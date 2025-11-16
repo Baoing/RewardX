@@ -1,5 +1,5 @@
 {
-  "name": "rewardx-spin-win-repeat",
+  "name": "rewardx",
   "private": true,
   "scripts": {
     "build": "react-router build",

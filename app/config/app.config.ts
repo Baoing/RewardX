@@ -1,6 +1,6 @@
 /**
  * 应用全局配置
- * 
+ *
  * 优先级：环境变量 > 默认值
  */
 
@@ -12,12 +12,12 @@ const getEnvVar = (key: string, defaultValue: string): string => {
   if (typeof process !== "undefined" && process.env && process.env[key]) {
     return process.env[key] as string
   }
-  
+
   // 尝试从 import.meta.env 获取（Vite 构建时，客户端）
   if (typeof import.meta !== "undefined" && import.meta.env && import.meta.env[key]) {
     return import.meta.env[key] as string
   }
-  
+
   return defaultValue
 }
 
@@ -45,25 +45,25 @@ export const APP_CONFIG = {
   isDev: getEnv() === "local" || getEnv() === "development",
   isTest: getEnv() === "test",
   isProd: getEnv() === "production",
-  
+
   // 应用基本信息
-  name: getEnvVar("APP_NAME", "RewardX – Spin, Win name: getEnvVar("APP_NAME", "Smart SEO") Repeat"),
+  name: getEnvVar("APP_NAME", "RewardX – Spin, Win & Repeat"),
   version: getEnvVar("APP_VERSION", "1.0.0"),
   description: "A Shopify app built with React Router",
-  
+
   // 应用作者信息
   author: {
     name: getEnvVar("APP_AUTHOR_NAME", "RewardX"),
     email: getEnvVar("APP_AUTHOR_EMAIL", "will@baoea.com")
   },
-  
+
   // 默认配置
   defaults: {
     language: getEnvVar("VITE_DEFAULT_LANG", "zh"),
     theme: getEnvVar("VITE_DEFAULT_THEME", "light"),
     timezone: "Asia/Shanghai"
   },
-  
+
   // 功能开关
   features: {
     analytics: getEnvBool("VITE_ENABLE_ANALYTICS", true),
@@ -71,7 +71,7 @@ export const APP_CONFIG = {
     multiLanguage: getEnvBool("VITE_ENABLE_MULTI_LANGUAGE", true),
     debug: getEnvBool("VITE_DEBUG_MODE", false)
   },
-  
+
   // 第三方服务配置
   services: {
     intercom: {
