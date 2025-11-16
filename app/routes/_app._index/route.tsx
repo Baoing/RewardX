@@ -29,8 +29,6 @@ const Index = observer(() => {
   const { t } = useTranslation()
   const userInfoStore = useUserInfoStore()
   const userInfo = userInfoStore.userInfo
-
-  const appName = getAppName()
   const userName = userInfo?.ownerName || userInfo?.shopName || "User"
 
   return (
@@ -39,10 +37,7 @@ const Index = observer(() => {
         <InlineStack align="space-between" blockAlign="center">
           <BlockStack gap="200">
             <Text as="h1" variant="headingXl">
-              {t("home.welcome", { userName, appName })}
-            </Text>
-            <Text as="p" variant="bodyMd" tone="subdued">
-              {t("home.welcomeMessage")}
+              {t("home.welcome", { userName, appName: "RewardX" })}
             </Text>
           </BlockStack>
           <LanguageSwitcher />

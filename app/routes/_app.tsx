@@ -156,13 +156,13 @@ function AppContent() {
   const { apiKey, shopInfo, userInfo, partnerLocale } = useLoaderData<typeof loader>()
   const { t } = useTranslation()
   const commonStore = useCommonStore()
-  const renderCount = useRef(0)
-
-  // 追踪渲染次数
-  useEffect(() => {
-    renderCount.current += 1
-    console.log(`🔄 AppContent 渲染次数: ${renderCount.current}`)
-  })
+  // const renderCount = useRef(0)
+  //
+  // // 追踪渲染次数
+  // useEffect(() => {
+  //   renderCount.current += 1
+  //   console.log(`🔄 AppContent 渲染次数: ${renderCount.current}`)
+  // })
 
   // 🔥 关键优化：语言初始化提前到第一位（同步执行）
   // 使用 store 的初始化状态，避免重复初始化
@@ -171,15 +171,15 @@ function AppContent() {
 
     if (userInfo.appLanguage) {
       targetLanguage = userInfo.appLanguage
-      console.log("📝 使用用户设置的语言:", userInfo.appLanguage)
+      // console.log("📝 使用用户设置的语言:", userInfo.appLanguage)
     } else if (partnerLocale && partnerLocale !== "en") {
       targetLanguage = partnerLocale
-      console.log("🌐 使用 Partner 后台语言:", partnerLocale)
+      // console.log("🌐 使用 Partner 后台语言:", partnerLocale)
     } else {
-      console.log("🔤 使用默认语言: en")
+      // console.log("🔤 使用默认语言: en")
     }
 
-    console.log("🎯 同步初始化语言为:", targetLanguage)
+    console.log("初始化语言:", targetLanguage)
     commonStore.setLanguage(targetLanguage as any)
   }
 
@@ -198,16 +198,16 @@ function AppContent() {
 
   // 开发环境日志（只执行一次）
   useEffect(() => {
-    if (shopInfo) {
-      console.log("🏪 Shop Info:", shopInfo.name, shopInfo.myshopifyDomain)
-    }
-
-    if (userInfo) {
-      console.log("👤 User Info:", userInfo.shopName || userInfo.shop)
-      console.log("💾 Saved App Language:", userInfo.appLanguage || "未设置")
-    }
-
-    console.log("🌐 Partner Locale:", partnerLocale)
+    // if (shopInfo) {
+    //   console.log("🏪 Shop Info:", shopInfo.name, shopInfo.myshopifyDomain)
+    // }
+    //
+    // if (userInfo) {
+    //   console.log("👤 User Info:", userInfo.shopName || userInfo.shop)
+    //   console.log("💾 Saved App Language:", userInfo.appLanguage || "未设置")
+    // }
+    //
+    // console.log("🌐 Partner Locale:", partnerLocale)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // 只执行一次
 
@@ -222,13 +222,13 @@ function AppContent() {
 const PolarisProvider = observer(() => {
   const { t } = useTranslation()
   const commonStore = useCommonStore()
-  const polarisRenderCount = useRef(0)
-
-  // 追踪渲染次数
-  useEffect(() => {
-    polarisRenderCount.current += 1
-    console.log(`🎨 PolarisProvider 渲染次数: ${polarisRenderCount.current}, 当前语言: ${commonStore.currentLanguage}`)
-  })
+  // const polarisRenderCount = useRef(0)
+  //
+  // // 追踪渲染次数
+  // useEffect(() => {
+  //   polarisRenderCount.current += 1
+  //   console.log(`🎨 PolarisProvider 渲染次数: ${polarisRenderCount.current}, 当前语言: ${commonStore.currentLanguage}`)
+  // })
 
   // 根据当前语言选择 Polaris 翻译（响应式）
   const polarisI18n = useMemo(() => {

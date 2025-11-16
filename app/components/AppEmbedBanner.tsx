@@ -20,7 +20,7 @@ export function AppEmbedBanner() {
     }
 
     // 检查 App Embed 状态
-    checkAppEmbedStatus()
+    // checkAppEmbedStatus()
   }, [])
 
   const checkAppEmbedStatus = async () => {
@@ -36,17 +36,17 @@ export function AppEmbedBanner() {
         setIsEmbedEnabled(true)
       } else if (data.isEnabled === false) {
         console.log("⚠️ App Embed 未启用")
-        
+
         // 检查是否是因为被禁用
         if (data.reason) {
           console.warn("📋 原因:", data.reason)
         }
-        
+
         // 如果找到了 blockId，说明 App Embed 存在但被禁用
         if (data.blockId) {
           console.warn("⚠️ App Embed 存在但被禁用，Block ID:", data.blockId)
         }
-        
+
         setIsEmbedEnabled(false)
       } else {
         console.warn("⚠️ 无法检测 App Embed 状态")

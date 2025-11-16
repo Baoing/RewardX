@@ -5,7 +5,7 @@ class UserInfoStore {
   userInfo: UserInfo | null = null
   isLoading = false
   error: string | null = null
-  
+
   // 🔥 新增：初始化状态标记
   isInitialized = false
 
@@ -18,11 +18,10 @@ class UserInfoStore {
    */
   setUserInfo(userInfo: UserInfo | null) {
     this.userInfo = userInfo
-    
+
     // 标记为已初始化
     if (userInfo && !this.isInitialized) {
       this.isInitialized = true
-      console.log("✅ UserInfo 已初始化")
     }
   }
 
@@ -33,7 +32,7 @@ class UserInfoStore {
   setError(error: string | null) {
     this.error = error
   }
-  
+
   /**
    * 重置初始化状态（用于登出或重新登录）
    */
@@ -42,6 +41,30 @@ class UserInfoStore {
     this.isLoading = false
     this.error = null
     this.isInitialized = false
+  }
+
+  async fetchUserInfo() {
+    this.setLoading(true)
+    this.setError(null)
+
+    try {
+      const response = await fetch("/api/userInfo")
+      const result = await response.json()
+
+      if (result.userInfo) {
+        this.setUserInfo(result.userInfo)
+        return result.userInfo
+      } else {
+        this.setError(result.error || "Failed to fetch user info")
+        return null
+      }
+    } catch (error) {
+      console.error("❌ Failed to fetch user info:", error)
+      this.setError("Failed to fetch user info")
+      return null
+    } finally {
+      this.setLoading(false)
+    }
   }
 
   async updateLanguage(language: string) {
@@ -64,11 +87,12 @@ class UserInfoStore {
 
       if (result.success && result.userInfo) {
         this.setUserInfo(result.userInfo)
+        console.log("✅ 语言更新成功，用户信息已刷新")
       } else {
         this.setError(result.error || "Failed to update language")
       }
     } catch (error) {
-      console.error("Failed to update language:", error)
+      console.error("❌ Failed to update language:", error)
       this.setError("Failed to update language")
     } finally {
       this.setLoading(false)
@@ -94,11 +118,12 @@ class UserInfoStore {
 
       if (result.success && result.userInfo) {
         this.setUserInfo(result.userInfo)
+        console.log("✅ 设置更新成功，用户信息已刷新")
       } else {
         this.setError(result.error || "Failed to update settings")
       }
     } catch (error) {
-      console.error("Failed to update settings:", error)
+      console.error("❌ Failed to update settings:", error)
       this.setError("Failed to update settings")
     } finally {
       this.setLoading(false)
