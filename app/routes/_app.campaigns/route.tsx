@@ -159,8 +159,8 @@ const CampaignsPage = observer(() => {
           {
             campaigns.length !== 0
               ? <EmptyState />
-              : <Card title={"Campaigns library"} titleDivider>
-                  211
+              : <Card title={"Campaigns library"} titleDivider padding={"0"}>
+
               </Card>
           }
         </Layout.Section>

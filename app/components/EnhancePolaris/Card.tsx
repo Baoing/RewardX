@@ -5,12 +5,14 @@ interface CardI {
   titleRight?: React.ReactNode;
   children?: React.ReactNode;
   titleDivider?: boolean
+  padding?: "0"|"4"
 }
 export const Card = ({
   title,
   titleRight,
   children,
-  titleDivider
+  titleDivider,
+  padding = "4",
 }: CardI) => {
   return <PolarisCard padding="0">
     {
@@ -20,7 +22,7 @@ export const Card = ({
       </div>
     }
     {titleDivider && <div className={"py-1"}><Divider /></div>}
-    <div className="p-4">
+    <div className={`p-${padding}`}>
       {children}
     </div>
   </PolarisCard>
