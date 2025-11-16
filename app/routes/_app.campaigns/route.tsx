@@ -30,7 +30,7 @@ const CampaignsPage = observer(() => {
     if (!isActive) {
       return <Badge tone="warning">Inactive</Badge>
     }
-    
+
     switch (status) {
       case "active":
         return <Badge tone="success">Active</Badge>
@@ -125,7 +125,7 @@ const CampaignsPage = observer(() => {
 
   if (campaignStore.isLoading && !campaignStore.isInitialized) {
     return (
-      <Page title="Lottery Campaigns">
+      <Page title="Campaigns">
         <Layout>
           <Layout.Section>
             <Card>
@@ -146,7 +146,7 @@ const CampaignsPage = observer(() => {
 
   return (
     <Page
-      title="Lottery Campaigns"
+      title="Campaigns"
       primaryAction={{
         content: "Create Campaign",
         icon: PlusIcon,

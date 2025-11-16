@@ -63,10 +63,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   }
 
   // 使用 console.table 优雅地打印用户信息
-  console.log("\n📊 === 用户信息 ===")
+  console.log("\n === 用户信息 ===")
   console.table({
     "店铺": session.shop,
-    "Partner 语言": partnerLocale,
+    "Partner locale": partnerLocale,
     "店铺语言": shopInfo?.primaryLocale || "未知",
     "用户语言": userInfo?.appLanguage || "未设置（使用 Partner 语言）",
     "当前套餐": subscription?.planType || "free",
