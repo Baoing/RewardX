@@ -1,7 +1,7 @@
 import type { LoaderFunctionArgs } from "react-router"
-import { authenticate } from "../shopify.server"
-import prisma from "../db.server"
-import { isCampaignValid } from "../utils/lottery.server"
+import { authenticate } from "@/shopify.server"
+import prisma from "@/db.server"
+import { isCampaignValid } from "@/utils/lottery.server"
 
 // GET /api/lottery/verify-order/:orderId - 验证订单是否可以抽奖
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {

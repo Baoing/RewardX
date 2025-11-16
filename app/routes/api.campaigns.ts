@@ -1,6 +1,6 @@
 import type { LoaderFunctionArgs } from "react-router"
-import { authenticate } from "../shopify.server"
-import prisma from "../db.server"
+import { authenticate } from "@/shopify.server"
+import prisma from "@/db.server"
 
 // GET /api/campaigns - 获取活动列表
 export const loader = async ({ request }: LoaderFunctionArgs) => {

@@ -2,20 +2,19 @@ import { useEffect, useState } from "react"
 import {
   Page,
   Layout,
-  Card,
-  DataTable,
+  Divider,
   Button,
   Badge,
-  BlockStack,
   InlineStack,
   Text,
-  EmptyState,
   Spinner
 } from "@shopify/polaris"
 import { PlusIcon } from "@shopify/polaris-icons"
 import { useTranslation } from "react-i18next"
 import { observer } from "mobx-react-lite"
-import { useCampaignStore } from "../../stores"
+import { useCampaignStore } from "@/stores"
+import {Card} from "@/components/EnhancePolaris"
+import EmptyState from "./components/emptyState"
 
 const CampaignsPage = observer(() => {
   const { t } = useTranslation()
@@ -54,7 +53,7 @@ const CampaignsPage = observer(() => {
       case "slot":
         return "Slot Machine"
       case "scratch":
-        return "Scratch Card"
+        return "Scratch Card.tsx"
       default:
         return gameType
     }
@@ -157,62 +156,13 @@ const CampaignsPage = observer(() => {
     >
       <Layout>
         <Layout.Section>
-          <Card>
-            <BlockStack gap="400">
-              <div className="tabs-container">
-                {tabs.map((tab, index) => (
-                  <Button
-                    key={tab.id}
-                    pressed={selectedTab === index}
-                    onClick={() => setSelectedTab(index)}
-                  >
-                    {tab.content}
-                  </Button>
-                ))}
-              </div>
-
-              {campaigns.length === 0 ? (
-                <EmptyState
-                  heading="No campaigns found"
-                  action={{
-                    content: "Create your first campaign",
-                    onAction: () => {
-                      window.location.href = "/campaigns/create"
-                    }
-                  }}
-                  image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
-                >
-                  <p>Create a lottery campaign to engage your customers</p>
-                </EmptyState>
-              ) : (
-                <DataTable
-                  columnContentTypes={[
-                    "text",
-                    "text",
-                    "text",
-                    "numeric",
-                    "numeric",
-                    "text",
-                    "text",
-                    "text",
-                    "text"
-                  ]}
-                  headings={[
-                    "Campaign Name",
-                    "Game Type",
-                    "Status",
-                    "Total Plays",
-                    "Total Wins",
-                    "Win Rate",
-                    "Start Date",
-                    "End Date",
-                    "Actions"
-                  ]}
-                  rows={rows}
-                />
-              )}
-            </BlockStack>
-          </Card>
+          {
+            campaigns.length !== 0
+              ? <EmptyState />
+              : <Card title={"Campaigns library"} titleDivider>
+                  211
+              </Card>
+          }
         </Layout.Section>
       </Layout>
     </Page>

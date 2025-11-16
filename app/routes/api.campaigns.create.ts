@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs } from "react-router"
-import { authenticate } from "../shopify.server"
-import prisma from "../db.server"
+import { authenticate } from "@/shopify.server"
+import prisma from "@/db.server"
 
 interface CreateCampaignRequest {
   name: string

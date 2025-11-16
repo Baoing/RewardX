@@ -29,13 +29,13 @@ import trPolaris from "@shopify/polaris/locales/tr.json"
 import zhCNPolaris from "@shopify/polaris/locales/zh-CN.json"
 import zhTWPolaris from "@shopify/polaris/locales/zh-TW.json"
 
-import { authenticate } from "../shopify.server"
-import { getShopInfo } from "../utils/shop.server"
-import { upsertUser } from "../utils/user.server"
-import { getCurrentSubscription } from "../services/subscription.server"
-import { StoreContext, userInfoStore, commonStore, campaignStore, useCommonStore } from "../stores"
-import { LoadingScreen } from "../components/LoadingScreen"
-import "../i18n/config"
+import { authenticate } from "@/shopify.server"
+import { getShopInfo } from "@/utils/shop.server"
+import { upsertUser } from "@/utils/user.server"
+import { getCurrentSubscription } from "@/services/subscription.server"
+import { StoreContext, userInfoStore, commonStore, campaignStore, useCommonStore } from "@/stores"
+import { LoadingScreen } from "@/components/LoadingScreen"
+import "@/i18n/config"
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { admin, session } = await authenticate.admin(request)
@@ -52,7 +52,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   // 降级策略：如果 API 获取失败，从数据库恢复
   if (!shopInfo && userInfo) {
-    const { userToShopInfo } = await import("../utils/user.server")
+    const { userToShopInfo } = await import("@/utils/user.server")
     shopInfo = userToShopInfo(userInfo)
   }
 

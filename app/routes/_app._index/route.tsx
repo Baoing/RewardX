@@ -11,13 +11,13 @@ import {
 import { useTranslation } from "react-i18next"
 import { observer } from "mobx-react-lite"
 import { boundary } from "@shopify/shopify-app-react-router/server"
-import { LanguageSwitcher } from "../../components/LanguageSwitcher"
-import { ShopInfoCard } from "../../components/ShopInfoCard"
-import { UserInfoCard } from "../../components/UserInfoCard"
-import { FAQCard } from "../../components/FAQCard"
-import { AppEmbedBanner } from "../../components/AppEmbedBanner"
-import { useUserInfoStore } from "../../stores"
-import { getAppName } from "../../config/app.config"
+import { LanguageSwitcher } from "@/components/LanguageSwitcher"
+import { ShopInfoCard } from "@/components/ShopInfoCard"
+import { UserInfoCard } from "@/components/UserInfoCard"
+import { FAQCard } from "@/components/FAQCard"
+import { AppEmbedBanner } from "@/components/AppEmbedBanner"
+import { useUserInfoStore } from "@/stores"
+import { getAppName } from "@/config/app.config"
 
 // 移除 loader，从父路由 (_app.tsx) 继承数据
 // export const loader = async ({ request }: LoaderFunctionArgs) => {

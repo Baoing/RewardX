@@ -1,7 +1,7 @@
 import type { ActionFunctionArgs } from "react-router"
-import { authenticate } from "../shopify.server"
-import prisma from "../db.server"
-import { selectPrize, generateDiscountCode, isCampaignValid, calculateExpiresAt } from "../utils/lottery.server"
+import { authenticate } from "@/shopify.server"
+import prisma from "@/db.server"
+import { selectPrize, generateDiscountCode, isCampaignValid, calculateExpiresAt } from "@/utils/lottery.server"
 
 interface PlayLotteryRequest {
   campaignId: string

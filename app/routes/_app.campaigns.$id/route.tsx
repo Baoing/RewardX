@@ -13,7 +13,7 @@ import {
   Divider
 } from "@shopify/polaris"
 import { observer } from "mobx-react-lite"
-import { useCampaignStore } from "../../stores"
+import { useCampaignStore } from "@/stores"
 
 const CampaignDetailPage = observer(() => {
   const { id } = useParams<{ id: string }>()
@@ -31,7 +31,7 @@ const CampaignDetailPage = observer(() => {
     if (!isActive) {
       return <Badge tone="warning">Inactive</Badge>
     }
-    
+
     switch (status) {
       case "active":
         return <Badge tone="success">Active</Badge>
@@ -55,7 +55,7 @@ const CampaignDetailPage = observer(() => {
       case "slot":
         return "Slot Machine"
       case "scratch":
-        return "Scratch Card"
+        return "Scratch Card.tsx"
       default:
         return gameType
     }
@@ -68,7 +68,7 @@ const CampaignDetailPage = observer(() => {
 
   const handleUpdateStatus = async (newStatus: string) => {
     if (!id) return
-    
+
     const confirmed = window.confirm(`Are you sure you want to change status to ${newStatus}?`)
     if (!confirmed) return
 
@@ -77,7 +77,7 @@ const CampaignDetailPage = observer(() => {
 
   const handleToggleActive = async () => {
     if (!id || !campaign) return
-    
+
     const newActiveState = !campaign.isActive
     const confirmed = window.confirm(
       `Are you sure you want to ${newActiveState ? "activate" : "deactivate"} this campaign?`
@@ -89,7 +89,7 @@ const CampaignDetailPage = observer(() => {
 
   const handleDelete = async () => {
     if (!id) return
-    
+
     const confirmed = window.confirm(
       "Are you sure you want to delete this campaign? This action cannot be undone."
     )

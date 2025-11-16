@@ -16,7 +16,7 @@
   // Main SmartSEO object
   window.SmartSEO = {
     config: {},
-    
+
     init: function() {
       console.log('🚀 SmartSEO initialized')
       this.loadConfig()
@@ -44,13 +44,13 @@
     },
 
     optimizeMetaTags: function() {
-      // Basic Open Graph and Twitter Card tags
+      // Basic Open Graph and Twitter Card.tsx tags
       ensureMetaTag('og:site_name', this.config.shop || document.title)
       ensureMetaTag('og:type', this.config.pageType === 'product' ? 'product' : 'website')
       ensureMetaTag('og:url', window.location.href)
       ensureMetaTag('twitter:card', 'summary_large_image')
       ensureMetaTag('twitter:site', this.config.shop || '')
-      
+
       console.log('📝 Meta tags optimized')
     },
 
@@ -76,7 +76,7 @@
       script.type = 'application/ld+json'
       script.textContent = JSON.stringify(structuredData)
       document.head.appendChild(script)
-      
+
       console.log('🔗 Structured data added')
     },
 

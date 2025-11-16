@@ -12,7 +12,7 @@ import {
   Button
 } from "@shopify/polaris"
 import { observer } from "mobx-react-lite"
-import { useCampaignStore } from "../../stores"
+import { useCampaignStore } from "@/stores"
 
 const CampaignAnalyticsPage = observer(() => {
   const { id } = useParams<{ id: string }>()
