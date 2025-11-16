@@ -9,8 +9,8 @@ generator client {
 // enough when changing adapters.
 // See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
 datasource db {
-  provider = "sqlite"
-  url      = "file:dev.sqlite"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Session {
@@ -76,6 +76,11 @@ model User {
   theme         String   @default("light")  // 主题偏好
   notifications Boolean  @default(true)     // 通知开关
   
+  // APP 评价信息
+  appRating     Int?                         // 用户评分 (1-5)
+  appReview     String?                      // 评价内容
+  reviewedAt    DateTime?                    // 评价时间
+  
   // 元数据
   installedAt   DateTime @default(now())
   lastLoginAt   DateTime @default(now())
@@ -92,10 +97,13 @@ model User {
   updatedAt     DateTime @updatedAt
   
   // 关联关系
-  subscriptions Subscription[]
-  usageRecords  UsageRecord[]
-  payments      Payment[]
-  discounts     UserDiscount[]
+  subscriptions   Subscription[]
+  usageRecords    UsageRecord[]
+  payments        Payment[]
+  discounts       UserDiscount[]
+  setupGuide      SetupGuide?
+  campaigns       Campaign[]
+  lotteryEntries  LotteryEntry[]
 }
 
 // ============ 订阅管理 ============
@@ -291,7 +299,7 @@ model UserDiscount {
   @@index([userId])
 }
 
-// ============ 分析统计（预留） ============
+// ============ 分析统计 ============
 
 model AnalyticsEvent {
   id          String   @id @default(uuid())
@@ -299,9 +307,10 @@ model AnalyticsEvent {
   // 关联用户
   userId      String?
   shop        String?
+  campaignId  String?
   
   // 事件信息
-  eventType   String              // subscription_created, payment_succeeded, quota_exceeded 等
+  eventType   String              // lottery_spin, prize_won, email_collected, order_converted 等
   eventData   String?  @default("{}")
   
   // 时间戳
@@ -309,4 +318,210 @@ model AnalyticsEvent {
   
   @@index([userId, timestamp])
   @@index([eventType, timestamp])
+  @@index([campaignId, timestamp])
 }
+
+// ============ 新手引导 ============
+
+model SetupGuide {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // 任务完成状态 (JSON 数组)
+  // 格式: [{id: 2, is_completed: true}, {id: 4, is_completed: false}, ...]
+  tasks           String   @default("[]")
+  
+  // 总体进度
+  totalTasks      Int      @default(4)
+  completedTasks  Int      @default(0)
+  isCompleted     Boolean  @default(false)
+  
+  // 时间记录
+  startedAt       DateTime @default(now())
+  completedAt     DateTime?
+  updatedAt       DateTime @updatedAt
+  
+  @@index([userId])
+}
+
+// ============ 抽奖活动管理 (MVP 版本 - 订单抽奖) ============
+
+model Campaign {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // === 基本信息 ===
+  name            String                    // 活动名称
+  description     String?                   // 活动描述（可选）
+  
+  // === 活动类型（触发方式）===
+  type            String   @default("order") // order（订单抽奖）, email_form（邮件表单抽奖）, share（分享抽奖）
+  
+  // === 游戏类型 ===
+  gameType        String   @default("ninebox")  // wheel（大转盘）, ninebox（九宫格）, slot（老虎机）
+  
+  // === 订单抽奖配置（type=order 时使用）===
+  minOrderAmount  Float?                    // 最小订单金额限制（null = 无限制）
+  allowedOrderStatus String @default("paid") // 允许的订单状态（paid, fulfilled）
+  
+  // === 邮件表单配置（type=email_form 时使用）===
+  requireEmail    Boolean  @default(true)   // 是否需要填写邮箱
+  requireName     Boolean  @default(false)  // 是否需要填写姓名
+  requirePhone    Boolean  @default(false)  // 是否需要填写电话
+  
+  // === 参与限制 ===
+  // 每个订单只能抽一次（通过 orderId unique 约束保证）
+  maxPlaysPerCustomer Int? @default(1)      // 每个客户最多参与次数（null = 无限）
+  
+  // === 时间设置（可选）===
+  startAt         DateTime?                 // 活动开始时间（null = 立即开始）
+  endAt           DateTime?                 // 活动结束时间（null = 永不结束）
+  
+  // === 活动状态 ===
+  status          String   @default("draft") // draft（草稿）, active（进行中）, paused（暂停）, ended（已结束）
+  isActive        Boolean  @default(false)   // 快速判断是否激活
+  
+  // === 九宫格特殊配置（JSON）===
+  // 九宫格：每个奖品出现在 2 个格子上
+  // 格式: { gridSize: 9, prizesPerGrid: 2 }
+  gameConfig      String   @default("{}")
+  
+  // === 统计数据（自动更新）===
+  totalPlays      Int      @default(0)       // 总参与次数
+  totalWins       Int      @default(0)       // 总中奖次数
+  totalOrders     Int      @default(0)       // 参与订单数
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // === 关联关系 ===
+  prizes          Prize[]
+  lotteryEntries  LotteryEntry[]
+  
+  @@index([userId, status])
+  @@index([status, isActive])
+  @@index([type, status])
+  @@index([gameType])
+  @@index([startAt, endAt])
+}
+
+// ============ 奖品配置 (MVP 版本) ============
+
+model Prize {
+  id              String   @id @default(uuid())
+  campaignId      String
+  campaign        Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  // === 奖品基本信息 ===
+  name            String                    // 奖品名称（如：10% OFF, No luck, Buy One Get One）
+  description     String?                   // 奖品描述（可选）
+  
+  // === 奖品类型 ===
+  type            String                    // discount_percentage（百分比折扣）, discount_fixed（固定金额）, free_gift（赠品）, no_prize（未中奖）
+  
+  // === 折扣配置 ===
+  discountValue   Float?                    // 折扣值（type=discount_percentage: 10 表示 10%; type=discount_fixed: 5 表示 $5）
+  discountCode    String?                   // Shopify 折扣码（自动生成或手动输入）
+  
+  // === 赠品配置 ===
+  giftProductId   String?                   // Shopify Product ID（type=free_gift 时使用）
+  giftVariantId   String?                   // Shopify Variant ID
+  
+  // === 中奖概率（百分比）===
+  // 九宫格：每个奖品出现在 2 个格子上，这里的百分比是两个格子的合计概率
+  // 示例：10% OFF - 90%，表示 90% 的概率中奖
+  chancePercentage Float   @default(0)      // 中奖概率（0-100）
+  
+  // === 库存管理 ===
+  totalStock      Int?                      // 总库存（null = 无限库存）
+  usedStock       Int      @default(0)      // 已使用库存
+  
+  // === 显示配置 ===
+  displayOrder    Int      @default(0)      // 显示顺序（九宫格中的位置）
+  color           String?  @default("#FF6B6B") // 奖品颜色（用于 UI 显示）
+  icon            String?                   // 图标 URL 或图标名称
+  
+  // === 奖品状态 ===
+  isActive        Boolean  @default(true)   // 是否启用
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // === 关联关系 ===
+  lotteryEntries  LotteryEntry[]
+  
+  @@index([campaignId, isActive])
+  @@index([campaignId, displayOrder])
+}
+
+// ============ 抽奖记录（支持多种活动类型）============
+
+model LotteryEntry {
+  id              String   @id @default(uuid())
+  campaignId      String
+  campaign        Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  // === 活动类型 ===
+  campaignType    String                    // order（订单抽奖）, email_form（邮件抽奖）, share（分享抽奖）
+  
+  // === 订单信息（type=order 时必填）===
+  orderId         String?  @unique          // Shopify Order ID（唯一，确保每个订单只能抽一次）
+  orderNumber     String?                   // Shopify Order Number（如：#1001，便于用户识别）
+  orderAmount     Float?                    // 订单金额
+  
+  // === 用户信息（通用）===
+  email           String?                   // 邮箱（type=email_form 时必填）
+  customerName    String?                   // 客户名称
+  phone           String?                   // 电话号码（可选）
+  customerId      String?                   // Shopify Customer ID
+  
+  // === 抽奖结果 ===
+  prizeId         String?
+  prize           Prize?   @relation(fields: [prizeId], references: [id], onDelete: SetNull)
+  
+  // 冗余存储（防止奖品被删除后无法查看历史记录）
+  prizeName       String?                   // 奖品名称
+  prizeType       String?                   // 奖品类型
+  prizeValue      String?                   // 奖品值（折扣百分比、金额等）
+  
+  // === 中奖状态 ===
+  isWinner        Boolean  @default(false)  // 是否中奖
+  status          String   @default("pending") // pending（待使用）, claimed（已使用）, expired（已过期）
+  
+  // === 折扣码发放 ===
+  discountCode    String?                   // 生成的 Shopify 折扣码（中奖时创建）
+  discountCodeId  String?                   // Shopify Discount Code ID
+  
+  // === 使用信息 ===
+  claimedAt       DateTime?                 // 使用时间
+  usedOrderId     String?                   // 使用该折扣码的订单 ID
+  usedOrderAmount Float?                    // 使用订单金额
+  
+  // === 过期设置 ===
+  expiresAt       DateTime?                 // 过期时间
+  
+  // === 追踪信息 ===
+  ipAddress       String?
+  userAgent       String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([campaignId, createdAt])
+  @@index([userId, createdAt])
+  @@index([campaignType])
+  @@index([orderId])
+  @@index([email])
+  @@index([customerId])
+  @@index([status])
+  @@index([isWinner])
+}
+
+// ============ 统计快照 (后续版本添加) ============
+// MVP 版本暂时使用 Campaign 表中的统计字段
+// 后续可扩展为按天/小时的详细统计
