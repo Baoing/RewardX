@@ -47,14 +47,14 @@ export const APP_CONFIG = {
   isProd: getEnv() === "production",
   
   // 应用基本信息
-  name: getEnvVar("APP_NAME", "Smart SEO"),
+  name: getEnvVar("APP_NAME", "RewardX – Spin, Win name: getEnvVar("APP_NAME", "Smart SEO") Repeat"),
   version: getEnvVar("APP_VERSION", "1.0.0"),
-  description: "Shopify SEO 优化应用",
+  description: "A Shopify app built with React Router",
   
   // 应用作者信息
   author: {
-    name: getEnvVar("APP_AUTHOR_NAME", "a333"),
-    email: getEnvVar("APP_AUTHOR_EMAIL", "support@smartseo.com")
+    name: getEnvVar("APP_AUTHOR_NAME", "RewardX"),
+    email: getEnvVar("APP_AUTHOR_EMAIL", "will@baoea.com")
   },
   
   // 默认配置

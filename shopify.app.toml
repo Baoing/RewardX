@@ -1,8 +1,6 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "40572ca771d68b503541a8837c8b24e0"
-name = "SmartSEO"
-application_url = "https://intersection-storage-birth-segments.trycloudflare.com"
+name = "RewardX – Spin, Win name = "SmartSEO" Repeat"
 embedded = true
 
 [build]
@@ -26,7 +24,6 @@ api_version = "2026-01"
 scopes = "read_products,write_products,read_customers,read_orders,read_content,read_themes,write_themes,read_locales"
 
 [auth]
-redirect_urls = [ 
   "https://intersection-storage-birth-segments.trycloudflare.com/api/auth",
   "https://intersection-storage-birth-segments.trycloudflare.com/auth/callback"
 ]
