@@ -1,0 +1,312 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Note that some adapters may set a maximum length for the String type by default, please ensure your strings are long
+// enough when changing adapters.
+// See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
+datasource db {
+  provider = "sqlite"
+  url      = "file:dev.sqlite"
+}
+
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+}
+
+model User {
+  id            String   @id @default(uuid())
+  shop          String   @unique
+  
+  // 店铺基本信息（从 Shopify API 缓存）
+  shopId        String?  // Shopify Shop ID (gid://shopify/Shop/xxxxx)
+  email         String?
+  shopName      String?
+  domain        String?
+  myshopifyDomain String?
+  primaryDomain String?
+  primaryLocale String?  // 店铺的 storefront 默认语言
+  
+  // 店主信息
+  ownerName     String?
+  firstName     String?
+  lastName      String?
+  
+  // 地理位置信息
+  country       String?
+  countryCode   String?
+  city          String?
+  province      String?
+  address       String?
+  zip           String?
+  phone         String?
+  
+  // 货币和语言
+  currency      String?
+  currencyCode  String   @default("USD")
+  language      String   @default("en")      // Storefront 默认语言
+  appLanguage   String?                       // 用户手动设置的应用界面语言（null = 未设置）
+  timezone      String?                       // 时区缩写 (如: EST)
+  ianaTimezone  String?                       // IANA 时区 (如: America/New_York)
+  
+  // 店铺计划信息
+  planName      String?
+  planDisplayName String?
+  isShopifyPlus Boolean  @default(false)
+  isPartnerDev  Boolean  @default(false)
+  
+  // 应用配置
+  theme         String   @default("light")  // 主题偏好
+  notifications Boolean  @default(true)     // 通知开关
+  
+  // 元数据
+  installedAt   DateTime @default(now())
+  lastLoginAt   DateTime @default(now())
+  lastSyncAt    DateTime @default(now())    // 最后同步 Shopify 数据时间
+  isActive      Boolean  @default(true)
+  isTrial       Boolean  @default(true)
+  trialEndsAt   DateTime?
+  
+  // JSON 字段用于存储额外配置
+  settings      String?  @default("{}")
+  metadata      String?  @default("{}")     // 其他元数据（存储完整的 Shop API 响应）
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // 关联关系
+  subscriptions Subscription[]
+  usageRecords  UsageRecord[]
+  payments      Payment[]
+  discounts     UserDiscount[]
+}
+
+// ============ 订阅管理 ============
+
+model Subscription {
+  id                String   @id @default(uuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Shopify 订阅信息
+  shopifyChargeId   String?  @unique  // Shopify AppSubscription ID
+  shopifyConfirmUrl String?              // 订阅确认 URL
+  
+  // 套餐信息
+  planType          String              // free, starter, professional, enterprise
+  billingCycle      String              // monthly, yearly
+  
+  // 价格信息
+  price             Float               // 实际支付价格（考虑折扣后）
+  originalPrice     Float               // 原价
+  currency          String   @default("USD")
+  
+  // 配额信息
+  quotaLimit        Int                 // 配额上限（-1 表示无限）
+  quotaUsed         Int      @default(0) // 已使用配额
+  quotaResetAt      DateTime            // 配额重置时间（每月）
+  
+  // 订阅状态
+  status            String              // pending, active, cancelled, expired, past_due
+  
+  // 试用信息
+  isTrial           Boolean  @default(false)
+  trialDays         Int      @default(0)
+  trialStartAt      DateTime?
+  trialEndAt        DateTime?
+  
+  // 订阅周期
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  cancelAt           DateTime?          // 计划取消时间
+  cancelledAt        DateTime?          // 实际取消时间
+  
+  // 折扣信息
+  discountId        String?
+  discount          Discount?  @relation(fields: [discountId], references: [id])
+  discountAmount    Float      @default(0)
+  discountType      String?              // percentage, fixed, custom
+  
+  // 手动开通信息
+  isManualGrant     Boolean    @default(false)  // 是否手动开通
+  grantedBy         String?                      // 开通人员
+  grantReason       String?                      // 开通原因
+  grantExpiresAt    DateTime?                    // 手动开通过期时间
+  
+  // 元数据
+  metadata          String?    @default("{}")
+  
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  
+  // 关联关系
+  usageRecords      UsageRecord[]
+  payments          Payment[]
+  
+  @@index([userId, status])
+  @@index([shopifyChargeId])
+}
+
+// ============ 使用量记录 ============
+
+model UsageRecord {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  
+  // 使用量信息
+  action         String              // 操作类型: optimize_meta, generate_schema, bulk_optimize 等
+  quantity       Int      @default(1)  // 使用数量
+  quotaUsed      Int      @default(1)  // 消耗配额数
+  
+  // 关联资源
+  resourceType   String?             // product, page, collection 等
+  resourceId     String?             // Shopify 资源 ID
+  
+  // 元数据
+  metadata       String?  @default("{}")
+  
+  createdAt      DateTime @default(now())
+  
+  @@index([userId, createdAt])
+  @@index([subscriptionId, createdAt])
+}
+
+// ============ 支付记录 ============
+
+model Payment {
+  id                String   @id @default(uuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptionId    String?
+  subscription      Subscription? @relation(fields: [subscriptionId], references: [id])
+  
+  // Shopify 支付信息
+  shopifyChargeId   String?  @unique
+  
+  // 支付信息
+  amount            Float
+  currency          String   @default("USD")
+  status            String              // pending, paid, failed, refunded
+  
+  // 支付周期
+  billingPeriodStart DateTime?
+  billingPeriodEnd   DateTime?
+  
+  // 发票信息
+  invoiceUrl        String?
+  
+  // 元数据
+  metadata          String?  @default("{}")
+  
+  paidAt            DateTime?
+  refundedAt        DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([userId, createdAt])
+  @@index([shopifyChargeId])
+}
+
+// ============ 折扣管理 ============
+
+model Discount {
+  id              String   @id @default(uuid())
+  
+  // 折扣码
+  code            String   @unique
+  
+  // 折扣类型
+  type            String              // percentage（百分比）, fixed（固定金额）, trial_extension（试用延长）
+  
+  // 折扣值
+  value           Float               // 折扣值（百分比或金额）
+  
+  // 适用范围
+  applicablePlans String?             // 适用套餐（JSON 数组），null = 全部
+  billingCycles   String?             // 适用周期（JSON 数组），null = 全部
+  
+  // 使用限制
+  maxUses         Int?                // 最大使用次数，null = 无限
+  currentUses     Int      @default(0)
+  maxUsesPerUser  Int?     @default(1) // 每个用户最大使用次数
+  
+  // 有效期
+  startsAt        DateTime?
+  expiresAt       DateTime?
+  
+  // 状态
+  isActive        Boolean  @default(true)
+  
+  // 元数据
+  description     String?
+  internalNotes   String?             // 内部备注
+  metadata        String?  @default("{}")
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // 关联关系
+  subscriptions   Subscription[]
+  userDiscounts   UserDiscount[]
+  
+  @@index([code, isActive])
+}
+
+// ============ 用户折扣使用记录 ============
+
+model UserDiscount {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  discountId  String
+  discount    Discount @relation(fields: [discountId], references: [id], onDelete: Cascade)
+  
+  // 使用次数
+  usedCount   Int      @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([userId, discountId])
+  @@index([userId])
+}
+
+// ============ 分析统计（预留） ============
+
+model AnalyticsEvent {
+  id          String   @id @default(uuid())
+  
+  // 关联用户
+  userId      String?
+  shop        String?
+  
+  // 事件信息
+  eventType   String              // subscription_created, payment_succeeded, quota_exceeded 等
+  eventData   String?  @default("{}")
+  
+  // 时间戳
+  timestamp   DateTime @default(now())
+  
+  @@index([userId, timestamp])
+  @@index([eventType, timestamp])
+}

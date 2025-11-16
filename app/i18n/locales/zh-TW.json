@@ -1,0 +1,78 @@
+{
+  "nav": {
+    "home": "首頁",
+    "settings": "設置"
+  },
+  "home": {
+    "welcome": "Hi {{userName}} 👋, 歡迎使用 {{appName}}",
+    "welcomeMessage": "您的 Shopify 應用已成功安裝並運行"
+  },
+  "shopInfo": {
+    "title": "店鋪信息",
+    "devShop": "開發店鋪",
+    "name": "店鋪名稱",
+    "domain": "域名",
+    "email": "郵箱",
+    "plan": "套餐",
+    "currency": "貨幣",
+    "timezone": "時區"
+  },
+  "userInfo": {
+    "title": "用戶信息",
+    "devShop": "開發店鋪",
+    "trial": "試用中",
+    "active": "活躍",
+    "shopInfo": "店鋪信息",
+    "shopName": "店鋪名稱",
+    "domain": "域名",
+    "email": "郵箱",
+    "plan": "套餐",
+    "geography": "地理位置",
+    "country": "國家",
+    "province": "省份/州",
+    "city": "城市",
+    "timezone": "時區",
+    "currencyAndLanguage": "貨幣和語言",
+    "currency": "貨幣",
+    "appLanguage": "應用語言",
+    "theme": "主題",
+    "notifications": "通知",
+    "enabled": "開啟",
+    "disabled": "關閉",
+    "metadata": "賬戶元數據",
+    "installedAt": "安裝時間",
+    "lastLogin": "最後登錄",
+    "trialEnds": "試用結束"
+  },
+  "language": {
+    "switch": "切換語言",
+    "selectLanguage": "選擇語言"
+  },
+  "settings": {
+    "title": "設置",
+    "general": {
+      "title": "常規設置",
+      "description": "管理您的應用偏好設置",
+      "language": "語言",
+      "languageDescription": "選擇應用界面顯示語言",
+      "theme": "主題",
+      "themeDescription": "選擇應用界面主題"
+    },
+    "theme": {
+      "light": "淺色",
+      "dark": "深色",
+      "auto": "跟隨系統"
+    },
+    "notifications": {
+      "title": "通知設置",
+      "description": "管理應用通知偏好",
+      "enabled": "啟用通知",
+      "enabledDescription": "接收應用重要通知和更新"
+    },
+    "help": {
+      "title": "需要幫助？",
+      "description": "查看我們的文檔了解更多信息和使用指南",
+      "viewDocs": "查看文檔"
+    }
+  }
+}

@@ -1,0 +1,748 @@
+# Shopify App Starter - Cursor Rules
+
+## 项目概述
+
+这是一个基于 Shopify App + React Router v7 + Remix 的 SaaS 应用基座项目。
+
+**技术栈**：
+- **框架**：React Router v7 (Remix)
+- **UI 库**：Shopify Polaris
+- **状态管理**：MobX
+- **数据库**：Prisma + SQLite
+- **国际化**：react-i18next
+- **样式**：Tailwind CSS
+- **类型**：TypeScript
+
+---
+
+## 代码规范
+
+### TypeScript
+
+- ✅ 使用 TypeScript 编写所有代码
+- ✅ 优先使用 `interface` 而非 `type`
+- ❌ 避免使用 `any` 或 `unknown`（除非必要）
+- ❌ 避免使用 `enum`，使用对象或常量代替
+- ❌ 避免使用类型断言 `as` 或 `!`
+
+### React
+
+- ✅ 使用函数组件
+- ✅ 使用 Hooks（useState, useEffect, useMemo, useCallback）
+- ✅ 使用 MobX `observer` 包裹需要响应式的组件
+- ❌ 不使用类组件
+- ✅ Props 必须定义完整的类型接口
+
+### 代码风格
+
+- ✅ 使用双引号 `"` 而非单引号 `'`
+- ❌ 语句结尾**不要**分号
+- ✅ 使用 2 空格缩进
+- ✅ 使用 Unix 风格换行符（LF）
+- ✅ 使用 `const` 而非 `function` 定义函数
+- ✅ 使用描述性的变量名（如 `isLoaded`, `hasError`）
+- ✅ 事件处理函数以 `handle` 开头（如 `handleClick`, `handleSubmit`）
+
+### 样式
+
+- ✅ **优先使用 Tailwind CSS** 工具类
+- ✅ 使用 CSS Modules 或 SCSS Modules（`.module.css` / `.module.scss`）
+- ❌ **禁止使用 JSX 内联样式**
+- ✅ 使用 `className` 而非 `style` 属性
+- ✅ 移动优先设计（mobile-first）
+
+### 文件结构
+
+```
+app/
+├── routes/                    # 路由文件
+│   ├── _app.tsx              # 主布局
+│   ├── _app._index/          # 首页
+│   │   ├── route.tsx         # 路由组件
+│   │   └── styles.module.scss # 样式文件
+│   ├── _app.billing/         # 套餐页面
+│   └── api.*.ts              # API 路由
+├── components/               # 可复用组件
+├── stores/                   # MobX 状态管理
+├── hooks/                    # 自定义 Hooks
+├── utils/                    # 工具函数
+├── services/                 # 业务逻辑服务
+├── config/                   # 配置文件
+└── i18n/                     # 国际化
+    └── locales/              # 翻译文件
+```
+
+---
+
+## Shopify 特定规范
+
+### 认证和会话
+
+```typescript
+// ✅ 在 loader/action 中使用 authenticate
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const { admin, session } = await authenticate.admin(request)
+  // ...
+}
+```
+
+### GraphQL 查询
+
+```typescript
+// ✅ 使用 admin.graphql 进行查询
+const response = await admin.graphql(
+  `#graphql
+  query getShop {
+    shop {
+      id
+      name
+    }
+  }`
+)
+```
+
+### Polaris 组件
+
+```typescript
+// ✅ 使用 Polaris 组件
+import { Page, Card, Button, BlockStack } from "@shopify/polaris"
+
+// ✅ 使用 Polaris Icons
+import { CheckIcon } from "@shopify/polaris-icons"
+```
+
+---
+
+## 状态管理（MobX）
+
+### Store 定义
+
+```typescript
+// ✅ 使用 makeAutoObservable
+import { makeAutoObservable } from "mobx"
+
+class UserInfoStore {
+  userInfo: UserInfo | null = null
+  isInitialized = false
+
+  constructor() {
+    makeAutoObservable(this)
+  }
+
+  setUserInfo(userInfo: UserInfo) {
+    this.userInfo = userInfo
+    this.isInitialized = true
+  }
+}
+
+export const userInfoStore = new UserInfoStore()
+```
+
+### 组件使用
+
+```typescript
+// ✅ 使用 observer 包裹
+import { observer } from "mobx-react-lite"
+
+export const MyComponent = observer(() => {
+  const { userInfo } = userInfoStore
+  return <div>{userInfo?.name}</div>
+})
+```
+
+---
+
+## 国际化（i18n）
+
+### 使用翻译
+
+```typescript
+// ✅ 使用 useTranslation Hook
+import { useTranslation } from "react-i18next"
+
+function MyComponent() {
+  const { t } = useTranslation()
+
+  return (
+    <Text>{t("common.loading")}</Text>
+  )
+}
+```
+
+### 翻译文件结构
+
+```json
+{
+  "common": {
+    "loading": "加载中..."
+  },
+  "billing": {
+    "title": "套餐与计费"
+  }
+}
+```
+
+### 翻译键命名
+
+- ✅ 使用点号分隔：`billing.title`
+- ✅ 使用驼峰命名：`startTrial`
+- ✅ 使用插值：`"欢迎 {{userName}}"`
+
+---
+
+## 路由规范
+
+### 文件命名
+
+- `_app.tsx` - 布局路由
+- `_app._index/route.tsx` - 索引路由
+- `_app.billing/route.tsx` - 嵌套路由
+- `api.*.ts` - API 路由
+
+### Loader 和 Action
+
+```typescript
+// ✅ 导出 loader 获取数据
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const { admin, session } = await authenticate.admin(request)
+  return { data: "..." }
+}
+
+// ✅ 导出 action 处理表单提交
+export const action = async ({ request }: ActionFunctionArgs) => {
+  const formData = await request.formData()
+  return Response.json({ success: true })
+}
+```
+
+### 性能优化
+
+```typescript
+// ✅ 使用 shouldRevalidate 控制重新加载
+export function shouldRevalidate({
+  currentUrl,
+  nextUrl,
+  defaultShouldRevalidate
+}: ShouldRevalidateFunctionArgs) {
+  // 只在必要时重新加载
+  if (currentUrl.pathname === nextUrl.pathname) {
+    return false
+  }
+  return defaultShouldRevalidate
+}
+```
+
+---
+
+## 数据库（Prisma）
+
+### Schema 定义
+
+```prisma
+model User {
+  id        String   @id @default(uuid())
+  shop      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+```
+
+### 查询规范
+
+```typescript
+// ✅ 使用 Prisma Client
+import prisma from "~/db.server"
+
+const user = await prisma.user.findUnique({
+  where: { shop: session.shop }
+})
+```
+
+### 迁移
+
+```bash
+# 创建迁移
+npx prisma migrate dev --name add_new_field
+
+# 生成 Prisma Client
+npx prisma generate
+```
+
+---
+
+## Toast 通知系统
+
+### 使用 Toast
+
+```typescript
+// ✅ 导入 toast 工具
+import { showToast, showSuccessToast, showErrorToast } from "~/utils/toast"
+
+// ✅ 显示成功消息
+showSuccessToast("保存成功")
+
+// ✅ 显示错误消息
+showErrorToast("保存失败")
+
+// ✅ 自定义
+showToast({
+  content: "操作完成",
+  duration: 2000
+})
+```
+
+### ❌ 禁止使用
+
+```typescript
+// ❌ 不要使用 alert
+alert("保存成功")
+
+// ❌ 不要使用 confirm
+const confirmed = confirm("确定吗？")
+```
+
+### ✅ 使用 Modal
+
+```typescript
+// ✅ 使用 Polaris Modal 替代 confirm
+import { Modal } from "@shopify/polaris"
+
+<Modal
+  open={showModal}
+  onClose={() => setShowModal(false)}
+  title="确认操作"
+  primaryAction={{
+    content: "确认",
+    onAction: handleConfirm
+  }}
+>
+  <Modal.Section>
+    <Text>确定要执行此操作吗？</Text>
+  </Modal.Section>
+</Modal>
+```
+
+---
+
+## 权限系统
+
+### 使用权限 Hook
+
+```typescript
+// ✅ 使用 usePermission Hook
+import { usePermission } from "~/hooks/usePermission"
+import { Feature } from "~/config/permissions"
+
+function MyComponent() {
+  const { hasAccess, isProfessional } = usePermission()
+
+  const canUseAI = hasAccess(Feature.AI_SUGGESTIONS)
+
+  return (
+    <Button disabled={!canUseAI}>
+      AI 优化
+    </Button>
+  )
+}
+```
+
+### 使用权限组件
+
+```typescript
+// ✅ 使用 RestrictedButton
+import { RestrictedButton } from "~/components/FeatureGate"
+import { Feature } from "~/config/permissions"
+
+<RestrictedButton
+  feature={Feature.AI_SUGGESTIONS}
+  onClick={handleAIOptimize}
+  showBadge={true}
+>
+  AI 优化
+</RestrictedButton>
+```
+
+### 服务端验证
+
+```typescript
+// ✅ 服务端必须验证权限
+import { hasFeatureAccess } from "~/config/permissions"
+import { Feature } from "~/config/permissions"
+
+export const action = async ({ request }) => {
+  const { session } = await authenticate.admin(request)
+  const user = await getUserByShop(session.shop)
+  const subscription = await getCurrentSubscription(user.id)
+  const currentPlan = subscription?.planType || PlanType.FREE
+
+  // 🔒 权限检查
+  if (!hasFeatureAccess(currentPlan, Feature.AI_SUGGESTIONS)) {
+    return Response.json({
+      success: false,
+      error: "This feature requires Professional plan"
+    }, { status: 403 })
+  }
+
+  // 执行操作...
+}
+```
+
+---
+
+## 订阅系统
+
+### 创建订阅
+
+```typescript
+// ✅ 使用订阅服务
+import { createSubscription } from "~/services/subscription.server"
+import { PlanType, BillingCycle } from "~/config/plans"
+
+const subscription = await createSubscription({
+  userId: user.id,
+  planType: PlanType.PROFESSIONAL,
+  billingCycle: BillingCycle.MONTHLY,
+  discountCode: "SAVE20"
+})
+```
+
+### 检查配额
+
+```typescript
+// ✅ 检查和消耗配额
+import { checkQuota, consumeQuota } from "~/services/subscription.server"
+
+const hasQuota = await checkQuota(user.id)
+if (!hasQuota) {
+  return Response.json({
+    error: "Quota exceeded"
+  }, { status: 429 })
+}
+
+await consumeQuota(user.id, 1)
+```
+
+---
+
+## 错误处理
+
+### API 错误
+
+```typescript
+// ✅ 统一的错误响应格式
+return Response.json({
+  success: false,
+  error: "Error message"
+}, { status: 400 })
+```
+
+### Try-Catch
+
+```typescript
+// ✅ 使用 try-catch 捕获错误
+try {
+  const result = await someAsyncOperation()
+  return Response.json({ success: true, result })
+} catch (error) {
+  console.error("操作失败:", error)
+  return Response.json({
+    success: false,
+    error: error instanceof Error ? error.message : "Unknown error"
+  }, { status: 500 })
+}
+```
+
+---
+
+## 日志规范
+
+### Console 日志
+
+```typescript
+// ✅ 使用表情符号和清晰的前缀
+console.log("✅ 操作成功")
+console.warn("⚠️ 警告信息")
+console.error("❌ 错误信息")
+console.log("🔍 调试信息")
+
+// ✅ 使用 console.table 显示结构化数据
+console.table({
+  "用户": "张三",
+  "套餐": "Professional",
+  "状态": "active"
+})
+```
+
+### 生产环境
+
+```typescript
+// ✅ 生产环境减少日志
+if (process.env.NODE_ENV === "development") {
+  console.log("🔍 调试信息:", data)
+}
+```
+
+---
+
+## 环境变量
+
+### .env 文件
+
+```bash
+# Shopify 配置
+SHOPIFY_API_KEY=your_api_key
+SHOPIFY_API_SECRET=your_api_secret
+
+# 数据库
+DATABASE_URL=file:./dev.sqlite
+
+# 应用配置
+APP_NAME=SmartSEO Pro
+APP_ENV=development
+```
+
+### 使用环境变量
+
+```typescript
+// ✅ 使用 process.env
+const apiKey = process.env.SHOPIFY_API_KEY
+
+// ✅ 提供默认值
+const appName = process.env.APP_NAME || "My App"
+```
+
+---
+
+## 测试规范
+
+### 单元测试
+
+```typescript
+// ✅ 测试文件放在 __tests__ 文件夹
+// app/services/__tests__/subscription.test.ts
+
+import { describe, it, expect } from "@jest/globals"
+import { createSubscription } from "../subscription.server"
+
+describe("createSubscription", () => {
+  it("should create a subscription", async () => {
+    const result = await createSubscription({
+      userId: "user-1",
+      planType: PlanType.PROFESSIONAL,
+      billingCycle: BillingCycle.MONTHLY
+    })
+
+    expect(result.planType).toBe(PlanType.PROFESSIONAL)
+  })
+})
+```
+
+---
+
+## Git 提交规范
+
+### Commit Message
+
+```bash
+# ✅ 使用语义化提交
+feat: 添加订阅系统
+fix: 修复权限检查逻辑
+docs: 更新 README
+style: 格式化代码
+refactor: 重构用户服务
+test: 添加订阅测试
+chore: 更新依赖
+
+# ❌ 避免
+修改
+update
+fix bug
+```
+
+---
+
+## 性能优化
+
+### React 优化
+
+```typescript
+// ✅ 使用 useMemo 缓存计算结果
+const expensiveValue = useMemo(() => {
+  return computeExpensiveValue(data)
+}, [data])
+
+// ✅ 使用 useCallback 缓存函数
+const handleClick = useCallback(() => {
+  doSomething(value)
+}, [value])
+
+// ✅ 使用 useRef 避免重复初始化
+const isInitialized = useRef(false)
+```
+
+### 数据库优化
+
+```typescript
+// ✅ 使用 select 只查询需要的字段
+const user = await prisma.user.findUnique({
+  where: { id: userId },
+  select: {
+    id: true,
+    name: true,
+    email: true
+  }
+})
+
+// ✅ 使用 include 预加载关联数据
+const user = await prisma.user.findUnique({
+  where: { id: userId },
+  include: {
+    subscription: true
+  }
+})
+```
+
+---
+
+## 安全规范
+
+### 输入验证
+
+```typescript
+// ✅ 验证用户输入
+if (!planKey || !isValidPlanType(planKey)) {
+  return Response.json({
+    success: false,
+    error: "Invalid plan type"
+  }, { status: 400 })
+}
+```
+
+### 权限验证
+
+```typescript
+// ✅ 前端 + 后端双重验证
+// 前端：禁用按钮
+<Button disabled={!hasAccess(Feature.AI_SUGGESTIONS)}>
+  AI 优化
+</Button>
+
+// 后端：API 验证
+if (!hasFeatureAccess(currentPlan, Feature.AI_SUGGESTIONS)) {
+  return Response.json({ error: "Forbidden" }, { status: 403 })
+}
+```
+
+---
+
+## 最佳实践总结
+
+### ✅ DO（推荐）
+
+1. 使用 TypeScript 类型定义
+2. 使用 Tailwind CSS 样式
+3. 使用 MobX observer 包裹响应式组件
+4. 使用 Toast 替代 alert
+5. 使用 Modal 替代 confirm
+6. 前后端双重权限验证
+7. 使用语义化的组件和函数名
+8. 添加详细的日志输出
+9. 使用 try-catch 捕获错误
+10. 编写单元测试
+
+### ❌ DON'T（避免）
+
+1. 不使用 any 类型
+2. 不使用 JSX 内联样式
+3. 不使用 alert/confirm
+4. 不使用类组件
+5. 不使用 enum
+6. 不在语句结尾加分号
+7. 不跳过前端权限检查
+8. 不跳过后端权限验证
+9. 不提交 .env 文件
+10. 不使用单引号
+
+---
+
+## 常用命令
+
+```bash
+# 开发
+npm run dev
+
+# 构建
+npm run build
+
+# 类型检查
+npm run typecheck
+
+# Lint
+npm run lint
+
+# 数据库迁移
+npx prisma migrate dev
+
+# 部署 Theme Extension
+shopify app deploy --force
+
+# 测试
+npm run test
+```
+
+---
+
+## 项目特定规则
+
+### 多语言
+
+- 所有用户可见文本必须使用 i18n
+- 翻译键使用点号分隔
+- 中英文翻译必须同步更新
+
+### 订阅系统
+
+- 所有付费功能必须检查权限
+- 配额消耗必须记录
+- 订阅状态变更必须记录分析事件
+
+### Theme App Extension
+
+- 部署后必须在主题编辑器中启用
+- 检测逻辑必须区分"不存在"和"被禁用"
+- 提供详细的调试日志
+
+### 文档管理
+
+- ✅ 所有文档必须放在 `docs/` 目录中
+- ✅ 文档命名使用大写字母和下划线（如 `SUBSCRIPTION_SYSTEM.md`）
+- ❌ 不要在项目根目录创建文档文件
+- ❌ 不要创建重复或冗余的文档
+- ❌ 不要创建低质量或漏洞修复报告的文档
+
+```bash
+# ✅ 正确的文档路径
+docs/SUBSCRIPTION_SYSTEM.md
+docs/API_GUIDE.md
+docs/DEPLOYMENT.md
+
+# ❌ 错误的文档路径
+SUBSCRIPTION_SYSTEM.md
+API_GUIDE.md
+README_EXTRA.md
+```
+
+---
+
+## 参考文档
+
+- [Shopify App 文档](https://shopify.dev/docs/apps)
+- [React Router v7 文档](https://reactrouter.com/en/main)
+- [Polaris 组件库](https://polaris.shopify.com/)
+- [MobX 文档](https://mobx.js.org/)
+- [Prisma 文档](https://www.prisma.io/docs)
+
+---
+
+**遵循这些规则，保持代码一致性和高质量！** 🚀
+

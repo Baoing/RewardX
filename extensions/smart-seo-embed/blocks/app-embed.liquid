@@ -1,0 +1,28 @@
+{%- comment -%}
+  SmartSEO Theme App Extension
+  Automatically injected into the theme by Shopify
+{%- endcomment -%}
+
+{%- liquid
+  assign block_id = section.id | append: '--' | append: block.id
+-%}
+
+<!-- SmartSEO: This page is optimized by SmartSEO App -->
+
+<script type="application/json" id="smartseo-config-{{ block_id }}">
+  {
+    "shop": "{{ shop.permanent_domain }}",
+    "pageType": "{{ request.page_type }}",
+    "locale": "{{ request.locale.iso_code }}",
+    "currency": "{{ cart.currency.iso_code }}"
+  }
+</script>
+
+{% schema %}
+{
+  "name": "SmartSEO App Embed",
+  "target": "body",
+  "javascript": "app-embed.js",
+  "settings": []
+}
+{% endschema %}

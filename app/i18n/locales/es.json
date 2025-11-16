@@ -1,0 +1,51 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "settings": "Configuración"
+  },
+  "home": {
+    "welcome": "Hola {{userName}} 👋, bienvenido a {{appName}}",
+    "welcomeMessage": "Su aplicación Shopify se ha instalado y está funcionando correctamente"
+  },
+  "shopInfo": {
+    "title": "Información de la tienda",
+    "devShop": "Tienda de desarrollo",
+    "name": "Nombre de la tienda",
+    "domain": "Dominio",
+    "email": "Correo electrónico",
+    "plan": "Plan",
+    "currency": "Moneda",
+    "timezone": "Zona horaria"
+  },
+  "userInfo": {
+    "title": "Información del usuario",
+    "devShop": "Tienda de desarrollo",
+    "trial": "En prueba",
+    "active": "Activo",
+    "shopInfo": "Información de la tienda",
+    "shopName": "Nombre de la tienda",
+    "domain": "Dominio",
+    "email": "Correo electrónico",
+    "plan": "Plan",
+    "geography": "Geografía",
+    "country": "País",
+    "province": "Provincia/Estado",
+    "city": "Ciudad",
+    "timezone": "Zona horaria",
+    "currencyAndLanguage": "Moneda e idioma",
+    "currency": "Moneda",
+    "appLanguage": "Idioma de la aplicación",
+    "theme": "Tema",
+    "notifications": "Notificaciones",
+    "enabled": "Activado",
+    "disabled": "Desactivado",
+    "metadata": "Metadatos de la cuenta",
+    "installedAt": "Fecha de instalación",
+    "lastLogin": "Último inicio de sesión",
+    "trialEnds": "Fin de la prueba"
+  },
+  "language": {
+    "switch": "Cambiar idioma",
+    "selectLanguage": "Seleccionar idioma"
+  }
+}

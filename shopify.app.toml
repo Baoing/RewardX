@@ -1,0 +1,33 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "40572ca771d68b503541a8837c8b24e0"
+name = "SmartSEO"
+application_url = "https://intersection-storage-birth-segments.trycloudflare.com"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+
+[webhooks]
+api_version = "2026-01"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/webhooks/app/uninstalled"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/scopes_update" ]
+  uri = "/webhooks/app/scopes_update"
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+# 基础权限配置 - 根据需要调整
+# write_themes: 用于检测和自动启用 App Embed
+scopes = "read_products,write_products,read_customers,read_orders,read_content,read_themes,write_themes,read_locales"
+
+[auth]
+redirect_urls = [ 
+  "https://intersection-storage-birth-segments.trycloudflare.com/api/auth",
+  "https://intersection-storage-birth-segments.trycloudflare.com/auth/callback"
+]
+

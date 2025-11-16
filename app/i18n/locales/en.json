@@ -1,0 +1,229 @@
+{
+  "common": {
+    "loading": "Loading..."
+  },
+  "nav": {
+    "home": "Home",
+    "billing": "Billing",
+    "settings": "Settings"
+  },
+  "home": {
+    "welcome": "Hi {{userName}} 👋, welcome to {{appName}}",
+    "welcomeMessage": "Your Shopify app is successfully installed and running"
+  },
+  "shopInfo": {
+    "title": "Shop Information",
+    "devShop": "Development Shop",
+    "name": "Shop Name",
+    "domain": "Domain",
+    "email": "Email",
+    "plan": "Plan",
+    "currency": "Currency",
+    "timezone": "Timezone"
+  },
+  "userInfo": {
+    "title": "User Information",
+    "devShop": "Development Shop",
+    "trial": "Trial",
+    "active": "Active",
+    "shopInfo": "Shop Information",
+    "shopName": "Shop Name",
+    "domain": "Domain",
+    "email": "Email",
+    "plan": "Plan",
+    "geography": "Geography",
+    "country": "Country",
+    "province": "Province/State",
+    "city": "City",
+    "timezone": "Timezone",
+    "currencyAndLanguage": "Currency and Language",
+    "currency": "Currency",
+    "appLanguage": "App Language",
+    "theme": "Theme",
+    "notifications": "Notifications",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "metadata": "Account Metadata",
+    "installedAt": "Installed At",
+    "lastLogin": "Last Login",
+    "trialEnds": "Trial Ends"
+  },
+  "language": {
+    "switch": "Switch language",
+    "selectLanguage": "Select language"
+  },
+  "appEmbed": {
+    "title": "Enable App Embed for Full Functionality",
+    "description": "To make the app work properly on your storefront, click the button below to open the theme editor, enable the app embed, and save.",
+    "manualEnableButton": "Go to Theme Editor",
+    "dismissButton": "Remind Me Later"
+  },
+  "settings": {
+    "title": "Settings",
+    "general": {
+      "title": "General Settings",
+      "description": "Manage your app preferences",
+      "language": "Language",
+      "languageDescription": "Choose your app interface language",
+      "theme": "Theme",
+      "themeDescription": "Choose your app interface theme"
+    },
+    "theme": {
+      "light": "Light",
+      "dark": "Dark",
+      "auto": "Auto"
+    },
+    "notifications": {
+      "title": "Notification Settings",
+      "description": "Manage your notification preferences",
+      "enabled": "Enable notifications",
+      "enabledDescription": "Receive important updates and notifications"
+    },
+    "help": {
+      "title": "Need Help?",
+      "description": "Check out our documentation for more information and guides",
+      "viewDocs": "View Documentation"
+    }
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "moreHelp": "Need more help?",
+    "viewDocs": "View Documentation",
+    "items": [
+      {
+        "question": "How do I get started with this app?",
+        "answer": "After installing the app, basic settings are automatically configured. You can customize language and other preferences in the settings page."
+      },
+      {
+        "question": "Which languages are supported?",
+        "answer": "The app supports 20 languages including Simplified Chinese, Traditional Chinese, English, Japanese, Korean, French, German, Spanish, and more. You can switch languages anytime in settings."
+      },
+      {
+        "question": "How do I change the app interface language?",
+        "answer": "Click the language switcher in the top right corner, or go to the Settings page to select your preferred language. Your choice will be automatically saved."
+      },
+      {
+        "question": "Is my data secure?",
+        "answer": "Yes, all data is securely stored within your Shopify store. We follow Shopify's security standards and best practices."
+      },
+      {
+        "question": "How do I contact technical support?",
+        "answer": "You can get support through the in-app help documentation, or visit our official documentation website for detailed guides and tutorials."
+      }
+    ]
+  },
+  "permissions": {
+    "upgradeRequired": "Upgrade required",
+    "upgradePlan": "Upgrade plan",
+    "featureRequiresPlan": "{{feature}} feature requires {{plan}} plan",
+    "currentPlanInsufficient": "Your current plan cannot use this feature"
+  },
+  "features": {
+    "basic_tracking": "Basic tracking",
+    "manual_optimization": "Manual optimization",
+    "basic_analytics": "Basic analytics",
+    "auto_meta": "Auto meta tags",
+    "structured_data": "Structured data",
+    "image_alt": "Image alt optimization",
+    "sitemap": "Smart sitemap",
+    "ai_suggestions": "AI suggestions",
+    "bulk_tools": "Bulk tools",
+    "advanced_schema": "Advanced schema",
+    "analytics_insights": "Analytics insights",
+    "priority_support": "Priority support",
+    "unlimited_quota": "Unlimited quota",
+    "custom_integration": "Custom integration",
+    "api_access": "API access",
+    "dedicated_support": "Dedicated support",
+    "onboarding": "Onboarding",
+    "sla": "SLA"
+  },
+  "billing": {
+    "title": "Plans & Billing",
+    "payMonthly": "Pay monthly",
+    "payYearly": "Pay annually",
+    "savePercent": "Save {{percent}}",
+    "saveAmount": "Save {{percent}}%",
+    "month": "month",
+    "year": "year",
+    "quota": "{{count}} optimization quota",
+    "perMonth": "per month",
+    "mostPopular": "Most Popular",
+    "currentPlan": "Current Plan",
+    "startTrial": "Start 7-day free trial",
+    "switchToFree": "Switch to Free",
+    "chooseThisPlan": "Choose this plan",
+    "cancelAndSwitchToFree": "Cancel subscription",
+    "confirmCancelMessage": "Are you sure you want to cancel your current subscription and switch to the free plan? Your subscription will be cancelled immediately.",
+    "downgradeModal": {
+      "title": "Confirm downgrade to free plan",
+      "message": "You are about to downgrade from {{plan}} plan to the free plan",
+      "consequences": "After downgrading:",
+      "consequence1": "You will immediately lose access to all paid features",
+      "consequence2": "Your quota will be reduced to the free plan limit (20/month)",
+      "consequence3": "Your current subscription will be cancelled immediately with no further charges",
+      "warning": "⚠️ This action cannot be undone. You will not be able to restore your current quota usage after downgrading",
+      "confirm": "Confirm downgrade",
+      "cancel": "Keep current plan"
+    },
+    "subscriptionSuccess": "Subscription successful!",
+    "subscriptionError": "Subscription failed: {{error}}",
+    "downgradeSuccess": "Successfully switched to free plan",
+    "downgradeError": "Downgrade failed: {{error}}",
+    "requestError": "Request failed, please try again",
+    "additionalQuota": "$0.05 per additional quota",
+    "features": "Features",
+    "needMoreQuota": "Need more quota?",
+    "contactUs": "Contact us for enterprise custom solutions",
+    "plans": {
+      "free": {
+        "name": "Free",
+        "description": "Perfect for testing and small stores",
+        "features": {
+          "basic_tracking": "Basic tracking features",
+          "manual_optimization": "Manual optimization tools",
+          "basic_analytics": "Basic analytics"
+        }
+      },
+      "starter": {
+        "name": "Starter",
+        "description": "All the basics for starting stores",
+        "featuresTitle": "All Free features, plus:",
+        "features": {
+          "all_free": "All Free features",
+          "auto_meta": "Auto Meta tags optimization",
+          "structured_data": "Structured data (Schema.org)",
+          "image_alt": "Image Alt text optimization",
+          "sitemap": "Smart sitemap generation"
+        }
+      },
+      "professional": {
+        "name": "Professional",
+        "description": "Perfect for growing professional sellers",
+        "featuresTitle": "All Starter features, plus:",
+        "features": {
+          "all_starter": "All Starter features",
+          "ai_suggestions": "AI content optimization suggestions",
+          "bulk_tools": "Bulk optimization tools",
+          "advanced_schema": "Advanced Schema templates",
+          "analytics_insights": "Deep analytics & insights",
+          "priority_support": "Priority technical support"
+        }
+      },
+      "enterprise": {
+        "name": "Enterprise",
+        "description": "Designed for large merchants and agencies",
+        "featuresTitle": "All Professional features, plus:",
+        "features": {
+          "all_professional": "All Professional features",
+          "unlimited_quota": "Unlimited optimization quota",
+          "custom_integration": "Custom integration solutions",
+          "api_access": "Full API access",
+          "dedicated_support": "Dedicated account manager",
+          "onboarding": "Dedicated onboarding assistance",
+          "sla": "SLA guarantee"
+        }
+      }
+    }
+  }
+}

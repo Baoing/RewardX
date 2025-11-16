@@ -1,0 +1,229 @@
+{
+  "common": {
+    "loading": "加载中..."
+  },
+  "nav": {
+    "home": "首页",
+    "billing": "套餐",
+    "settings": "设置"
+  },
+  "home": {
+    "welcome": "Hi {{userName}} 👋, 欢迎使用 {{appName}}",
+    "welcomeMessage": "您的 Shopify 应用已成功安装并运行"
+  },
+  "shopInfo": {
+    "title": "店铺信息",
+    "devShop": "开发店铺",
+    "name": "店铺名称",
+    "domain": "域名",
+    "email": "邮箱",
+    "plan": "套餐",
+    "currency": "货币",
+    "timezone": "时区"
+  },
+  "userInfo": {
+    "title": "用户信息",
+    "devShop": "开发店铺",
+    "trial": "试用中",
+    "active": "活跃",
+    "shopInfo": "店铺信息",
+    "shopName": "店铺名称",
+    "domain": "域名",
+    "email": "邮箱",
+    "plan": "套餐",
+    "geography": "地理位置",
+    "country": "国家",
+    "province": "省份/州",
+    "city": "城市",
+    "timezone": "时区",
+    "currencyAndLanguage": "货币和语言",
+    "currency": "货币",
+    "appLanguage": "应用语言",
+    "theme": "主题",
+    "notifications": "通知",
+    "enabled": "开启",
+    "disabled": "关闭",
+    "metadata": "账户元数据",
+    "installedAt": "安装时间",
+    "lastLogin": "最后登录",
+    "trialEnds": "试用结束"
+  },
+  "language": {
+    "switch": "切换语言",
+    "selectLanguage": "选择语言"
+  },
+  "appEmbed": {
+    "title": "启用应用嵌入以获得完整功能",
+    "description": "为了让应用在您的店铺前台正常工作，请点击下方按钮前往主题编辑器启用应用嵌入，然后保存即可。",
+    "manualEnableButton": "前往主题编辑器",
+    "dismissButton": "稍后提醒我"
+  },
+  "settings": {
+    "title": "设置",
+    "general": {
+      "title": "常规设置",
+      "description": "管理您的应用偏好设置",
+      "language": "语言",
+      "languageDescription": "选择应用界面显示语言",
+      "theme": "主题",
+      "themeDescription": "选择应用界面主题"
+    },
+    "theme": {
+      "light": "浅色",
+      "dark": "深色",
+      "auto": "跟随系统"
+    },
+    "notifications": {
+      "title": "通知设置",
+      "description": "管理应用通知偏好",
+      "enabled": "启用通知",
+      "enabledDescription": "接收应用重要通知和更新"
+    },
+    "help": {
+      "title": "需要帮助？",
+      "description": "查看我们的文档了解更多信息和使用指南",
+      "viewDocs": "查看文档"
+    }
+  },
+  "faq": {
+    "title": "常见问题解答",
+    "moreHelp": "需要更多帮助？",
+    "viewDocs": "查看文档",
+    "items": [
+      {
+        "question": "如何开始使用这个应用？",
+        "answer": "安装应用后，系统会自动配置基本设置。您可以在设置页面中自定义语言和其他偏好设置。"
+      },
+      {
+        "question": "支持哪些语言？",
+        "answer": "应用支持 20 种语言，包括简体中文、繁体中文、英语、日语、韩语、法语、德语、西班牙语等。您可以在设置中随时切换。"
+      },
+      {
+        "question": "如何切换应用界面语言？",
+        "answer": "点击右上角的语言切换器，或前往\"设置\"页面选择您喜欢的语言。您的选择会自动保存。"
+      },
+      {
+        "question": "数据是否安全？",
+        "answer": "是的，所有数据都安全存储在您的 Shopify 店铺中。我们遵循 Shopify 的安全标准和最佳实践。"
+      },
+      {
+        "question": "如何联系技术支持？",
+        "answer": "您可以通过应用内的帮助文档获取支持，或访问我们的官方文档网站获取详细指南和教程。"
+      }
+    ]
+  },
+  "permissions": {
+    "upgradeRequired": "需要升级套餐",
+    "upgradePlan": "升级套餐",
+    "featureRequiresPlan": "{{feature}} 功能需要 {{plan}} 套餐",
+    "currentPlanInsufficient": "您当前的套餐无法使用此功能"
+  },
+  "features": {
+    "basic_tracking": "基础追踪",
+    "manual_optimization": "手动优化",
+    "basic_analytics": "基础分析",
+    "auto_meta": "自动 Meta 标签",
+    "structured_data": "结构化数据",
+    "image_alt": "图片 Alt 优化",
+    "sitemap": "智能站点地图",
+    "ai_suggestions": "AI 优化建议",
+    "bulk_tools": "批量优化工具",
+    "advanced_schema": "高级 Schema",
+    "analytics_insights": "深度分析",
+    "priority_support": "优先支持",
+    "unlimited_quota": "无限配额",
+    "custom_integration": "定制集成",
+    "api_access": "API 访问",
+    "dedicated_support": "专属支持",
+    "onboarding": "专人部署",
+    "sla": "SLA 保障"
+  },
+  "billing": {
+    "title": "套餐与计费",
+    "payMonthly": "按月付费",
+    "payYearly": "按年付费",
+    "savePercent": "节省 {{percent}}",
+    "saveAmount": "节省 {{percent}}%",
+    "month": "月",
+    "year": "年",
+    "quota": "{{count}} 次优化配额",
+    "perMonth": "每月",
+    "mostPopular": "最受欢迎",
+    "currentPlan": "当前套餐",
+    "startTrial": "开始 7 天免费试用",
+    "switchToFree": "切换到免费套餐",
+    "chooseThisPlan": "选择此套餐",
+    "cancelAndSwitchToFree": "取消订阅",
+    "confirmCancelMessage": "确定要取消当前订阅并切换到免费套餐吗？订阅将立即取消。",
+    "downgradeModal": {
+      "title": "确认降级到免费套餐",
+      "message": "您即将从 {{plan}} 套餐降级到免费套餐",
+      "consequences": "降级后将会：",
+      "consequence1": "立即失去所有付费功能",
+      "consequence2": "配额限制降至免费套餐标准（20次/月）",
+      "consequence3": "当前订阅将立即取消，不会产生新的费用",
+      "warning": "⚠️ 此操作无法撤销，降级后将无法恢复当前的配额使用情况",
+      "confirm": "确认降级",
+      "cancel": "保持当前套餐"
+    },
+    "subscriptionSuccess": "订阅成功！",
+    "subscriptionError": "订阅失败：{{error}}",
+    "downgradeSuccess": "已成功切换到免费套餐",
+    "downgradeError": "降级失败：{{error}}",
+    "requestError": "请求失败，请重试",
+    "additionalQuota": "$0.05 每次额外配额",
+    "features": "功能特性",
+    "needMoreQuota": "需要更多配额？",
+    "contactUs": "联系我们获取企业定制方案",
+    "plans": {
+      "free": {
+        "name": "Free",
+        "description": "适合测试和小型店铺",
+        "features": {
+          "basic_tracking": "基础追踪功能",
+          "manual_optimization": "手动优化工具",
+          "basic_analytics": "基础数据分析"
+        }
+      },
+      "starter": {
+        "name": "Starter",
+        "description": "适合刚起步的店铺",
+        "featuresTitle": "所有 Free 功能，加上：",
+        "features": {
+          "all_free": "所有 Free 功能",
+          "auto_meta": "自动 Meta 标签优化",
+          "structured_data": "结构化数据（Schema.org）",
+          "image_alt": "图片 Alt 文本优化",
+          "sitemap": "智能站点地图生成"
+        }
+      },
+      "professional": {
+        "name": "Professional",
+        "description": "适合成长中的专业卖家",
+        "featuresTitle": "所有 Starter 功能，加上：",
+        "features": {
+          "all_starter": "所有 Starter 功能",
+          "ai_suggestions": "AI 内容优化建议",
+          "bulk_tools": "批量优化工具",
+          "advanced_schema": "高级 Schema 模板",
+          "analytics_insights": "深度分析和洞察",
+          "priority_support": "优先技术支持"
+        }
+      },
+      "enterprise": {
+        "name": "Enterprise",
+        "description": "适合大型商家和代理商",
+        "featuresTitle": "所有 Professional 功能，加上：",
+        "features": {
+          "all_professional": "所有 Professional 功能",
+          "unlimited_quota": "无限优化配额",
+          "custom_integration": "定制集成方案",
+          "api_access": "完整 API 访问",
+          "dedicated_support": "专属客户经理",
+          "onboarding": "专人协助部署",
+          "sla": "SLA 服务保障"
+        }
+      }
+    }
+  }
+}

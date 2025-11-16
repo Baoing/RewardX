@@ -1,0 +1,51 @@
+{
+  "nav": {
+    "home": "홈",
+    "settings": "설정"
+  },
+  "home": {
+    "welcome": "Hi {{userName}} 👋, {{appName}}에 오신 것을 환영합니다",
+    "welcomeMessage": "Shopify 앱이 성공적으로 설치되어 실행 중입니다"
+  },
+  "shopInfo": {
+    "title": "상점 정보",
+    "devShop": "개발 상점",
+    "name": "상점 이름",
+    "domain": "도메인",
+    "email": "이메일",
+    "plan": "플랜",
+    "currency": "통화",
+    "timezone": "시간대"
+  },
+  "userInfo": {
+    "title": "사용자 정보",
+    "devShop": "개발 상점",
+    "trial": "체험 중",
+    "active": "활성",
+    "shopInfo": "상점 정보",
+    "shopName": "상점 이름",
+    "domain": "도메인",
+    "email": "이메일",
+    "plan": "플랜",
+    "geography": "지리 정보",
+    "country": "국가",
+    "province": "주/도",
+    "city": "도시",
+    "timezone": "시간대",
+    "currencyAndLanguage": "통화 및 언어",
+    "currency": "통화",
+    "appLanguage": "앱 언어",
+    "theme": "테마",
+    "notifications": "알림",
+    "enabled": "활성화",
+    "disabled": "비활성화",
+    "metadata": "계정 메타데이터",
+    "installedAt": "설치 시간",
+    "lastLogin": "마지막 로그인",
+    "trialEnds": "체험 종료"
+  },
+  "language": {
+    "switch": "언어 전환",
+    "selectLanguage": "언어 선택"
+  }
+}
