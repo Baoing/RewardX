@@ -4,6 +4,7 @@
   },
   "nav": {
     "home": "Home",
+    "campaigns": "Campaigns",
     "billing": "Billing",
     "settings": "Settings"
   },

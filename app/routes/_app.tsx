@@ -33,7 +33,7 @@ import { authenticate } from "../shopify.server"
 import { getShopInfo } from "../utils/shop.server"
 import { upsertUser } from "../utils/user.server"
 import { getCurrentSubscription } from "../services/subscription.server"
-import { StoreContext, userInfoStore, commonStore, useCommonStore } from "../stores"
+import { StoreContext, userInfoStore, commonStore, campaignStore, useCommonStore } from "../stores"
 import { LoadingScreen } from "../components/LoadingScreen"
 import "../i18n/config"
 
@@ -46,10 +46,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   // 获取店铺信息（包含 storefront 语言）
   let shopInfo = await getShopInfo(admin)
-  
+
   // 创建或更新用户，传递 Partner locale
   const userInfo = await upsertUser(session.shop, shopInfo, partnerLocale)
-  
+
   // 降级策略：如果 API 获取失败，从数据库恢复
   if (!shopInfo && userInfo) {
     const { userToShopInfo } = await import("../utils/user.server")
@@ -78,7 +78,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   })
 
   // eslint-disable-next-line no-undef
-  return { 
+  return {
     apiKey: process.env.SHOPIFY_API_KEY || "",
     shopInfo,
     userInfo: {
@@ -98,9 +98,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
  * 返回 false = 不重新加载（使用缓存数据）
  * 返回 true = 重新加载
  */
-export function shouldRevalidate({ 
-  currentUrl, 
-  nextUrl, 
+export function shouldRevalidate({
+  currentUrl,
+  nextUrl,
   defaultShouldRevalidate,
   formAction
 }: ShouldRevalidateFunctionArgs) {
@@ -117,8 +117,8 @@ export function shouldRevalidate({
   }
 
   // 如果是在应用内导航（如首页 -> 设置），不重新加载
-  if (currentUrl.pathname !== nextUrl.pathname && 
-      currentUrl.pathname.startsWith("/app") && 
+  if (currentUrl.pathname !== nextUrl.pathname &&
+      currentUrl.pathname.startsWith("/app") &&
       nextUrl.pathname.startsWith("/app")) {
     console.log("⚡️ 应用内导航，使用缓存数据")
     return false
@@ -168,7 +168,7 @@ function AppContent() {
   // 使用 store 的初始化状态，避免重复初始化
   if (!commonStore.isLanguageInitialized && userInfo && partnerLocale) {
     let targetLanguage: string = "en"
-    
+
     if (userInfo.appLanguage) {
       targetLanguage = userInfo.appLanguage
       console.log("📝 使用用户设置的语言:", userInfo.appLanguage)
@@ -189,7 +189,7 @@ function AppContent() {
     if (!userInfoStore.isInitialized && userInfo) {
       userInfoStore.setUserInfo(userInfo)
     }
-    
+
     // 检查 ShopInfo 是否已初始化
     if (!commonStore.isShopInfoInitialized && shopInfo) {
       commonStore.setShopInfo(shopInfo)
@@ -201,12 +201,12 @@ function AppContent() {
     if (shopInfo) {
       console.log("🏪 Shop Info:", shopInfo.name, shopInfo.myshopifyDomain)
     }
-    
+
     if (userInfo) {
       console.log("👤 User Info:", userInfo.shopName || userInfo.shop)
       console.log("💾 Saved App Language:", userInfo.appLanguage || "未设置")
     }
-    
+
     console.log("🌐 Partner Locale:", partnerLocale)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // 只执行一次
@@ -223,13 +223,13 @@ const PolarisProvider = observer(() => {
   const { t } = useTranslation()
   const commonStore = useCommonStore()
   const polarisRenderCount = useRef(0)
-  
+
   // 追踪渲染次数
   useEffect(() => {
     polarisRenderCount.current += 1
     console.log(`🎨 PolarisProvider 渲染次数: ${polarisRenderCount.current}, 当前语言: ${commonStore.currentLanguage}`)
   })
-  
+
   // 根据当前语言选择 Polaris 翻译（响应式）
   const polarisI18n = useMemo(() => {
     return polarisTranslations[commonStore.currentLanguage] || enPolaris
@@ -247,6 +247,7 @@ const PolarisProvider = observer(() => {
         // 应用主内容
         <>
           <s-app-nav>
+            <s-link href="/campaigns">{t("nav.campaigns")}</s-link>
             <s-link href="/billing">{t("nav.billing")}</s-link>
             <s-link href="/settings">{t("nav.settings")}</s-link>
           </s-app-nav>
@@ -270,7 +271,7 @@ export default function App() {
   }, [i18n])
 
   return (
-    <StoreContext.Provider value={{ userInfoStore, commonStore }}>
+    <StoreContext.Provider value={{ userInfoStore, commonStore, campaignStore }}>
       <AppContent />
     </StoreContext.Provider>
   )
