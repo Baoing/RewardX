@@ -1,8 +1,8 @@
 .campaignItem {
-  @apply flex flex-col lg:flex-row items-start lg:items-center gap-4 p-4;
   @apply border-b border-gray-200 last:border-b-0;
   @apply hover:bg-gray-50 transition-colors;
 
+  // 移动端布局
   &__info {
     @apply flex items-start gap-4 flex-1 min-w-0;
   }
@@ -11,7 +11,7 @@
     @apply flex-shrink-0;
 
     .iconWrapper {
-      @apply w-16 h-16 lg:w-20 lg:h-20;
+      @apply w-16 h-16;
       @apply flex items-center justify-center;
       @apply bg-gradient-to-br from-purple-50 to-blue-50;
       @apply rounded-xl border border-gray-200;
@@ -27,36 +27,12 @@
     }
   }
 
-  // 移动端统计数据 - 2x2 网格布局
+  // 移动端统计数据 - 4列网格布局
   &__statisticsMobile {
     @apply w-full grid grid-cols-4 gap-3 px-3 py-2 bg-gray-50 rounded-lg;
 
     .statItem {
       @apply flex flex-col items-center text-center gap-0.5;
-    }
-  }
-
-  // PC端统计数据
-  &__statistics {
-    @apply flex-shrink-0 gap-6;
-
-    .statisticItem {
-      @apply flex flex-col items-center text-center gap-1 min-w-[80px];
-    }
-  }
-}
-
-// 移动端适配
-@media (max-width: 1024px) {
-  .campaignItem {
-    @apply flex-col;
-
-    &__info {
-      @apply w-full;
-    }
-
-    &__statistics {
-      @apply w-full;
     }
   }
 }
