@@ -39,8 +39,7 @@ export interface Campaign {
   maxPlaysPerCustomer?: number
   startAt?: string
   endAt?: string
-  status: string
-  isActive: boolean
+  isActive: boolean  // ✅ 只保留 isActive 标记是否发布
   gameConfig: string
   totalPlays: number
   totalWins: number
@@ -72,8 +71,7 @@ export interface CreateCampaignRequest {
 export interface UpdateCampaignRequest {
   name?: string
   description?: string
-  status?: string
-  isActive?: boolean
+  isActive?: boolean  // ✅ 只保留 isActive
   minOrderAmount?: number
   maxPlaysPerCustomer?: number
   startAt?: string

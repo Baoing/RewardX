@@ -20,10 +20,10 @@ import { authenticate } from "@/shopify.server"
 // ✅ 添加 loader 进行 Shopify 认证
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   console.log("📍 Campaign Detail Loader called, params:", params)
-  
+
   // Shopify 认证
   await authenticate.admin(request)
-  
+
   // 返回路由参数（实际数据由前端 MobX store 加载）
   return { campaignId: params.id }
 }
@@ -34,12 +34,8 @@ const CampaignDetailPage = observer(() => {
   const campaignStore = useCampaignStore()
   const campaign = campaignStore.currentCampaign
 
-  console.log("🎯 CampaignDetailPage rendered, id:", id, "campaign:", campaign?.id)
-
   useEffect(() => {
-    console.log("🔥 useEffect triggered, id:", id)
     if (id) {
-      console.log("🔄 Campaign ID changed, fetching new data:", id)
       // 清空当前数据，避免显示旧数据
       campaignStore.setCurrentCampaign(null)
       campaignStore.setEntries([])
@@ -57,23 +53,11 @@ const CampaignDetailPage = observer(() => {
     }
   }, [id, campaignStore])
 
-  const getStatusBadge = (status: string, isActive: boolean) => {
-    if (!isActive) {
-      return <Badge tone="warning">Inactive</Badge>
-    }
-
-    switch (status) {
-      case "active":
-        return <Badge tone="success">Active</Badge>
-      case "draft":
-        return <Badge>Draft</Badge>
-      case "paused":
-        return <Badge tone="warning">Paused</Badge>
-      case "ended":
-        return <Badge tone="info">Ended</Badge>
-      default:
-        return <Badge>{status}</Badge>
-    }
+  // ✅ 简化：只根据 isActive 显示状态
+  const getStatusBadge = (isActive: boolean) => {
+    return isActive
+      ? <Badge tone="success">Active</Badge>
+      : <Badge tone="warning">Inactive</Badge>
   }
 
   const getGameTypeName = (gameType: string) => {
@@ -96,15 +80,7 @@ const CampaignDetailPage = observer(() => {
     return new Date(dateString).toLocaleString()
   }
 
-  const handleUpdateStatus = async (newStatus: string) => {
-    if (!id) return
-
-    const confirmed = window.confirm(`Are you sure you want to change status to ${newStatus}?`)
-    if (!confirmed) return
-
-    await campaignStore.updateCampaign(id, { status: newStatus })
-  }
-
+  // ✅ 移除 handleUpdateStatus，只保留 handleToggleActive
   const handleToggleActive = async () => {
     if (!id || !campaign) return
 
@@ -197,7 +173,7 @@ const CampaignDetailPage = observer(() => {
                   <Text as="h2" variant="headingMd">
                     Campaign Information
                   </Text>
-                  {getStatusBadge(campaign.status, campaign.isActive)}
+                  {getStatusBadge(campaign.isActive)}
                 </InlineStack>
 
                 <Divider />

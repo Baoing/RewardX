@@ -49,23 +49,11 @@ export default function CampaignItem({
     })
   }
 
-  const getStatusBadge = (status: string, isActive: boolean) => {
-    if (!isActive) {
-      return <Badge tone="attention">Inactive</Badge>
-    }
-
-    switch (status) {
-    case "active":
-      return <Badge tone="success">Active</Badge>
-    case "draft":
-      return <Badge>Draft</Badge>
-    case "scheduled":
-      return <Badge tone="info">Scheduled</Badge>
-    case "archived":
-      return <Badge tone="critical">Archived</Badge>
-    default:
-      return <Badge>{status}</Badge>
-    }
+  // ✅ 简化：只根据 isActive 显示状态
+  const getStatusBadge = (isActive: boolean) => {
+    return isActive
+      ? <Badge tone="success">Active</Badge>
+      : <Badge tone="warning">Inactive</Badge>
   }
 
   const getGameTypeLabel = (gameType: string) => {
@@ -135,7 +123,7 @@ export default function CampaignItem({
              {/* Switch 替换 Badge 和按钮 */}
 
                <div className="flex items-center gap-2">
-                 {/*{getStatusBadge(campaign.status, campaign.isActive)}*/}
+                 {getStatusBadge(campaign.isActive)}
                  <Tooltip content={campaign.isActive ? "Active - Click to deactivate" : "Inactive - Click to activate"}>
                    <Switch
                      checked={campaign.isActive}
