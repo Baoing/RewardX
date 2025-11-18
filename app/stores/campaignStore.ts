@@ -253,20 +253,13 @@ class CampaignStore {
     this.isInitialized = false
   }
 
+  // ✅ 简化：只基于 isActive 筛选
   get activeCampaigns() {
-    return this.campaigns.filter(c => c.isActive && c.status === "active")
+    return this.campaigns.filter(c => c.isActive)
   }
 
-  get draftCampaigns() {
-    return this.campaigns.filter(c => c.status === "draft")
-  }
-
-  get pausedCampaigns() {
-    return this.campaigns.filter(c => c.status === "paused")
-  }
-
-  get endedCampaigns() {
-    return this.campaigns.filter(c => c.status === "ended")
+  get inactiveCampaigns() {
+    return this.campaigns.filter(c => !c.isActive)
   }
 }
 

@@ -136,19 +136,7 @@ export default function CampaignItem({
             <Button
               variant="primary"
               size="slim"
-              onClick={() => {
-                console.log("🚀 Customize button clicked")
-                console.log("📦 Campaign ID:", campaign.id)
-                console.log("🔗 Target path:", `/campaigns/${campaign.id}`)
-                console.log("📍 Current location:", window.location.href)
-                
-                try {
-                  navigate(`/campaigns/${campaign.id}`)
-                  console.log("✅ navigate() called successfully")
-                } catch (error) {
-                  console.error("❌ navigate() failed:", error)
-                }
-              }}
+              onClick={() => navigate(`/campaigns/${campaign.id}`)}
             >
               Customize
             </Button>

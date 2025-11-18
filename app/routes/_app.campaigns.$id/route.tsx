@@ -17,10 +17,8 @@ import { observer } from "mobx-react-lite"
 import { useCampaignStore } from "@/stores"
 import { authenticate } from "@/shopify.server"
 
-// ✅ 添加 loader 进行 Shopify 认证
+// loader 进行 Shopify 认证
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  console.log("📍 Campaign Detail Loader called, params:", params)
-
   // Shopify 认证
   await authenticate.admin(request)
 
@@ -53,7 +51,7 @@ const CampaignDetailPage = observer(() => {
     }
   }, [id, campaignStore])
 
-  // ✅ 简化：只根据 isActive 显示状态
+  // 根据 isActive 显示状态
   const getStatusBadge = (isActive: boolean) => {
     return isActive
       ? <Badge tone="success">Active</Badge>
@@ -151,17 +149,6 @@ const CampaignDetailPage = observer(() => {
           content: campaign.isActive ? "Deactivate" : "Activate",
           onAction: handleToggleActive
         },
-        {
-          content: "View Analytics",
-          onAction: () => {
-            navigate(`/campaigns/${id}/analytics`)
-          }
-        },
-        {
-          content: "Delete",
-          destructive: true,
-          onAction: handleDelete
-        }
       ]}
     >
       <Layout>
@@ -234,35 +221,7 @@ const CampaignDetailPage = observer(() => {
                   </InlineStack>
                 </BlockStack>
 
-                <Divider />
-
-                <BlockStack gap="200">
-                  <Text as="h3" variant="headingSm">
-                    Status Actions
-                  </Text>
-                  <InlineStack gap="200">
-                    {campaign.status === "draft" && (
-                      <Button onClick={() => handleUpdateStatus("active")}>
-                        Publish Campaign
-                      </Button>
-                    )}
-                    {campaign.status === "active" && (
-                      <Button onClick={() => handleUpdateStatus("paused")}>
-                        Pause Campaign
-                      </Button>
-                    )}
-                    {campaign.status === "paused" && (
-                      <Button onClick={() => handleUpdateStatus("active")}>
-                        Resume Campaign
-                      </Button>
-                    )}
-                    {campaign.status !== "ended" && (
-                      <Button onClick={() => handleUpdateStatus("ended")}>
-                        End Campaign
-                      </Button>
-                    )}
-                  </InlineStack>
-                </BlockStack>
+                {/* ✅ 移除 Status Actions 区块，只保留 isActive 开关 */}
               </BlockStack>
             </Card>
 

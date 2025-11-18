@@ -49,8 +49,7 @@ interface UpdateCampaignData {
   requirePhone?: boolean
   startAt?: string
   endAt?: string
-  status?: string
-  isActive?: boolean  // ✅ 添加 isActive 字段
+  isActive?: boolean  // ✅ 只保留 isActive 字段
   prizes?: Array<{
     name: string
     type: string
@@ -183,8 +182,7 @@ export const createCampaign = async (
       requirePhone: data.requirePhone ?? false,
       startAt: data.startAt ? new Date(data.startAt) : null,
       endAt: data.endAt ? new Date(data.endAt) : null,
-      status: "draft",
-      isActive: false,
+      isActive: false,  // ✅ 新创建的活动默认为未发布
       prizes: data.prizes ? {
         create: data.prizes.map(prize => ({
           name: prize.name,
@@ -251,9 +249,7 @@ export const updateCampaign = async (
         requirePhone: data.requirePhone,
         startAt: data.startAt ? new Date(data.startAt) : undefined,
         endAt: data.endAt ? new Date(data.endAt) : undefined,
-        status: data.status,
-        // 优先使用 data.isActive，如果没有则根据 status 判断
-        isActive: data.isActive !== undefined ? data.isActive : (data.status === "active"),
+        isActive: data.isActive,  // ✅ 只使用 isActive
         prizes: data.prizes ? {
           create: data.prizes.map((prize: any) => ({
             name: prize.name,

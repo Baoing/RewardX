@@ -39,8 +39,6 @@ const CampaignsPage = observer(() => {
   
   // 判断是否在子路由（详情页、分析页等）
   const isChildRoute = location.pathname !== "/campaigns"
-  
-  console.log("📍 CampaignsPage - Current path:", location.pathname, "isChildRoute:", isChildRoute)
 
   useEffect(() => {
     campaignStore.fetchCampaigns()
