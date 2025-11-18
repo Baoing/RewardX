@@ -43,7 +43,6 @@ const CampaignDetailPage = observer(() => {
     if (typeof window !== "undefined") {
       // 如果是通过 window.open 打开的弹窗
       if (window.opener) {
-        console.log("🪟 关闭 Modal 弹窗")
         window.close()
         return
       }
@@ -51,14 +50,11 @@ const CampaignDetailPage = observer(() => {
       // 检查 URL 参数是否标记为 modal
       const urlParams = new URLSearchParams(window.location.search)
       if (urlParams.get("modal") === "1") {
-        console.log("🎯 关闭 Modal（通过参数标记）")
         window.close()
         return
       }
     }
 
-    // 默认：导航回列表页
-    console.log("📋 返回列表页")
     navigate("/campaigns")
   }
 
