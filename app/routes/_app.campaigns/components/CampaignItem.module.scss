@@ -1,0 +1,86 @@
+.campaignItem {
+  @apply flex flex-col lg:flex-row items-start lg:items-center gap-4 p-4;
+  @apply border-b border-gray-200 last:border-b-0;
+  @apply hover:bg-gray-50 transition-colors;
+
+  &__info {
+    @apply flex items-start gap-4 flex-1 min-w-0;
+  }
+
+  &__icon {
+    @apply flex-shrink-0;
+
+    .iconWrapper {
+      @apply w-16 h-16 lg:w-20 lg:h-20;
+      @apply flex items-center justify-center;
+      @apply bg-gradient-to-br from-purple-50 to-blue-50;
+      @apply rounded-xl border border-gray-200;
+      @apply shadow-sm;
+    }
+  }
+
+  &__metadata {
+    @apply flex-1 min-w-0;
+
+    h2 {
+      @apply truncate;
+    }
+  }
+
+  &__statistics {
+    @apply flex-shrink-0;
+
+    &.lg\:hidden {
+      @apply w-full px-4 py-3 bg-gray-50 rounded-lg;
+    }
+
+    &.hidden.lg\:flex {
+      @apply gap-6;
+    }
+
+    .statisticItem {
+      @apply flex flex-col items-center text-center gap-1 min-w-[80px];
+    }
+  }
+
+  &__operate {
+    @apply flex items-center gap-2 flex-shrink-0;
+    @apply w-full lg:w-auto justify-end;
+  }
+}
+
+// 移动端适配
+@media (max-width: 1024px) {
+  .campaignItem {
+    @apply flex-col;
+
+    &__info {
+      @apply w-full;
+    }
+
+    &__statistics {
+      @apply w-full;
+    }
+
+    &__operate {
+      @apply w-full justify-between;
+    }
+  }
+}
+
+// Dark mode support (可选)
+@media (prefers-color-scheme: dark) {
+  .campaignItem {
+    @apply hover:bg-gray-800;
+
+    &__icon .iconWrapper {
+      @apply bg-gradient-to-br from-purple-900 to-blue-900;
+      @apply border-gray-700;
+    }
+
+    &__statistics.lg\:hidden {
+      @apply bg-gray-800;
+    }
+  }
+}
+

@@ -14,10 +14,11 @@ import { PlusIcon } from "@shopify/polaris-icons"
 import { useTranslation } from "react-i18next"
 import { observer } from "mobx-react-lite"
 import { useCampaignStore } from "@/stores"
-import {Card} from "@/components/EnhancePolaris"
+import { Card } from "@/components/EnhancePolaris"
 import EmptyState from "./components/emptyState"
+import CampaignItem from "./components/CampaignItem"
 import { showSuccessToast, showErrorToast } from "@/utils/toast"
-import { createDefaultCampaign } from "@/utils/api.campaigns"
+import { createDefaultCampaign, toggleCampaignStatus, deleteCampaign } from "@/utils/api.campaigns"
 import { ApiError } from "@/utils/api.client"
 
 const CampaignsPage = observer(() => {
@@ -61,85 +62,29 @@ const CampaignsPage = observer(() => {
     }
   }
 
-  const getStatusBadge = (status: string, isActive: boolean) => {
-    if (!isActive) {
-      return <Badge tone="warning">Inactive</Badge>
-    }
-
-    switch (status) {
-      case "active":
-        return <Badge tone="success">Active</Badge>
-      case "draft":
-        return <Badge>Draft</Badge>
-      case "paused":
-        return <Badge tone="warning">Paused</Badge>
-      case "ended":
-        return <Badge tone="info">Ended</Badge>
-      default:
-        return <Badge>{status}</Badge>
+  const handleToggleStatus = async (id: string, isActive: boolean) => {
+    try {
+      await toggleCampaignStatus(id, isActive)
+      showSuccessToast(isActive ? "Campaign activated" : "Campaign deactivated")
+      await campaignStore.fetchCampaigns()
+    } catch (error) {
+      console.error("❌ Error toggling campaign status:", error)
+      showErrorToast(error instanceof Error ? error.message : "Failed to toggle status")
     }
   }
 
-  const getGameTypeName = (gameType: string) => {
-    switch (gameType) {
-      case "wheel":
-        return "Lucky Wheel"
-      case "ninebox":
-        return "9-Box"
-      case "slot":
-        return "Slot Machine"
-      case "scratch":
-        return "Scratch Card.tsx"
-      default:
-        return gameType
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteCampaign(id)
+      showSuccessToast("Campaign deleted successfully")
+      await campaignStore.fetchCampaigns()
+    } catch (error) {
+      console.error("❌ Error deleting campaign:", error)
+      showErrorToast(error instanceof Error ? error.message : "Failed to delete campaign")
     }
-  }
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "-"
-    return new Date(dateString).toLocaleDateString()
   }
 
   const campaigns = campaignStore.campaigns
-
-  const rows = campaigns.map((campaign) => [
-    campaign.name,
-    getGameTypeName(campaign.gameType),
-    getStatusBadge(campaign.status, campaign.isActive),
-    campaign.totalPlays,
-    campaign.totalWins,
-    campaign.totalPlays > 0
-      ? `${((campaign.totalWins / campaign.totalPlays) * 100).toFixed(1)}%`
-      : "0%",
-    formatDate(campaign.startAt),
-    formatDate(campaign.endAt),
-    <InlineStack gap="200">
-      <Button
-        size="slim"
-        onClick={() => {
-          navigate(`/campaigns/${campaign.id}`)
-        }}
-      >
-        View
-      </Button>
-      <Button
-        size="slim"
-        onClick={() => {
-          navigate(`/campaigns/${campaign.id}/analytics`)
-        }}
-      >
-        Analytics
-      </Button>
-    </InlineStack>
-  ])
-
-  const tabs = [
-    { id: "all", content: `All (${campaignStore.campaigns.length})` },
-    { id: "active", content: `Active (${campaignStore.activeCampaigns.length})` },
-    { id: "draft", content: `Draft (${campaignStore.draftCampaigns.length})` },
-    { id: "paused", content: `Paused (${campaignStore.pausedCampaigns.length})` },
-    { id: "ended", content: `Ended (${campaignStore.endedCampaigns.length})` }
-  ]
 
   if (campaignStore.isLoading && !campaignStore.isInitialized) {
     return (
@@ -177,8 +122,15 @@ const CampaignsPage = observer(() => {
           {
             campaigns.length === 0
               ? <EmptyState />
-              : <Card title={"Campaigns library"} titleDivider padding={"0"}>
-
+              : <Card title="Campaigns library" titleDivider padding="0">
+                {campaigns.map((campaign) => (
+                  <CampaignItem
+                    key={campaign.id}
+                    campaign={campaign}
+                    onToggleStatus={handleToggleStatus}
+                    onDelete={handleDelete}
+                  />
+                ))}
               </Card>
           }
         </Layout.Section>
