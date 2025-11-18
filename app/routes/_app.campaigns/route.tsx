@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
-import { useNavigate } from "react-router"
+import type { LoaderFunctionArgs } from "react-router"
+import { useNavigate, Outlet, useLocation } from "react-router"
 import {
   Page,
   Layout,
@@ -20,13 +21,26 @@ import CampaignItem from "./components/CampaignItem"
 import { showSuccessToast, showErrorToast } from "@/utils/toast"
 import { createDefaultCampaign, toggleCampaignStatus, deleteCampaign } from "@/utils/api.campaigns"
 import { ApiError } from "@/utils/api.client"
+import { authenticate } from "@/shopify.server"
+
+// ✅ 添加 loader 进行 Shopify 认证
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  await authenticate.admin(request)
+  return {}
+}
 
 const CampaignsPage = observer(() => {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
   const campaignStore = useCampaignStore()
   const [selectedTab, setSelectedTab] = useState(0)
   const [isCreating, setIsCreating] = useState(false)
+  
+  // 判断是否在子路由（详情页、分析页等）
+  const isChildRoute = location.pathname !== "/campaigns"
+  
+  console.log("📍 CampaignsPage - Current path:", location.pathname, "isChildRoute:", isChildRoute)
 
   useEffect(() => {
     campaignStore.fetchCampaigns()
@@ -86,6 +100,12 @@ const CampaignsPage = observer(() => {
 
   const campaigns = campaignStore.campaigns
 
+  // ✅ 如果是子路由（详情页、分析页等），直接渲染子路由内容
+  if (isChildRoute) {
+    return <Outlet />
+  }
+
+  // 以下是列表页的内容
   if (campaignStore.isLoading && !campaignStore.isInitialized) {
     return (
       <Page title="Campaigns">

@@ -1,4 +1,5 @@
 import { useEffect } from "react"
+import type { LoaderFunctionArgs } from "react-router"
 import { useParams, useNavigate } from "react-router"
 import {
   Page,
@@ -14,6 +15,18 @@ import {
 } from "@shopify/polaris"
 import { observer } from "mobx-react-lite"
 import { useCampaignStore } from "@/stores"
+import { authenticate } from "@/shopify.server"
+
+// ✅ 添加 loader 进行 Shopify 认证
+export const loader = async ({ request, params }: LoaderFunctionArgs) => {
+  console.log("📍 Campaign Detail Loader called, params:", params)
+  
+  // Shopify 认证
+  await authenticate.admin(request)
+  
+  // 返回路由参数（实际数据由前端 MobX store 加载）
+  return { campaignId: params.id }
+}
 
 const CampaignDetailPage = observer(() => {
   const { id } = useParams<{ id: string }>()
@@ -21,12 +34,28 @@ const CampaignDetailPage = observer(() => {
   const campaignStore = useCampaignStore()
   const campaign = campaignStore.currentCampaign
 
+  console.log("🎯 CampaignDetailPage rendered, id:", id, "campaign:", campaign?.id)
+
   useEffect(() => {
+    console.log("🔥 useEffect triggered, id:", id)
     if (id) {
+      console.log("🔄 Campaign ID changed, fetching new data:", id)
+      // 清空当前数据，避免显示旧数据
+      campaignStore.setCurrentCampaign(null)
+      campaignStore.setEntries([])
+
+      // 获取新数据
       campaignStore.fetchCampaign(id)
-      campaignStore.fetchEntries(id, { limit: 50 })
+      campaignStore.fetchEntries(id)
     }
-  }, [id])
+
+    // 组件卸载时清空数据
+    return () => {
+      console.log("🧹 Cleaning up campaign detail page")
+      campaignStore.setCurrentCampaign(null)
+      campaignStore.setEntries([])
+    }
+  }, [id, campaignStore])
 
   const getStatusBadge = (status: string, isActive: boolean) => {
     if (!isActive) {
@@ -303,11 +332,11 @@ const CampaignDetailPage = observer(() => {
             <Card>
               <BlockStack gap="400">
                 <Text as="h2" variant="headingMd">
-                  Prizes ({campaign.prizes.length})
+                  Prizes ({campaign.prizes?.length || 0})
                 </Text>
 
                 <div className="space-y-2">
-                  {campaign.prizes.map((prize) => (
+                  {(campaign.prizes || []).map((prize) => (
                     <div
                       key={prize.id}
                       className="p-4 border rounded flex items-center justify-between"

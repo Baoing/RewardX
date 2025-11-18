@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react"
-import { useNavigate } from "react-router"
+import { useNavigate, Link } from "react-router"
 import {
   Button,
   Text,
@@ -145,13 +145,25 @@ export default function CampaignItem({
                  </Tooltip>
                </div>
 
-             <Button
-               variant="primary"
-               size="slim"
-               onClick={() => navigate(`/campaigns/${campaign.id}`)}
-             >
-               Customize
-             </Button>
+            <Button
+              variant="primary"
+              size="slim"
+              onClick={() => {
+                console.log("🚀 Customize button clicked")
+                console.log("📦 Campaign ID:", campaign.id)
+                console.log("🔗 Target path:", `/campaigns/${campaign.id}`)
+                console.log("📍 Current location:", window.location.href)
+                
+                try {
+                  navigate(`/campaigns/${campaign.id}`)
+                  console.log("✅ navigate() called successfully")
+                } catch (error) {
+                  console.error("❌ navigate() failed:", error)
+                }
+              }}
+            >
+              Customize
+            </Button>
 
              <MoreActions
                campaignId={campaign.id}

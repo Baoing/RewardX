@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import type { LoaderFunctionArgs } from "react-router"
 import { useParams } from "react-router"
 import {
   Page,
@@ -13,6 +14,13 @@ import {
 } from "@shopify/polaris"
 import { observer } from "mobx-react-lite"
 import { useCampaignStore } from "@/stores"
+import { authenticate } from "@/shopify.server"
+
+// ✅ 添加 loader 进行 Shopify 认证
+export const loader = async ({ request, params }: LoaderFunctionArgs) => {
+  await authenticate.admin(request)
+  return { campaignId: params.id }
+}
 
 const CampaignAnalyticsPage = observer(() => {
   const { id } = useParams<{ id: string }>()
