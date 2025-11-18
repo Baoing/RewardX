@@ -43,7 +43,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   })
 }
 
-// PUT /DELETE /api/campaigns/:id - 更新/删除活动
+// PUT/PATCH/DELETE /api/campaigns/:id - 更新/删除活动
 export const action = async ({ request, params }: ActionFunctionArgs) => {
   return actionHandler(async () => {
     const { session } = await authenticate.admin(request)
@@ -61,7 +61,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       return noContent()
     }
     
-    if (method === "PUT") {
+    if (method === "PUT" || method === "PATCH") {
       const data = await request.json()
       const updated = await updateCampaign(id, user.id, data)
       return Response.json(updated)

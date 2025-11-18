@@ -13,6 +13,7 @@ import {
 import { MenuHorizontalIcon } from "@shopify/polaris-icons"
 import { useTranslation } from "react-i18next"
 import { Card } from "@/components/EnhancePolaris"
+import { Switch } from "@/components/Switch"
 import type { Campaign } from "@/types/campaign"
 import styles from "./CampaignItem.module.scss"
 
@@ -105,47 +106,80 @@ export default function CampaignItem({
           </div>
         </div>
 
-        {/* 活动信息 */}
-        <div className={styles.campaignItem__metadata}>
-          <InlineStack gap="200" blockAlign="center">
-            <Text variant="bodyLg" as="h2" fontWeight="medium">
-              {campaign.name}
-            </Text>
-            {getStatusBadge(campaign.status, campaign.isActive)}
-          </InlineStack>
+         <div className={"flex justify-between flex-1 items-center"}>
+           {/* 活动信息 */}
+           <div className={styles.campaignItem__metadata}>
+             <InlineStack gap="200" blockAlign="center">
+               <Text variant="bodyLg" as="h2" fontWeight="medium">
+                 {campaign.name}
+               </Text>
+             </InlineStack>
 
-          <div className="mt-1">
-            <BlockStack gap="100">
-              <Text variant="bodySm" as="p" tone="subdued">
-                {getGameTypeLabel(campaign.gameType)} • {campaign.type === "order" ? "Order Required" : "Free"}
-              </Text>
-              <Text variant="bodySm" as="p" tone="subdued">
-                Created: {formatDate(campaign.createdAt)}
-              </Text>
-              <Text variant="bodySm" as="p" tone="subdued">
-                Last updated: {formatDate(campaign.updatedAt)}
-              </Text>
-            </BlockStack>
-          </div>
-        </div>
+             <div className="mt-1">
+               <BlockStack gap="100">
+                 {/*<Text variant="bodySm" as="p" tone="subdued">*/}
+                 {/*  {getGameTypeLabel(campaign.gameType)} • {campaign.type === "order" ? "Order Required" : "Free"}*/}
+                 {/*</Text>*/}
+                 <Text variant="bodySm" as="p" tone="subdued">
+                   Created: {formatDate(campaign.createdAt)}
+                 </Text>
+                 <Text variant="bodySm" as="p" tone="subdued">
+                   Last updated: {formatDate(campaign.updatedAt)}
+                 </Text>
+               </BlockStack>
+             </div>
+           </div>
+
+           {/* 操作区 */}
+           <div className={"flex gap-3 items-center"}>
+             {/* Switch 替换 Badge 和按钮 */}
+
+               <div className="flex items-center gap-2">
+                 {/*{getStatusBadge(campaign.status, campaign.isActive)}*/}
+                 <Tooltip content={campaign.isActive ? "Active - Click to deactivate" : "Inactive - Click to activate"}>
+                   <Switch
+                     checked={campaign.isActive}
+                     disabled={isToggling}
+                     onChange={() => handleToggleStatus()}
+                   />
+                 </Tooltip>
+               </div>
+
+             <Button
+               variant="primary"
+               size="slim"
+               onClick={() => navigate(`/campaigns/${campaign.id}`)}
+             >
+               Customize
+             </Button>
+
+             <MoreActions
+               campaignId={campaign.id}
+               campaignName={campaign.name}
+               onDelete={onDelete}
+             />
+           </div>
+         </div>
       </div>
 
       {/* 统计数据 - 移动端 */}
-      <div className={`${styles.campaignItem__statistics} lg:hidden`}>
-        <BlockStack gap="100">
-          <Text variant="bodySm" as="p">
-            <span className="font-medium">Plays:</span> {trueVal(campaign.totalPlays)}
-          </Text>
-          <Text variant="bodySm" as="p">
-            <span className="font-medium">Wins:</span> {trueVal(campaign.totalWins)}
-          </Text>
-          <Text variant="bodySm" as="p">
-            <span className="font-medium">Orders:</span> {trueVal(campaign.totalOrders)}
-          </Text>
-          <Text variant="bodySm" as="p">
-            <span className="font-medium">Win Rate:</span> {winRate}%
-          </Text>
-        </BlockStack>
+      <div className={`${styles.campaignItem__statisticsMobile} lg:hidden`}>
+        <div className={styles.statItem}>
+          <Text variant="bodySm" as="span" tone="subdued">Plays</Text>
+          <Text variant="bodyMd" as="span" fontWeight="semibold">{trueVal(campaign.totalPlays)}</Text>
+        </div>
+        <div className={styles.statItem}>
+          <Text variant="bodySm" as="span" tone="subdued">Wins</Text>
+          <Text variant="bodyMd" as="span" fontWeight="semibold">{trueVal(campaign.totalWins)}</Text>
+        </div>
+        <div className={styles.statItem}>
+          <Text variant="bodySm" as="span" tone="subdued">Orders</Text>
+          <Text variant="bodyMd" as="span" fontWeight="semibold">{trueVal(campaign.totalOrders)}</Text>
+        </div>
+        <div className={styles.statItem}>
+          <Text variant="bodySm" as="span" tone="subdued">Win Rate</Text>
+          <Text variant="bodyMd" as="span" fontWeight="semibold">{winRate}%</Text>
+        </div>
       </div>
 
       {/* 统计数据 - PC端 */}
@@ -169,36 +203,6 @@ export default function CampaignItem({
           <Text variant="bodySm" as="span" tone="subdued">Win Rate</Text>
           <Text variant="bodyMd" as="span" fontWeight="semibold">{winRate}%</Text>
         </div>
-      </div>
-
-      {/* 操作区 */}
-      <div className={styles.campaignItem__operate}>
-        <div className="mr-4">
-          <Tooltip content={campaign.isActive ? "Deactivate campaign" : "Activate campaign"}>
-            <Button
-              size="slim"
-              disabled={isToggling}
-              loading={isToggling}
-              onClick={handleToggleStatus}
-            >
-              {campaign.isActive ? "Active" : "Inactive"}
-            </Button>
-          </Tooltip>
-        </div>
-
-        <Button
-          variant="primary"
-          size="slim"
-          onClick={() => navigate(`/campaigns/${campaign.id}`)}
-        >
-          View Details
-        </Button>
-
-        <MoreActions
-          campaignId={campaign.id}
-          campaignName={campaign.name}
-          onDelete={onDelete}
-        />
       </div>
     </div>
   )
@@ -249,25 +253,21 @@ function MoreActions({ campaignId, campaignName, onDelete }: MoreActionsProps) {
         actionRole="menuitem"
         onActionAnyItem={togglePopoverActive}
         items={[
-          {
-            content: "Edit",
-            onAction: () => navigate(`/campaigns/${campaignId}`)
-          },
-          {
-            content: "View Analytics",
-            onAction: () => navigate(`/campaigns/${campaignId}/analytics`)
-          },
-          {
-            content: "View Entries",
-            onAction: () => navigate(`/campaigns/${campaignId}/entries`)
-          },
-          {
-            content: "Duplicate",
-            onAction: () => {
-              // TODO: 实现复制功能
-              console.log("Duplicate campaign:", campaignId)
-            }
-          },
+          // {
+          //   content: "View Analytics",
+          //   onAction: () => navigate(`/campaigns/${campaignId}/analytics`)
+          // },
+          // {
+          //   content: "View Entries",
+          //   onAction: () => navigate(`/campaigns/${campaignId}/entries`)
+          // },
+          // {
+          //   content: "Duplicate",
+          //   onAction: () => {
+          //     // TODO: 实现复制功能
+          //     console.log("Duplicate campaign:", campaignId)
+          //   }
+          // },
           {
             destructive: true,
             content: "Delete",

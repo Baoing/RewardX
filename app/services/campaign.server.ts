@@ -50,6 +50,7 @@ interface UpdateCampaignData {
   startAt?: string
   endAt?: string
   status?: string
+  isActive?: boolean  // ✅ 添加 isActive 字段
   prizes?: Array<{
     name: string
     type: string
@@ -251,7 +252,8 @@ export const updateCampaign = async (
         startAt: data.startAt ? new Date(data.startAt) : undefined,
         endAt: data.endAt ? new Date(data.endAt) : undefined,
         status: data.status,
-        isActive: data.status === "active",
+        // 优先使用 data.isActive，如果没有则根据 status 判断
+        isActive: data.isActive !== undefined ? data.isActive : (data.status === "active"),
         prizes: data.prizes ? {
           create: data.prizes.map((prize: any) => ({
             name: prize.name,

@@ -20,32 +20,29 @@
   }
 
   &__metadata {
-    @apply flex-1 min-w-0;
+    @apply flex-1;
 
     h2 {
       @apply truncate;
     }
   }
 
+  // 移动端统计数据 - 2x2 网格布局
+  &__statisticsMobile {
+    @apply w-full grid grid-cols-4 gap-3 px-3 py-2 bg-gray-50 rounded-lg;
+
+    .statItem {
+      @apply flex flex-col items-center text-center gap-0.5;
+    }
+  }
+
+  // PC端统计数据
   &__statistics {
-    @apply flex-shrink-0;
-
-    &.lg\:hidden {
-      @apply w-full px-4 py-3 bg-gray-50 rounded-lg;
-    }
-
-    &.hidden.lg\:flex {
-      @apply gap-6;
-    }
+    @apply flex-shrink-0 gap-6;
 
     .statisticItem {
       @apply flex flex-col items-center text-center gap-1 min-w-[80px];
     }
-  }
-
-  &__operate {
-    @apply flex items-center gap-2 flex-shrink-0;
-    @apply w-full lg:w-auto justify-end;
   }
 }
 
@@ -61,26 +58,5 @@
     &__statistics {
       @apply w-full;
     }
-
-    &__operate {
-      @apply w-full justify-between;
-    }
   }
 }
-
-// Dark mode support (可选)
-@media (prefers-color-scheme: dark) {
-  .campaignItem {
-    @apply hover:bg-gray-800;
-
-    &__icon .iconWrapper {
-      @apply bg-gradient-to-br from-purple-900 to-blue-900;
-      @apply border-gray-700;
-    }
-
-    &__statistics.lg\:hidden {
-      @apply bg-gray-800;
-    }
-  }
-}
-
