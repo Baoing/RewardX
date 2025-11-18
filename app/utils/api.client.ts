@@ -143,7 +143,8 @@ class ApiClient {
       const response = await fetch(fullURL, {
         ...options,
         headers,
-        signal
+        signal,
+        credentials: "include" // 🔑 确保携带 cookies（用于 Shopify session）
       })
 
       // 解析响应

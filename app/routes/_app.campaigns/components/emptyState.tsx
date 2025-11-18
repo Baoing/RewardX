@@ -1,9 +1,11 @@
-import {useTranslation} from "react-i18next";
-import {Card} from "@/components/EnhancePolaris"
-import {EmptyState as EmptyComponent} from "@shopify/polaris"
+import { useNavigate } from "react-router"
+import { useTranslation } from "react-i18next"
+import { Card } from "@/components/EnhancePolaris"
+import { EmptyState as EmptyComponent } from "@shopify/polaris"
 
 export default function EmptyState () {
   const { t } = useTranslation()
+  const navigate = useNavigate()
 
   return <Card>
     <EmptyComponent
@@ -11,7 +13,7 @@ export default function EmptyState () {
       action={{
         content: "Create your first campaign",
         onAction: () => {
-          window.location.href = "/campaigns/create"
+          navigate("/campaigns/create")
         }
       }}
       image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"

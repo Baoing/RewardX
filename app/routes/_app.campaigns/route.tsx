@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useNavigate } from "react-router"
 import {
   Page,
   Layout,
@@ -21,6 +22,7 @@ import { ApiError } from "@/utils/api.client"
 
 const CampaignsPage = observer(() => {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const campaignStore = useCampaignStore()
   const [selectedTab, setSelectedTab] = useState(0)
   const [isCreating, setIsCreating] = useState(false)
@@ -41,8 +43,8 @@ const CampaignsPage = observer(() => {
       // 刷新活动列表
       await campaignStore.fetchCampaigns()
 
-      // 跳转到活动详情页
-      window.location.href = `/campaigns/${campaign.id}`
+      // 🎯 使用 React Router 导航（不会触发页面刷新和重新认证）
+      navigate(`/campaigns/${campaign.id}`)
 
     } catch (error) {
       console.error("❌ Error creating campaign:", error)
@@ -115,7 +117,7 @@ const CampaignsPage = observer(() => {
       <Button
         size="slim"
         onClick={() => {
-          window.location.href = `/campaigns/${campaign.id}`
+          navigate(`/campaigns/${campaign.id}`)
         }}
       >
         View
@@ -123,7 +125,7 @@ const CampaignsPage = observer(() => {
       <Button
         size="slim"
         onClick={() => {
-          window.location.href = `/campaigns/${campaign.id}/analytics`
+          navigate(`/campaigns/${campaign.id}/analytics`)
         }}
       >
         Analytics
@@ -173,7 +175,7 @@ const CampaignsPage = observer(() => {
       <Layout>
         <Layout.Section>
           {
-            campaigns.length !== 0
+            campaigns.length === 0
               ? <EmptyState />
               : <Card title={"Campaigns library"} titleDivider padding={"0"}>
 

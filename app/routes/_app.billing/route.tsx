@@ -3,7 +3,7 @@ import {Badge, BlockStack, Box, Button, Card, Icon, InlineStack, Page, Text} fro
 import {CheckIcon} from "@shopify/polaris-icons"
 import {useTranslation} from "react-i18next"
 import type {LoaderFunctionArgs} from "react-router"
-import {useLoaderData} from "react-router"
+import {useLoaderData, useRevalidator} from "react-router"
 import {authenticate} from "../../shopify.server"
 import {SwitchTab} from "../../components/SwitchTab"
 import {DowngradeModal} from "../../components/DowngradeModal"
@@ -72,6 +72,7 @@ type BillingCycleType = "monthly" | "yearly"
 
 export default function BillingPage() {
   const {t} = useTranslation()
+  const revalidator = useRevalidator()
   const {currentPlan, plans, hasCompletedSubscription, isInTrial} = useLoaderData<typeof loader>()
   const [billingCycle, setBillingCycle] = useState<BillingCycleType>("monthly")
   const [isSubscribing, setIsSubscribing] = useState(false)
@@ -104,10 +105,10 @@ export default function BillingPage() {
           console.log("🔗 跳转到订阅确认页面:", result.confirmationUrl)
           window.top!.location.href = result.confirmationUrl
         } else {
-          // 开发模式：直接刷新页面
+          // 开发模式：重新加载数据
           console.log("✅ 开发模式：订阅已激活")
           showToast({ content: t("billing.subscriptionSuccess") })
-          setTimeout(() => window.location.reload(), 1000)
+          setTimeout(() => revalidator.revalidate(), 1000)
         }
       } else {
         console.error("❌ 订阅失败:", result.error)
@@ -134,9 +135,9 @@ export default function BillingPage() {
       const result = await response.json()
 
       if (result.success) {
-        console.log("✅ 订阅已取消，刷新页面")
+        console.log("✅ 订阅已取消，重新加载数据")
         showToast({ content: t("billing.downgradeSuccess") })
-        setTimeout(() => window.location.reload(), 1000)
+        setTimeout(() => revalidator.revalidate(), 1000)
       } else {
         console.error("❌ 取消订阅失败:", result.error)
         showErrorToast(t("billing.downgradeError", { error: result.error }))

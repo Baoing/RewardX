@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { useParams } from "react-router"
+import { useParams, useNavigate } from "react-router"
 import {
   Page,
   Layout,
@@ -17,6 +17,7 @@ import { useCampaignStore } from "@/stores"
 
 const CampaignDetailPage = observer(() => {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const campaignStore = useCampaignStore()
   const campaign = campaignStore.currentCampaign
 
@@ -97,7 +98,7 @@ const CampaignDetailPage = observer(() => {
 
     const success = await campaignStore.deleteCampaign(id)
     if (success) {
-      window.location.href = "/campaigns"
+      navigate("/campaigns")
     }
   }
 
@@ -148,7 +149,7 @@ const CampaignDetailPage = observer(() => {
         {
           content: "View Analytics",
           onAction: () => {
-            window.location.href = `/campaigns/${id}/analytics`
+            navigate(`/campaigns/${id}/analytics`)
           }
         },
         {
@@ -349,7 +350,7 @@ const CampaignDetailPage = observer(() => {
                   </Text>
                   <Button
                     onClick={() => {
-                      window.location.href = `/campaigns/${id}/entries`
+                      navigate(`/campaigns/${id}/entries`)
                     }}
                   >
                     View All
