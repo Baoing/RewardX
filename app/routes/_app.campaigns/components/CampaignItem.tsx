@@ -49,22 +49,6 @@ export default function CampaignItem({
     })
   }
 
-  // ✅ 简化：只根据 isActive 显示状态
-  const getStatusBadge = (isActive: boolean) => {
-    return isActive
-      ? <Badge tone="success">Active</Badge>
-      : <Badge tone="warning">Inactive</Badge>
-  }
-
-  const getGameTypeLabel = (gameType: string) => {
-    const types: Record<string, string> = {
-      "ninebox": "🎲 Nine Box",
-      "wheel": "🎡 Lucky Wheel",
-      "slot": "🎰 Slot Machine"
-    }
-    return types[gameType] || gameType
-  }
-
   const handleToggleStatus = async () => {
     if (!onToggleStatus) return
 
@@ -120,7 +104,6 @@ export default function CampaignItem({
             {/* 操作区 */}
             <div className="flex gap-3 items-center">
               <div className="flex items-center gap-2">
-                {getStatusBadge(campaign.isActive)}
                 <Tooltip content={campaign.isActive ? "Active - Click to deactivate" : "Inactive - Click to activate"}>
                   <Switch
                     checked={campaign.isActive}
@@ -218,7 +201,6 @@ export default function CampaignItem({
         {/* 操作区 */}
         <div className="flex gap-3 items-center flex-shrink-0">
           <div className="flex items-center gap-2">
-            {getStatusBadge(campaign.isActive)}
             <Tooltip content={campaign.isActive ? "Active - Click to deactivate" : "Inactive - Click to activate"}>
               <Switch
                 checked={campaign.isActive}
