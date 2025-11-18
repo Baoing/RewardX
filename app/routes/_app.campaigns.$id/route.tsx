@@ -79,28 +79,6 @@ const CampaignDetailPage = observer(() => {
     }
   }, [id, campaignStore])
 
-  // 为 s-button 添加全局方法
-  useEffect(() => {
-    // @ts-ignore
-    window.saveCampaign = () => {
-      console.log("💾 Saving campaign...")
-      // TODO: Implement save logic
-      showToast({ content: "Campaign saved (Coming soon)" })
-    }
-
-    // @ts-ignore
-    window.deleteCampaign = () => {
-      handleDelete()
-    }
-
-    return () => {
-      // @ts-ignore
-      delete window.saveCampaign
-      // @ts-ignore
-      delete window.deleteCampaign
-    }
-  }, [handleDelete])
-
   // 渲染左侧配置面板的内容
   const renderSidebarContent = () => {
     if (!campaign) return null
@@ -281,9 +259,13 @@ const CampaignDetailPage = observer(() => {
   if (campaignStore.isLoading && !campaign) {
     return (
       <div className={styles.campaignEditor}>
-        {/* @ts-ignore */}
-        <s-page heading="Campaign Details">
-          <div style={{ padding: "40px", textAlign: "center" }}>
+        <div className={styles.campaignEditor__header}>
+          <div className={styles.campaignEditor__headerContent}>
+            <h1 className={styles.campaignEditor__title}>Campaign Details</h1>
+          </div>
+        </div>
+        <div style={{ padding: "40px", textAlign: "center", flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div>
             <Spinner size="large" />
             <div style={{ marginTop: "16px" }}>
               <Text as="p" tone="subdued">
@@ -291,7 +273,7 @@ const CampaignDetailPage = observer(() => {
               </Text>
             </div>
           </div>
-        </s-page>
+        </div>
       </div>
     )
   }
@@ -299,101 +281,109 @@ const CampaignDetailPage = observer(() => {
   if (!campaign) {
     return (
       <div className={styles.campaignEditor}>
-        {/* @ts-ignore */}
-        <s-page heading="Campaign Not Found">
-          <div style={{ padding: "40px" }}>
-            <Text as="p">Campaign not found</Text>
+        <div className={styles.campaignEditor__header}>
+          <div className={styles.campaignEditor__headerContent}>
+            <h1 className={styles.campaignEditor__title}>Campaign Not Found</h1>
           </div>
-        </s-page>
+        </div>
+        <div style={{ padding: "40px", flex: 1 }}>
+          <Text as="p">Campaign not found</Text>
+        </div>
       </div>
     )
   }
 
   return (
     <div className={styles.campaignEditor}>
-      {/* @ts-ignore */}
-      <s-page heading={campaign.name} style={{ height: "100%", display: "flex", flexDirection: "column", padding: 0, margin: 0 }}>
-        {/* 主操作按钮 */}
-        {/* @ts-ignore */}
-        <s-button slot="primary-action" onclick="window.saveCampaign()">
-          Save
-        </s-button>
-        
-        {/* 次要操作按钮 */}
-        {/* @ts-ignore */}
-        <s-button slot="secondary-actions" onclick="window.deleteCampaign()">
-          Delete
-        </s-button>
-        
-        {/* 编辑器容器 */}
-        <div className={styles.campaignEditor__container} style={{ flex: 1, margin: 0, padding: 0 }}>
-          {/* 左侧配置面板 */}
-          <div className={styles.campaignEditor__sidebar}>
-            {/* 标签切换 */}
-            <div className={styles.tabs}>
-              <div className={styles.tabList}>
-                <button
-                  className={`${styles.tabButton} ${activeTab === "rules" ? styles.active : ""}`}
-                  onClick={() => setActiveTab("rules")}
-                >
-                  Rules
-                </button>
-                <button
-                  className={`${styles.tabButton} ${activeTab === "design" ? styles.active : ""}`}
-                  onClick={() => setActiveTab("design")}
-                >
-                  Design
-                </button>
-                <button
-                  className={`${styles.tabButton} ${activeTab === "prizes" ? styles.active : ""}`}
-                  onClick={() => setActiveTab("prizes")}
-                >
-                  Prizes
-                </button>
+      {/* 自定义标题栏 */}
+      <div className={styles.campaignEditor__header}>
+        <div className={styles.campaignEditor__headerContent}>
+          <h1 className={styles.campaignEditor__title}>{campaign.name}</h1>
+          <div className={styles.campaignEditor__actions}>
+            <Button onClick={handleDelete} tone="critical">
+              Delete
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => {
+                console.log("💾 Saving campaign...")
+                showToast({ content: "Campaign saved (Coming soon)" })
+              }}
+            >
+              Save
+            </Button>
+          </div>
+        </div>
+      </div>
+      
+      {/* 编辑器容器 */}
+      <div className={styles.campaignEditor__container}>
+        {/* 左侧配置面板 */}
+        <div className={styles.campaignEditor__sidebar}>
+          {/* 标签切换 */}
+          <div className={styles.tabs}>
+            <div className={styles.tabList}>
+              <button
+                className={`${styles.tabButton} ${activeTab === "rules" ? styles.active : ""}`}
+                onClick={() => setActiveTab("rules")}
+              >
+                Rules
+              </button>
+              <button
+                className={`${styles.tabButton} ${activeTab === "design" ? styles.active : ""}`}
+                onClick={() => setActiveTab("design")}
+              >
+                Design
+              </button>
+              <button
+                className={`${styles.tabButton} ${activeTab === "prizes" ? styles.active : ""}`}
+                onClick={() => setActiveTab("prizes")}
+              >
+                Prizes
+              </button>
+            </div>
+          </div>
+
+          {/* 配置内容 */}
+          {renderSidebarContent()}
+        </div>
+
+        {/* 右侧预览区域 */}
+        <div className={styles.campaignEditor__preview}>
+          {/* 预览工具栏 */}
+          <div className={styles.previewToolbar}>
+            <div className={styles.deviceToggle}>
+              <button
+                className={previewDevice === "desktop" ? styles.active : ""}
+                onClick={() => setPreviewDevice("desktop")}
+              >
+                <DesktopIcon />
+              </button>
+              <button
+                className={previewDevice === "mobile" ? styles.active : ""}
+                onClick={() => setPreviewDevice("mobile")}
+              >
+                <MobileIcon />
+              </button>
+            </div>
+          </div>
+
+          {/* 预览内容 */}
+          <div className={styles.previewContent}>
+            <div className={`${styles.previewWrapper} ${styles[previewDevice]}`}>
+              <div className={styles.gameCanvas}>
+                <Text as="p" variant="bodyLg" tone="subdued">
+                  Game Preview ({campaign.gameType})
+                </Text>
+                <Text as="p" tone="subdued">
+                  Coming soon
+                </Text>
               </div>
-                  </div>
-
-            {/* 配置内容 */}
-            {renderSidebarContent()}
-                  </div>
-
-          {/* 右侧预览区域 */}
-          <div className={styles.campaignEditor__preview}>
-            {/* 预览工具栏 */}
-            <div className={styles.previewToolbar}>
-              <div className={styles.deviceToggle}>
-                <button
-                  className={previewDevice === "desktop" ? styles.active : ""}
-                  onClick={() => setPreviewDevice("desktop")}
-                >
-                  <DesktopIcon />
-                </button>
-                <button
-                  className={previewDevice === "mobile" ? styles.active : ""}
-                  onClick={() => setPreviewDevice("mobile")}
-                >
-                  <MobileIcon />
-                </button>
-                        </div>
-                      </div>
-
-            {/* 预览内容 */}
-            <div className={styles.previewContent}>
-              <div className={`${styles.previewWrapper} ${styles[previewDevice]}`}>
-                <div className={styles.gameCanvas}>
-                  <Text as="p" variant="bodyLg" tone="subdued">
-                    Game Preview ({campaign.gameType})
-                  </Text>
-                  <Text as="p" tone="subdued">
-                    Coming soon
-                  </Text>
-                </div>
-              </div>
-                        </div>
-                        </div>
-                      </div>
-      </s-page>
-                  </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 })
 

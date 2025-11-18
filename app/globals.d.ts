@@ -31,8 +31,6 @@ declare namespace JSX {
 
 // Shopify Toast API
 interface Window {
-  saveCampaign?: () => void
-  deleteCampaign?: () => void
   shopify?: {
     toast: {
       show: (message: string) => void

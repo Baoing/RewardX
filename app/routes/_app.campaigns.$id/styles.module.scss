@@ -3,37 +3,34 @@
   @apply h-screen w-screen;
   @apply overflow-hidden;
   @apply bg-white;
+  @apply flex flex-col;
   
-  // 移除所有子元素的 max-width 限制
-  * {
-    max-width: none !important;
+  // 自定义标题栏
+  &__header {
+    @apply flex-shrink-0;
+    @apply bg-white border-b border-gray-200;
+    @apply px-6 py-4;
+    @apply shadow-sm;
   }
 
-  // 让 s-page 充满整个空间，移除默认 padding
-  :global(s-page) {
-    @apply h-full w-full;
-    display: flex !important;
-    flex-direction: column !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    
-    // 移除 s-page 内部所有元素的 padding 和 margin
-    & > *,
-    & * {
-      max-width: none !important;
-    }
-    
-    // 移除内容区域的默认容器 padding
-    & [slot]:not([slot="primary-action"]):not([slot="secondary-actions"]) {
-      padding: 0 !important;
-      margin: 0 !important;
-    }
+  &__headerContent {
+    @apply flex items-center justify-between;
+    @apply max-w-none;
+  }
+
+  &__title {
+    @apply text-xl font-semibold text-gray-900;
+    @apply m-0 p-0;
+  }
+
+  &__actions {
+    @apply flex items-center gap-3;
   }
 
   &__container {
     @apply flex flex-1;
     @apply flex-col lg:flex-row;
-    @apply h-full overflow-hidden;
+    @apply overflow-hidden;
     @apply m-0 p-0; // 移除所有边距
   }
 
