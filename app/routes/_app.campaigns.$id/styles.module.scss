@@ -1,0 +1,185 @@
+.campaignEditor {
+  @apply fixed inset-0;
+  @apply h-screen w-screen;
+  @apply overflow-hidden;
+  @apply bg-white;
+  
+  // 移除所有子元素的 max-width 限制
+  * {
+    max-width: none !important;
+  }
+
+  // 让 s-page 充满整个空间，移除默认 padding
+  :global(s-page) {
+    @apply h-full w-full;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    
+    // 移除 s-page 内部所有元素的 padding 和 margin
+    & > *,
+    & * {
+      max-width: none !important;
+    }
+    
+    // 移除内容区域的默认容器 padding
+    & [slot]:not([slot="primary-action"]):not([slot="secondary-actions"]) {
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+  }
+
+  &__container {
+    @apply flex flex-1;
+    @apply flex-col lg:flex-row;
+    @apply h-full overflow-hidden;
+    @apply m-0 p-0; // 移除所有边距
+  }
+
+  // 左侧配置面板
+  &__sidebar {
+    @apply w-full lg:w-80 xl:w-96;
+    @apply bg-white border-r border-gray-200;
+    @apply flex flex-col;
+    @apply overflow-hidden;
+    @apply h-full;
+
+    // 标签栏
+    .tabs {
+      @apply border-b border-gray-200;
+      @apply px-4 pt-4;
+
+      .tabList {
+        @apply flex gap-4;
+
+        .tabButton {
+          @apply px-4 py-2;
+          @apply text-sm font-medium;
+          @apply text-gray-600;
+          @apply border-b-2 border-transparent;
+          @apply transition-colors;
+          @apply cursor-pointer;
+          @apply bg-transparent;
+
+          &:hover {
+            @apply text-gray-900;
+          }
+
+          &.active {
+            @apply text-blue-600 border-blue-600;
+          }
+        }
+      }
+    }
+
+    // 配置内容区域
+    .content {
+      @apply flex-1 overflow-y-auto;
+      @apply px-4 py-4; // 减小上下 padding
+
+      .section {
+        @apply mb-6;
+
+        &:last-child {
+          @apply mb-0;
+        }
+
+        .sectionTitle {
+          @apply text-sm font-semibold text-gray-900 mb-3;
+        }
+
+        .sectionDescription {
+          @apply text-xs text-gray-600 mb-3;
+        }
+      }
+    }
+  }
+
+  // 右侧预览区域
+  &__preview {
+    @apply flex-1;
+    @apply bg-gray-100;
+    @apply flex flex-col;
+    @apply overflow-hidden;
+    @apply h-full;
+    @apply m-0 p-0; // 移除边距
+
+    // 预览工具栏
+    .previewToolbar {
+      @apply bg-white border-b border-gray-200;
+      @apply px-4 py-3; // 减小左右 padding
+      @apply flex items-center justify-end gap-3;
+
+      .deviceToggle {
+        @apply flex gap-1 bg-gray-100 rounded p-1;
+
+        button {
+          @apply px-3 py-1.5 rounded;
+          @apply text-sm text-gray-600;
+          @apply transition-colors;
+          @apply bg-transparent border-0;
+
+          &:hover {
+            @apply text-gray-900 bg-gray-200;
+          }
+
+          &.active {
+            @apply bg-white text-gray-900 shadow-sm;
+          }
+        }
+      }
+    }
+
+    // 预览内容区域
+    .previewContent {
+      @apply flex-1 overflow-y-auto;
+      @apply flex items-center justify-center;
+      @apply p-4; // 减小 padding
+
+      .previewWrapper {
+        @apply bg-white rounded-lg shadow-lg;
+        @apply transition-all;
+
+        // 桌面视图
+        &.desktop {
+          @apply w-full max-w-4xl;
+          min-height: 600px;
+        }
+
+        // 移动视图
+        &.mobile {
+          @apply w-full max-w-sm;
+          min-height: 600px;
+        }
+
+        .gameCanvas {
+          @apply w-full h-full;
+          @apply flex items-center justify-center;
+          @apply text-gray-400;
+          min-height: 500px;
+        }
+      }
+    }
+  }
+}
+
+// 响应式：移动端
+@media (max-width: 1023px) {
+  .campaignEditor {
+    &__container {
+      @apply flex-col;
+    }
+
+    &__sidebar {
+      @apply w-full border-r-0 border-b;
+      max-height: 50vh;
+      @apply flex-shrink-0;
+    }
+
+    &__preview {
+      @apply flex-1;
+    }
+  }
+}
+

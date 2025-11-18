@@ -238,6 +238,9 @@ const PolarisProvider = observer(() => {
   // 🔥 检查是否全部初始化完成
   const isFullyInitialized = commonStore.isFullyInitialized && userInfoStore.isInitialized
 
+  // 🔥 检测是否在 App Window（iframe）内
+  const isInAppWindow = typeof window !== "undefined" && window.self !== window.top
+
   return (
     <AppProvider i18n={polarisI18n}>
       {!isFullyInitialized ? (
@@ -246,14 +249,22 @@ const PolarisProvider = observer(() => {
       ) : (
         // 应用主内容
         <>
-          <s-app-nav>
-            <s-link href="/campaigns">{t("nav.campaigns")}</s-link>
-            <s-link href="/billing">{t("nav.billing")}</s-link>
-            <s-link href="/settings">{t("nav.settings")}</s-link>
-          </s-app-nav>
-          <Frame>
+          {/* 在 App Window 内不显示导航 */}
+          {!isInAppWindow && (
+            <s-app-nav>
+              <s-link href="/campaigns">{t("nav.campaigns")}</s-link>
+              <s-link href="/billing">{t("nav.billing")}</s-link>
+              <s-link href="/settings">{t("nav.settings")}</s-link>
+            </s-app-nav>
+          )}
+          {/* 在 App Window 内不使用 Frame，直接渲染内容 */}
+          {isInAppWindow ? (
             <Outlet />
-          </Frame>
+          ) : (
+            <Frame>
+              <Outlet />
+            </Frame>
+          )}
         </>
       )}
     </AppProvider>

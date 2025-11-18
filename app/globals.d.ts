@@ -22,8 +22,20 @@ declare namespace JSX {
         command?: string
         commandFor?: string
         slot?: string
+        onclick?: string
       },
       HTMLElement
     >
+  }
+}
+
+// Shopify Toast API
+interface Window {
+  saveCampaign?: () => void
+  deleteCampaign?: () => void
+  shopify?: {
+    toast: {
+      show: (message: string) => void
+    }
   }
 }

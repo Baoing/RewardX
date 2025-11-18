@@ -1,21 +1,20 @@
-import { useEffect } from "react"
+import { useEffect, useState, useCallback } from "react"
 import type { LoaderFunctionArgs } from "react-router"
 import { useParams, useNavigate } from "react-router"
 import {
-  Page,
-  Layout,
-  Card,
-  BlockStack,
-  InlineStack,
-  Text,
-  Badge,
   Button,
   Spinner,
-  Divider
+  Text,
+  TextField,
+  Select,
+  Checkbox
 } from "@shopify/polaris"
+import { DesktopIcon, MobileIcon } from "@shopify/polaris-icons"
 import { observer } from "mobx-react-lite"
 import { useCampaignStore } from "@/stores"
 import { authenticate } from "@/shopify.server"
+import { showToast } from "@/utils/toast"
+import styles from "./styles.module.scss"
 
 // loader 进行 Shopify 认证
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
@@ -32,66 +31,13 @@ const CampaignDetailPage = observer(() => {
   const campaignStore = useCampaignStore()
   const campaign = campaignStore.currentCampaign
 
-  useEffect(() => {
-    if (id) {
-      // 清空当前数据，避免显示旧数据
-      campaignStore.setCurrentCampaign(null)
-      campaignStore.setEntries([])
+  // 标签状态
+  const [activeTab, setActiveTab] = useState<"rules" | "design" | "prizes">("rules")
+  // 预览设备状态
+  const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop")
 
-      // 获取新数据
-      campaignStore.fetchCampaign(id)
-      campaignStore.fetchEntries(id)
-    }
-
-    // 组件卸载时清空数据
-    return () => {
-      console.log("🧹 Cleaning up campaign detail page")
-      campaignStore.setCurrentCampaign(null)
-      campaignStore.setEntries([])
-    }
-  }, [id, campaignStore])
-
-  // 根据 isActive 显示状态
-  const getStatusBadge = (isActive: boolean) => {
-    return isActive
-      ? <Badge tone="success">Active</Badge>
-      : <Badge tone="warning">Inactive</Badge>
-  }
-
-  const getGameTypeName = (gameType: string) => {
-    switch (gameType) {
-      case "wheel":
-        return "Lucky Wheel"
-      case "ninebox":
-        return "9-Box"
-      case "slot":
-        return "Slot Machine"
-      case "scratch":
-        return "Scratch Card.tsx"
-      default:
-        return gameType
-    }
-  }
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "Not set"
-    return new Date(dateString).toLocaleString()
-  }
-
-  // ✅ 移除 handleUpdateStatus，只保留 handleToggleActive
-  const handleToggleActive = async () => {
-    if (!id || !campaign) return
-
-    const newActiveState = !campaign.isActive
-    const confirmed = window.confirm(
-      `Are you sure you want to ${newActiveState ? "activate" : "deactivate"} this campaign?`
-    )
-    if (!confirmed) return
-
-    await campaignStore.updateCampaign(id, { isActive: newActiveState })
-  }
-
-  const handleDelete = async () => {
+  // 删除活动
+  const handleDelete = useCallback(async () => {
     if (!id) return
 
     const confirmed = window.confirm(
@@ -112,265 +58,343 @@ const CampaignDetailPage = observer(() => {
         navigate("/campaigns")
       }
     }
+  }, [id, campaignStore, navigate])
+
+  useEffect(() => {
+    if (id) {
+      // 清空当前数据，避免显示旧数据
+      campaignStore.setCurrentCampaign(null)
+      campaignStore.setEntries([])
+
+      // 获取新数据
+      campaignStore.fetchCampaign(id)
+      campaignStore.fetchEntries(id)
+    }
+
+    // 组件卸载时清空数据
+    return () => {
+      console.log("🧹 Cleaning up campaign detail page")
+      campaignStore.setCurrentCampaign(null)
+      campaignStore.setEntries([])
+    }
+  }, [id, campaignStore])
+
+  // 为 s-button 添加全局方法
+  useEffect(() => {
+    // @ts-ignore
+    window.saveCampaign = () => {
+      console.log("💾 Saving campaign...")
+      // TODO: Implement save logic
+      showToast({ content: "Campaign saved (Coming soon)" })
+    }
+
+    // @ts-ignore
+    window.deleteCampaign = () => {
+      handleDelete()
+    }
+
+    return () => {
+      // @ts-ignore
+      delete window.saveCampaign
+      // @ts-ignore
+      delete window.deleteCampaign
+    }
+  }, [handleDelete])
+
+  // 渲染左侧配置面板的内容
+  const renderSidebarContent = () => {
+    if (!campaign) return null
+
+    switch (activeTab) {
+      case "rules":
+        return (
+          <div className={styles.content}>
+            <div className={styles.section}>
+              <div className={styles.sectionTitle}>
+                Publish Campaign
+              </div>
+              <Checkbox
+                label="Make this campaign live"
+                checked={campaign.isActive}
+                onChange={(checked) => {
+                  if (id) {
+                    campaignStore.updateCampaign(id, { isActive: checked })
+                  }
+                }}
+              />
+            </div>
+
+            <div className={styles.section}>
+              <div className={styles.sectionTitle}>
+                Campaign Name
+              </div>
+              <TextField
+                label=""
+                value={campaign.name}
+                onChange={(value) => {
+                  if (id) {
+                    campaignStore.updateCampaign(id, { name: value })
+                  }
+                }}
+                autoComplete="off"
+                maxLength={50}
+              />
+              <div className={styles.sectionDescription}>
+                Only visible to you, not shown to customers
+              </div>
+            </div>
+
+            <div className={styles.section}>
+              <div className={styles.sectionTitle}>
+                Campaign Type
+              </div>
+              <Select
+                label=""
+                options={[
+                  { label: "Order Lottery", value: "order_lottery" },
+                  { label: "Email Subscribe", value: "email_subscribe" }
+                ]}
+                value={campaign.type}
+                onChange={(value) => {
+                  if (id) {
+                    campaignStore.updateCampaign(id, { type: value })
+                  }
+                }}
+              />
+            </div>
+
+            <div className={styles.section}>
+              <div className={styles.sectionTitle}>
+                Min Order Amount
+              </div>
+              <TextField
+                label=""
+                type="number"
+                value={campaign.minOrderAmount?.toString() || ""}
+                onChange={(value) => {
+                  if (id) {
+                    campaignStore.updateCampaign(id, {
+                      minOrderAmount: value ? parseFloat(value) : undefined
+                    })
+                  }
+                }}
+                prefix="$"
+                autoComplete="off"
+              />
+              <div className={styles.sectionDescription}>
+                Minimum order amount required to play
+              </div>
+            </div>
+
+            <div className={styles.section}>
+              <div className={styles.sectionTitle}>
+                Max Plays Per Customer
+              </div>
+              <TextField
+                label=""
+                type="number"
+                value={campaign.maxPlaysPerCustomer?.toString() || ""}
+                onChange={(value) => {
+                  if (id) {
+                    campaignStore.updateCampaign(id, {
+                      maxPlaysPerCustomer: value ? parseInt(value) : undefined
+                    })
+                  }
+                }}
+                autoComplete="off"
+              />
+              <div className={styles.sectionDescription}>
+                Leave empty for unlimited plays
+              </div>
+            </div>
+          </div>
+        )
+
+      case "design":
+        return (
+          <div className={styles.content}>
+            <div className={styles.section}>
+              <div className={styles.sectionTitle}>
+                Game Type
+              </div>
+              <Select
+                label=""
+                options={[
+                  { label: "9-Box", value: "ninebox" },
+                  { label: "Lucky Wheel", value: "wheel" },
+                  { label: "Slot Machine", value: "slot" },
+                  { label: "Scratch Card", value: "scratch" }
+                ]}
+                value={campaign.gameType}
+                onChange={(value) => {
+                  if (id) {
+                    campaignStore.updateCampaign(id, { gameType: value })
+                  }
+                }}
+              />
+            </div>
+
+            <div className={styles.section}>
+              <div className={styles.sectionTitle}>
+                Theme Colors
+              </div>
+              <Text as="p" tone="subdued">
+                Customize colors (Coming soon)
+              </Text>
+            </div>
+          </div>
+        )
+
+      case "prizes":
+        return (
+          <div className={styles.content}>
+            <div className={styles.section}>
+              <div className={styles.sectionTitle}>
+                Prize Configuration
+              </div>
+              <div className={styles.sectionDescription}>
+                Total Prizes: {campaign.prizes?.length || 0}
+              </div>
+              <Button onClick={() => { /* TODO: Add prize modal */ }}>
+                Add Prize
+              </Button>
+            </div>
+
+            {campaign.prizes && campaign.prizes.length > 0 && (
+              <div className={styles.section}>
+                {campaign.prizes.map((prize) => (
+                  <div key={prize.id} style={{ padding: "12px", border: "1px solid #e1e3e5", borderRadius: "8px", marginBottom: "8px" }}>
+                    <Text as="p" fontWeight="semibold">{prize.name}</Text>
+                    <Text as="p" tone="subdued">{prize.type} - {prize.chancePercentage}%</Text>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )
+
+      default:
+        return null
+    }
   }
 
   if (campaignStore.isLoading && !campaign) {
     return (
-      <Page title="Campaign Details">
-        <Layout>
-          <Layout.Section>
-            <Card>
-              <div style={{ padding: "40px", textAlign: "center" }}>
-                <Spinner size="large" />
-                <div style={{ marginTop: "16px" }}>
-                  <Text as="p" tone="subdued">
-                    Loading campaign...
-                  </Text>
-                </div>
-              </div>
-            </Card>
-          </Layout.Section>
-        </Layout>
-      </Page>
+      <div className={styles.campaignEditor}>
+        {/* @ts-ignore */}
+        <s-page heading="Campaign Details">
+          <div style={{ padding: "40px", textAlign: "center" }}>
+            <Spinner size="large" />
+            <div style={{ marginTop: "16px" }}>
+              <Text as="p" tone="subdued">
+                Loading campaign...
+              </Text>
+            </div>
+          </div>
+        </s-page>
+      </div>
     )
   }
 
   if (!campaign) {
     return (
-      <Page title="Campaign Not Found">
-        <Layout>
-          <Layout.Section>
-            <Card>
-              <Text as="p">Campaign not found</Text>
-            </Card>
-          </Layout.Section>
-        </Layout>
-      </Page>
+      <div className={styles.campaignEditor}>
+        {/* @ts-ignore */}
+        <s-page heading="Campaign Not Found">
+          <div style={{ padding: "40px" }}>
+            <Text as="p">Campaign not found</Text>
+          </div>
+        </s-page>
+      </div>
     )
   }
 
   return (
-    <Page
-      title={campaign.name}
-      backAction={{ content: "Campaigns", url: "/campaigns" }}
-      secondaryActions={[
-        {
-          content: campaign.isActive ? "Deactivate" : "Activate",
-          onAction: handleToggleActive
-        },
-      ]}
-    >
-      <Layout>
-        <Layout.Section>
-          <BlockStack gap="400">
-            <Card>
-              <BlockStack gap="400">
-                <InlineStack align="space-between" blockAlign="center">
-                  <Text as="h2" variant="headingMd">
-                    Campaign Information
-                  </Text>
-                  {getStatusBadge(campaign.isActive)}
-                </InlineStack>
-
-                <Divider />
-
-                <BlockStack gap="200">
-                  <InlineStack align="space-between">
-                    <Text as="p" tone="subdued">
-                      Game Type
-                    </Text>
-                    <Text as="p" fontWeight="semibold">
-                      {getGameTypeName(campaign.gameType)}
-                    </Text>
-                  </InlineStack>
-
-                  <InlineStack align="space-between">
-                    <Text as="p" tone="subdued">
-                      Campaign Type
-                    </Text>
-                    <Text as="p" fontWeight="semibold">
-                      {campaign.type}
-                    </Text>
-                  </InlineStack>
-
-                  <InlineStack align="space-between">
-                    <Text as="p" tone="subdued">
-                      Min Order Amount
-                    </Text>
-                    <Text as="p" fontWeight="semibold">
-                      {campaign.minOrderAmount ? `$${campaign.minOrderAmount}` : "No limit"}
-                    </Text>
-                  </InlineStack>
-
-                  <InlineStack align="space-between">
-                    <Text as="p" tone="subdued">
-                      Max Plays Per Customer
-                    </Text>
-                    <Text as="p" fontWeight="semibold">
-                      {campaign.maxPlaysPerCustomer || "Unlimited"}
-                    </Text>
-                  </InlineStack>
-
-                  <InlineStack align="space-between">
-                    <Text as="p" tone="subdued">
-                      Start Date
-                    </Text>
-                    <Text as="p" fontWeight="semibold">
-                      {formatDate(campaign.startAt)}
-                    </Text>
-                  </InlineStack>
-
-                  <InlineStack align="space-between">
-                    <Text as="p" tone="subdued">
-                      End Date
-                    </Text>
-                    <Text as="p" fontWeight="semibold">
-                      {formatDate(campaign.endAt)}
-                    </Text>
-                  </InlineStack>
-                </BlockStack>
-
-                {/* ✅ 移除 Status Actions 区块，只保留 isActive 开关 */}
-              </BlockStack>
-            </Card>
-
-            <Card>
-              <BlockStack gap="400">
-                <Text as="h2" variant="headingMd">
-                  Statistics
-                </Text>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center p-4 bg-gray-50 rounded">
-                    <Text as="p" tone="subdued">
-                      Total Plays
-                    </Text>
-                    <Text as="p" variant="headingLg">
-                      {campaign.totalPlays}
-                    </Text>
+    <div className={styles.campaignEditor}>
+      {/* @ts-ignore */}
+      <s-page heading={campaign.name} style={{ height: "100%", display: "flex", flexDirection: "column", padding: 0, margin: 0 }}>
+        {/* 主操作按钮 */}
+        {/* @ts-ignore */}
+        <s-button slot="primary-action" onclick="window.saveCampaign()">
+          Save
+        </s-button>
+        
+        {/* 次要操作按钮 */}
+        {/* @ts-ignore */}
+        <s-button slot="secondary-actions" onclick="window.deleteCampaign()">
+          Delete
+        </s-button>
+        
+        {/* 编辑器容器 */}
+        <div className={styles.campaignEditor__container} style={{ flex: 1, margin: 0, padding: 0 }}>
+          {/* 左侧配置面板 */}
+          <div className={styles.campaignEditor__sidebar}>
+            {/* 标签切换 */}
+            <div className={styles.tabs}>
+              <div className={styles.tabList}>
+                <button
+                  className={`${styles.tabButton} ${activeTab === "rules" ? styles.active : ""}`}
+                  onClick={() => setActiveTab("rules")}
+                >
+                  Rules
+                </button>
+                <button
+                  className={`${styles.tabButton} ${activeTab === "design" ? styles.active : ""}`}
+                  onClick={() => setActiveTab("design")}
+                >
+                  Design
+                </button>
+                <button
+                  className={`${styles.tabButton} ${activeTab === "prizes" ? styles.active : ""}`}
+                  onClick={() => setActiveTab("prizes")}
+                >
+                  Prizes
+                </button>
+              </div>
                   </div>
 
-                  <div className="text-center p-4 bg-gray-50 rounded">
-                    <Text as="p" tone="subdued">
-                      Total Wins
-                    </Text>
-                    <Text as="p" variant="headingLg">
-                      {campaign.totalWins}
-                    </Text>
+            {/* 配置内容 */}
+            {renderSidebarContent()}
                   </div>
 
-                  <div className="text-center p-4 bg-gray-50 rounded">
-                    <Text as="p" tone="subdued">
-                      Win Rate
-                    </Text>
-                    <Text as="p" variant="headingLg">
-                      {campaign.totalPlays > 0
-                        ? `${((campaign.totalWins / campaign.totalPlays) * 100).toFixed(1)}%`
-                        : "0%"}
-                    </Text>
-                  </div>
-                </div>
-              </BlockStack>
-            </Card>
-
-            <Card>
-              <BlockStack gap="400">
-                <Text as="h2" variant="headingMd">
-                  Prizes ({campaign.prizes?.length || 0})
-                </Text>
-
-                <div className="space-y-2">
-                  {(campaign.prizes || []).map((prize) => (
-                    <div
-                      key={prize.id}
-                      className="p-4 border rounded flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-4">
-                        {prize.color && (
-                          <div
-                            className="w-10 h-10 rounded"
-                            style={{ backgroundColor: prize.color }}
-                          />
-                        )}
-                        <div>
-                          <Text as="p" fontWeight="semibold">
-                            {prize.name}
-                          </Text>
-                          <Text as="p" tone="subdued" variant="bodySm">
-                            {prize.type} • {prize.chancePercentage}% chance
-                          </Text>
-                          {prize.totalStock && (
-                            <Text as="p" tone="subdued" variant="bodySm">
-                              Stock: {prize.usedStock}/{prize.totalStock}
-                            </Text>
-                          )}
+          {/* 右侧预览区域 */}
+          <div className={styles.campaignEditor__preview}>
+            {/* 预览工具栏 */}
+            <div className={styles.previewToolbar}>
+              <div className={styles.deviceToggle}>
+                <button
+                  className={previewDevice === "desktop" ? styles.active : ""}
+                  onClick={() => setPreviewDevice("desktop")}
+                >
+                  <DesktopIcon />
+                </button>
+                <button
+                  className={previewDevice === "mobile" ? styles.active : ""}
+                  onClick={() => setPreviewDevice("mobile")}
+                >
+                  <MobileIcon />
+                </button>
                         </div>
                       </div>
-                      <Badge tone={prize.isActive ? "success" : undefined}>
-                        {prize.isActive ? "Active" : "Inactive"}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </BlockStack>
-            </Card>
 
-            <Card>
-              <BlockStack gap="400">
-                <InlineStack align="space-between" blockAlign="center">
-                  <Text as="h2" variant="headingMd">
-                    Recent Entries ({campaignStore.entries.length})
+            {/* 预览内容 */}
+            <div className={styles.previewContent}>
+              <div className={`${styles.previewWrapper} ${styles[previewDevice]}`}>
+                <div className={styles.gameCanvas}>
+                  <Text as="p" variant="bodyLg" tone="subdued">
+                    Game Preview ({campaign.gameType})
                   </Text>
-                  <Button
-                    onClick={() => {
-                      navigate(`/campaigns/${id}/entries`)
-                    }}
-                  >
-                    View All
-                  </Button>
-                </InlineStack>
-
-                {campaignStore.entries.length === 0 ? (
                   <Text as="p" tone="subdued">
-                    No entries yet
+                    Coming soon
                   </Text>
-                ) : (
-                  <div className="space-y-2">
-                    {campaignStore.entries.slice(0, 10).map((entry) => (
-                      <div
-                        key={entry.id}
-                        className="p-3 border rounded flex items-center justify-between"
-                      >
-                        <div>
-                          <Text as="p" fontWeight="semibold">
-                            {entry.orderNumber || entry.email}
-                          </Text>
-                          <Text as="p" tone="subdued" variant="bodySm">
-                            {new Date(entry.createdAt).toLocaleString()}
-                          </Text>
+                </div>
+              </div>
                         </div>
-                        <div className="text-right">
-                          <Badge tone={entry.isWinner ? "success" : undefined}>
-                            {entry.isWinner ? `Won: ${entry.prizeName}` : "No prize"}
-                          </Badge>
-                          {entry.discountCode && (
-                            <Text as="p" variant="bodySm">
-                              Code: {entry.discountCode}
-                            </Text>
-                          )}
                         </div>
                       </div>
-                    ))}
+      </s-page>
                   </div>
-                )}
-              </BlockStack>
-            </Card>
-          </BlockStack>
-        </Layout.Section>
-      </Layout>
-    </Page>
   )
 })
 
 export default CampaignDetailPage
-
