@@ -101,7 +101,16 @@ const CampaignDetailPage = observer(() => {
 
     const success = await campaignStore.deleteCampaign(id)
     if (success) {
-      navigate("/campaigns")
+      // 如果在 App Window 中，通知父窗口关闭
+      // 通过检查是否在 iframe 中来判断
+      if (window.parent !== window) {
+        console.log("🔄 Closing App Window after delete")
+        // 触发 App Window 的 hide 事件（父窗口会监听并刷新列表）
+        window.parent.postMessage({ type: "close-app-window" }, "*")
+      } else {
+        // 如果不在 App Window 中，正常导航
+        navigate("/campaigns")
+      }
     }
   }
 

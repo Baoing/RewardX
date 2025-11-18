@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import type { LoaderFunctionArgs } from "react-router"
 import { useNavigate, Outlet, useLocation } from "react-router"
 import {
@@ -36,6 +36,7 @@ const CampaignsPage = observer(() => {
   const campaignStore = useCampaignStore()
   const [selectedTab, setSelectedTab] = useState(0)
   const [isCreating, setIsCreating] = useState(false)
+  const appWindowRef = useRef<any>(null)
   
   // 判断是否在子路由（详情页、分析页等）
   const isChildRoute = location.pathname !== "/campaigns"
@@ -43,6 +44,51 @@ const CampaignsPage = observer(() => {
   useEffect(() => {
     campaignStore.fetchCampaigns()
   }, [])
+
+  // 监听 App Window 关闭事件，刷新列表
+  useEffect(() => {
+    const appWindow = appWindowRef.current
+    if (!appWindow) return
+
+    const handleHide = () => {
+      console.log("🔄 App Window closed, refreshing campaigns...")
+      campaignStore.fetchCampaigns()
+    }
+
+    appWindow.addEventListener("hide", handleHide)
+    return () => {
+      appWindow.removeEventListener("hide", handleHide)
+    }
+  }, [campaignStore])
+
+  // 监听来自 App Window 内部的消息（例如删除后的关闭请求）
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === "close-app-window") {
+        console.log("📩 Received close request from App Window")
+        const appWindow = appWindowRef.current
+        if (appWindow) {
+          appWindow.hide()
+        }
+      }
+    }
+
+    window.addEventListener("message", handleMessage)
+    return () => {
+      window.removeEventListener("message", handleMessage)
+    }
+  }, [])
+
+  const handleOpenModal = (campaignId: string) => {
+    const appWindow = appWindowRef.current
+    if (appWindow) {
+      // 设置 App Window 的 src 为详情页路由
+      appWindow.src = `/campaigns/${campaignId}`
+      // 显示 App Window
+      appWindow.show()
+      console.log("🚀 Opening App Window for campaign:", campaignId)
+    }
+  }
 
   const handleCreateCampaign = async () => {
     try {
@@ -56,8 +102,8 @@ const CampaignsPage = observer(() => {
       // 刷新活动列表
       await campaignStore.fetchCampaigns()
 
-      // 🎯 使用 React Router 导航（不会触发页面刷新和重新认证）
-      navigate(`/campaigns/${campaign.id}`)
+      // 🎯 打开 App Window 显示新创建的活动
+      handleOpenModal(campaign.id)
 
     } catch (error) {
       console.error("❌ Error creating campaign:", error)
@@ -147,12 +193,16 @@ const CampaignsPage = observer(() => {
                     campaign={campaign}
                     onToggleStatus={handleToggleStatus}
                     onDelete={handleDelete}
+                    onCustomize={handleOpenModal}
                   />
                 ))}
               </Card>
           }
         </Layout.Section>
       </Layout>
+
+      {/* App Window for Campaign Details */}
+      <s-app-window ref={appWindowRef} id="campaign-detail-window" />
     </Page>
   )
 })

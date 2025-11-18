@@ -1,5 +1,4 @@
 import { useState, useCallback } from "react"
-import { useNavigate, Link } from "react-router"
 import {
   Button,
   Text,
@@ -21,15 +20,16 @@ export interface CampaignItemProps {
   campaign: Campaign
   onToggleStatus?: (id: string, isActive: boolean) => Promise<void>
   onDelete?: (id: string) => Promise<void>
+  onCustomize?: (id: string) => void
 }
 
 export default function CampaignItem({
   campaign,
   onToggleStatus,
-  onDelete
+  onDelete,
+  onCustomize
 }: CampaignItemProps) {
   const { t } = useTranslation()
-  const navigate = useNavigate()
   const [isToggling, setIsToggling] = useState(false)
 
   const trueVal = (val: number, suffix: string = ""): string => {
@@ -116,7 +116,7 @@ export default function CampaignItem({
               <Button
                 variant="primary"
                 size="slim"
-                onClick={() => navigate(`/campaigns/${campaign.id}`)}
+                onClick={() => onCustomize?.(campaign.id)}
               >
                 Customize
               </Button>
@@ -213,7 +213,7 @@ export default function CampaignItem({
           <Button
             variant="primary"
             size="slim"
-            onClick={() => navigate(`/campaigns/${campaign.id}`)}
+            onClick={() => onCustomize?.(campaign.id)}
           >
             Customize
           </Button>
@@ -236,7 +236,6 @@ interface MoreActionsProps {
 }
 
 function MoreActions({ campaignId, campaignName, onDelete }: MoreActionsProps) {
-  const navigate = useNavigate()
   const [popoverActive, setPopoverActive] = useState(false)
 
   const togglePopoverActive = useCallback(
