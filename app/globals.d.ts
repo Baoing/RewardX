@@ -26,6 +26,16 @@ declare namespace JSX {
       },
       HTMLElement
     >
+    "s-app-nav": React.DetailedHTMLProps<
+      React.HTMLAttributes<HTMLElement>,
+      HTMLElement
+    >
+    "s-link": React.DetailedHTMLProps<
+      React.HTMLAttributes<HTMLElement> & {
+        href?: string
+      },
+      HTMLElement
+    >
   }
 }
 

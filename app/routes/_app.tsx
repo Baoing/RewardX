@@ -1,3 +1,4 @@
+/// <reference path="../globals.d.ts" />
 import { useEffect, useMemo, useRef } from "react"
 import type { HeadersFunction, LoaderFunctionArgs, ShouldRevalidateFunctionArgs } from "react-router"
 import { Outlet, useLoaderData, useRouteError } from "react-router"
@@ -196,21 +197,6 @@ function AppContent() {
     }
   }, [userInfo, shopInfo, commonStore])
 
-  // 开发环境日志（只执行一次）
-  useEffect(() => {
-    // if (shopInfo) {
-    //   console.log("🏪 Shop Info:", shopInfo.name, shopInfo.myshopifyDomain)
-    // }
-    //
-    // if (userInfo) {
-    //   console.log("👤 User Info:", userInfo.shopName || userInfo.shop)
-    //   console.log("💾 Saved App Language:", userInfo.appLanguage || "未设置")
-    // }
-    //
-    // console.log("🌐 Partner Locale:", partnerLocale)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []) // 只执行一次
-
   return (
     <ShopifyAppProvider embedded apiKey={apiKey}>
       <PolarisProvider />
@@ -222,13 +208,6 @@ function AppContent() {
 const PolarisProvider = observer(() => {
   const { t } = useTranslation()
   const commonStore = useCommonStore()
-  // const polarisRenderCount = useRef(0)
-  //
-  // // 追踪渲染次数
-  // useEffect(() => {
-  //   polarisRenderCount.current += 1
-  //   console.log(`🎨 PolarisProvider 渲染次数: ${polarisRenderCount.current}, 当前语言: ${commonStore.currentLanguage}`)
-  // })
 
   // 根据当前语言选择 Polaris 翻译（响应式）
   const polarisI18n = useMemo(() => {
@@ -238,9 +217,13 @@ const PolarisProvider = observer(() => {
   // 🔥 检查是否全部初始化完成
   const isFullyInitialized = commonStore.isFullyInitialized && userInfoStore.isInitialized
 
-  // 🔥 检测是否在 App Window（iframe）内
-  const isInAppWindow = typeof window !== "undefined" && window.self !== window.top
-
+  // 🔥 检测是否在 Modal 中打开
+  // Shopify Modal 场景的判断条件：
+  // 1. 在 iframe 中运行（window.self !== window.top）
+  // 2. URL 中没有标准的 Shopify Admin 参数（如 shop, host）
+  // 3. 或者 URL 包含特定的 modal 标记
+  const isInModal = typeof window !== "undefined" && window.opener
+  console.log(isInModal)
   return (
     <AppProvider i18n={polarisI18n}>
       {!isFullyInitialized ? (
@@ -250,7 +233,7 @@ const PolarisProvider = observer(() => {
         // 应用主内容
         <>
           {/* 在 App Window 内不显示导航 */}
-          {!isInAppWindow && (
+          {!isInModal && (
             <s-app-nav>
               <s-link href="/campaigns">{t("nav.campaigns")}</s-link>
               <s-link href="/billing">{t("nav.billing")}</s-link>
@@ -258,7 +241,7 @@ const PolarisProvider = observer(() => {
             </s-app-nav>
           )}
           {/* 在 App Window 内不使用 Frame，直接渲染内容 */}
-          {isInAppWindow ? (
+          {isInModal ? (
             <Outlet />
           ) : (
             <Frame>

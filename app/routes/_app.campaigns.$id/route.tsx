@@ -1,15 +1,16 @@
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState } from "react"
 import type { LoaderFunctionArgs } from "react-router"
 import { useParams, useNavigate } from "react-router"
 import {
   Button,
+  ButtonGroup,
   Spinner,
   Text,
   TextField,
   Select,
   Checkbox
 } from "@shopify/polaris"
-import { DesktopIcon, MobileIcon } from "@shopify/polaris-icons"
+import { DesktopIcon, MobileIcon, XIcon } from "@shopify/polaris-icons"
 import { observer } from "mobx-react-lite"
 import { useCampaignStore } from "@/stores"
 import { authenticate } from "@/shopify.server"
@@ -36,29 +37,30 @@ const CampaignDetailPage = observer(() => {
   // 预览设备状态
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop")
 
-  // 删除活动
-  const handleDelete = useCallback(async () => {
-    if (!id) return
+  // 🔥 处理关闭操作
+  const handleClose = () => {
+    // 检测是否在 Modal/弹窗中打开
+    if (typeof window !== "undefined") {
+      // 如果是通过 window.open 打开的弹窗
+      if (window.opener) {
+        console.log("🪟 关闭 Modal 弹窗")
+        window.close()
+        return
+      }
 
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this campaign? This action cannot be undone."
-    )
-    if (!confirmed) return
-
-    const success = await campaignStore.deleteCampaign(id)
-    if (success) {
-      // 如果在 App Window 中，通知父窗口关闭
-      // 通过检查是否在 iframe 中来判断
-      if (window.parent !== window) {
-        console.log("🔄 Closing App Window after delete")
-        // 触发 App Window 的 hide 事件（父窗口会监听并刷新列表）
-        window.parent.postMessage({ type: "close-app-window" }, "*")
-      } else {
-        // 如果不在 App Window 中，正常导航
-        navigate("/campaigns")
+      // 检查 URL 参数是否标记为 modal
+      const urlParams = new URLSearchParams(window.location.search)
+      if (urlParams.get("modal") === "1") {
+        console.log("🎯 关闭 Modal（通过参数标记）")
+        window.close()
+        return
       }
     }
-  }, [id, campaignStore, navigate])
+
+    // 默认：导航回列表页
+    console.log("📋 返回列表页")
+    navigate("/campaigns")
+  }
 
   useEffect(() => {
     if (id) {
@@ -298,10 +300,12 @@ const CampaignDetailPage = observer(() => {
       {/* 自定义标题栏 */}
       <div className={styles.campaignEditor__header}>
         <div className={styles.campaignEditor__headerContent}>
-          <h1 className={styles.campaignEditor__title}>{campaign.name}</h1>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <h1 className={styles.campaignEditor__title}>{campaign.name}</h1>
+          </div>
           <div className={styles.campaignEditor__actions}>
-            <Button onClick={handleDelete} tone="critical">
-              Delete
+            <Button disabled={true}>
+              Discard
             </Button>
             <Button
               variant="primary"
@@ -312,10 +316,17 @@ const CampaignDetailPage = observer(() => {
             >
               Save
             </Button>
+
+            <Button
+              icon={XIcon}
+              variant={"tertiary"}
+              onClick={handleClose}
+              accessibilityLabel="Close"
+            />
           </div>
         </div>
       </div>
-      
+
       {/* 编辑器容器 */}
       <div className={styles.campaignEditor__container}>
         {/* 左侧配置面板 */}
@@ -352,20 +363,22 @@ const CampaignDetailPage = observer(() => {
         <div className={styles.campaignEditor__preview}>
           {/* 预览工具栏 */}
           <div className={styles.previewToolbar}>
-            <div className={styles.deviceToggle}>
-              <button
-                className={previewDevice === "desktop" ? styles.active : ""}
+            <ButtonGroup variant="segmented">
+              <Button
+                icon={DesktopIcon}
+                size={"large"}
+                pressed={previewDevice === "desktop"}
                 onClick={() => setPreviewDevice("desktop")}
-              >
-                <DesktopIcon />
-              </button>
-              <button
-                className={previewDevice === "mobile" ? styles.active : ""}
+                accessibilityLabel="Desktop preview"
+              />
+              <Button
+                size={"large"}
+                icon={MobileIcon}
+                pressed={previewDevice === "mobile"}
                 onClick={() => setPreviewDevice("mobile")}
-              >
-                <MobileIcon />
-              </button>
-            </div>
+                accessibilityLabel="Mobile preview"
+              />
+            </ButtonGroup>
           </div>
 
           {/* 预览内容 */}

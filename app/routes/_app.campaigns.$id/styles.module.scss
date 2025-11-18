@@ -4,7 +4,7 @@
   @apply overflow-hidden;
   @apply bg-white;
   @apply flex flex-col;
-  
+
   // 自定义标题栏
   &__header {
     @apply flex-shrink-0;
@@ -105,27 +105,8 @@
     // 预览工具栏
     .previewToolbar {
       @apply bg-white border-b border-gray-200;
-      @apply px-4 py-3; // 减小左右 padding
-      @apply flex items-center justify-end gap-3;
-
-      .deviceToggle {
-        @apply flex gap-1 bg-gray-100 rounded p-1;
-
-        button {
-          @apply px-3 py-1.5 rounded;
-          @apply text-sm text-gray-600;
-          @apply transition-colors;
-          @apply bg-transparent border-0;
-
-          &:hover {
-            @apply text-gray-900 bg-gray-200;
-          }
-
-          &.active {
-            @apply bg-white text-gray-900 shadow-sm;
-          }
-        }
-      }
+      @apply px-4 py-3;
+      @apply flex items-center justify-center gap-3;
     }
 
     // 预览内容区域
@@ -140,21 +121,21 @@
 
         // 桌面视图
         &.desktop {
-          @apply w-full max-w-4xl;
-          min-height: 600px;
+          @apply w-full;
+          height: calc(100%);
         }
 
         // 移动视图
         &.mobile {
           @apply w-full max-w-sm;
-          min-height: 600px;
+
         }
 
         .gameCanvas {
           @apply w-full h-full;
           @apply flex items-center justify-center;
           @apply text-gray-400;
-          min-height: 500px;
+          min-height: 700px;
         }
       }
     }
