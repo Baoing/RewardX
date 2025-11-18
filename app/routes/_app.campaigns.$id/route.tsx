@@ -101,11 +101,8 @@ const CampaignDetailPage = observer(() => {
             </div>
 
             <div className={styles.section}>
-              <div className={styles.sectionTitle}>
-                Campaign Name
-              </div>
               <TextField
-                label=""
+                label="Campaign Name"
                 value={campaign.name}
                 onChange={(value) => {
                   if (id) {
@@ -114,18 +111,13 @@ const CampaignDetailPage = observer(() => {
                 }}
                 autoComplete="off"
                 maxLength={50}
+                helpText={"Only visible to you, not shown to customers"}
               />
-              <div className={styles.sectionDescription}>
-                Only visible to you, not shown to customers
-              </div>
             </div>
 
             <div className={styles.section}>
-              <div className={styles.sectionTitle}>
-                Campaign Type
-              </div>
               <Select
-                label=""
+                label="Campaign Type"
                 options={[
                   { label: "Order Lottery", value: "order_lottery" },
                   { label: "Email Subscribe", value: "email_subscribe" }
@@ -140,11 +132,8 @@ const CampaignDetailPage = observer(() => {
             </div>
 
             <div className={styles.section}>
-              <div className={styles.sectionTitle}>
-                Min Order Amount
-              </div>
               <TextField
-                label=""
+                label="Min Order Amount"
                 type="number"
                 value={campaign.minOrderAmount?.toString() || ""}
                 onChange={(value) => {
@@ -156,18 +145,13 @@ const CampaignDetailPage = observer(() => {
                 }}
                 prefix="$"
                 autoComplete="off"
+                helpText={"Minimum order amount required to play"}
               />
-              <div className={styles.sectionDescription}>
-                Minimum order amount required to play
-              </div>
             </div>
 
             <div className={styles.section}>
-              <div className={styles.sectionTitle}>
-                Max Plays Per Customer
-              </div>
               <TextField
-                label=""
+                label="Max Plays Per Customer"
                 type="number"
                 value={campaign.maxPlaysPerCustomer?.toString() || ""}
                 onChange={(value) => {
@@ -178,10 +162,8 @@ const CampaignDetailPage = observer(() => {
                   }
                 }}
                 autoComplete="off"
+                helpText={"Leave empty for unlimited plays"}
               />
-              <div className={styles.sectionDescription}>
-                Leave empty for unlimited plays
-              </div>
             </div>
           </div>
         )
