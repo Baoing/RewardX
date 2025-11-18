@@ -15,15 +15,49 @@ import { observer } from "mobx-react-lite"
 import { useCampaignStore } from "@/stores"
 import {Card} from "@/components/EnhancePolaris"
 import EmptyState from "./components/emptyState"
+import { showSuccessToast, showErrorToast } from "@/utils/toast"
+import { createDefaultCampaign } from "@/utils/api.campaigns"
+import { ApiError } from "@/utils/api.client"
 
 const CampaignsPage = observer(() => {
   const { t } = useTranslation()
   const campaignStore = useCampaignStore()
   const [selectedTab, setSelectedTab] = useState(0)
+  const [isCreating, setIsCreating] = useState(false)
 
   useEffect(() => {
     campaignStore.fetchCampaigns()
   }, [])
+
+  const handleCreateCampaign = async () => {
+    try {
+      setIsCreating(true)
+
+      // 使用封装的 API 方法创建默认活动
+      const campaign = await createDefaultCampaign()
+
+      showSuccessToast("Campaign created successfully!")
+
+      // 刷新活动列表
+      await campaignStore.fetchCampaigns()
+
+      // 跳转到活动详情页
+      window.location.href = `/campaigns/${campaign.id}`
+
+    } catch (error) {
+      console.error("❌ Error creating campaign:", error)
+      
+      if (error instanceof ApiError) {
+        showErrorToast(error.message)
+      } else if (error instanceof Error) {
+        showErrorToast(error.message)
+      } else {
+        showErrorToast("Failed to create campaign")
+      }
+    } finally {
+      setIsCreating(false)
+    }
+  }
 
   const getStatusBadge = (status: string, isActive: boolean) => {
     if (!isActive) {
@@ -149,9 +183,8 @@ const CampaignsPage = observer(() => {
       primaryAction={{
         content: "Create Campaign",
         icon: PlusIcon,
-        onAction: () => {
-          window.location.href = "/campaigns/create"
-        }
+        loading: isCreating,
+        onAction: handleCreateCampaign
       }}
     >
       <Layout>

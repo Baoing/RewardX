@@ -1,101 +1,22 @@
 import { makeAutoObservable } from "mobx"
+import {
+  getCampaigns,
+  getCampaignById,
+  updateCampaign,
+  deleteCampaign,
+  getCampaignAnalytics,
+  getCampaignEntries
+} from "@/utils/api.campaigns"
+import { api, ApiError } from "@/utils/api.client"
+import type {
+  Campaign,
+  Prize,
+  LotteryEntry,
+  CampaignAnalytics
+} from "@/types/campaign"
 
-export interface Prize {
-  id: string
-  name: string
-  description?: string
-  type: string
-  discountValue?: number
-  discountCode?: string
-  giftProductId?: string
-  giftVariantId?: string
-  chancePercentage: number
-  totalStock?: number
-  usedStock: number
-  displayOrder: number
-  color?: string
-  icon?: string
-  isActive: boolean
-}
-
-export interface Campaign {
-  id: string
-  name: string
-  description?: string
-  type: string
-  gameType: string
-  minOrderAmount?: number
-  allowedOrderStatus: string
-  requireEmail: boolean
-  requireName: boolean
-  requirePhone: boolean
-  maxPlaysPerCustomer?: number
-  startAt?: string
-  endAt?: string
-  status: string
-  isActive: boolean
-  gameConfig: string
-  totalPlays: number
-  totalWins: number
-  totalOrders: number
-  createdAt: string
-  updatedAt: string
-  prizes: Prize[]
-}
-
-export interface LotteryEntry {
-  id: string
-  campaignId: string
-  campaignType: string
-  orderId?: string
-  orderNumber?: string
-  orderAmount?: number
-  email?: string
-  customerName?: string
-  phone?: string
-  customerId?: string
-  prizeId?: string
-  prizeName?: string
-  prizeType?: string
-  prizeValue?: string
-  isWinner: boolean
-  status: string
-  discountCode?: string
-  discountCodeId?: string
-  claimedAt?: string
-  usedOrderId?: string
-  usedOrderAmount?: number
-  expiresAt?: string
-  createdAt: string
-}
-
-export interface CampaignAnalytics {
-  summary: {
-    pv: number
-    uv: number
-    totalEntries: number
-    totalWins: number
-    winRate: number
-  }
-  dailyStats: Array<{
-    date: string
-    pv: number
-    uv: number
-    entries: number
-    wins: number
-  }>
-  prizeStats: Array<{
-    prizeId: string
-    prizeName: string
-    totalWins: number
-    totalValue: number
-  }>
-  orderStats: {
-    totalOrders: number
-    totalAmount: number
-    avgAmount: number
-  }
-}
+// Re-export types for backward compatibility
+export type { Campaign, Prize, LotteryEntry, CampaignAnalytics }
 
 class CampaignStore {
   campaigns: Campaign[] = []
@@ -142,17 +63,12 @@ class CampaignStore {
     this.setError(null)
 
     try {
-      const response = await fetch("/api/campaigns")
-      const result = await response.json()
-
-      if (result.success) {
-        this.setCampaigns(result.campaigns)
-      } else {
-        this.setError(result.error || "Failed to fetch campaigns")
-      }
+      const campaigns = await getCampaigns()
+      this.setCampaigns(campaigns)
     } catch (error) {
       console.error("❌ Failed to fetch campaigns:", error)
-      this.setError("Failed to fetch campaigns")
+      const message = error instanceof ApiError ? error.message : "Failed to fetch campaigns"
+      this.setError(message)
     } finally {
       this.setLoading(false)
     }
@@ -163,17 +79,12 @@ class CampaignStore {
     this.setError(null)
 
     try {
-      const response = await fetch(`/api/campaigns/${id}`)
-      const result = await response.json()
-
-      if (result.success) {
-        this.setCurrentCampaign(result.campaign)
-      } else {
-        this.setError(result.error || "Failed to fetch campaign")
-      }
+      const campaign = await getCampaignById(id)
+      this.setCurrentCampaign(campaign)
     } catch (error) {
       console.error("❌ Failed to fetch campaign:", error)
-      this.setError("Failed to fetch campaign")
+      const message = error instanceof ApiError ? error.message : "Failed to fetch campaign"
+      this.setError(message)
     } finally {
       this.setLoading(false)
     }
@@ -208,26 +119,13 @@ class CampaignStore {
     this.setError(null)
 
     try {
-      const response = await fetch("/api/campaigns/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        await this.fetchCampaigns()
-        return result.campaign
-      } else {
-        this.setError(result.error || "Failed to create campaign")
-        return null
-      }
+      const campaign = await api.post<Campaign>("/api/campaigns/create", data)
+      await this.fetchCampaigns()
+      return campaign
     } catch (error) {
       console.error("❌ Failed to create campaign:", error)
-      this.setError("Failed to create campaign")
+      const message = error instanceof ApiError ? error.message : "Failed to create campaign"
+      this.setError(message)
       return null
     } finally {
       this.setLoading(false)
@@ -239,26 +137,13 @@ class CampaignStore {
     this.setError(null)
 
     try {
-      const response = await fetch(`/api/campaigns/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        await this.fetchCampaigns()
-        return result.campaign
-      } else {
-        this.setError(result.error || "Failed to update campaign")
-        return null
-      }
+      const campaign = await updateCampaign(id, data)
+      await this.fetchCampaigns()
+      return campaign
     } catch (error) {
       console.error("❌ Failed to update campaign:", error)
-      this.setError("Failed to update campaign")
+      const message = error instanceof ApiError ? error.message : "Failed to update campaign"
+      this.setError(message)
       return null
     } finally {
       this.setLoading(false)
@@ -270,22 +155,13 @@ class CampaignStore {
     this.setError(null)
 
     try {
-      const response = await fetch(`/api/campaigns/${id}`, {
-        method: "DELETE"
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        await this.fetchCampaigns()
-        return true
-      } else {
-        this.setError(result.error || "Failed to delete campaign")
-        return false
-      }
+      await deleteCampaign(id)
+      await this.fetchCampaigns()
+      return true
     } catch (error) {
       console.error("❌ Failed to delete campaign:", error)
-      this.setError("Failed to delete campaign")
+      const message = error instanceof ApiError ? error.message : "Failed to delete campaign"
+      this.setError(message)
       return false
     } finally {
       this.setLoading(false)
@@ -297,22 +173,12 @@ class CampaignStore {
     this.setError(null)
 
     try {
-      const params = new URLSearchParams()
-      if (startDate) params.append("startDate", startDate)
-      if (endDate) params.append("endDate", endDate)
-      
-      const url = `/api/campaigns/${id}/analytics${params.toString() ? `?${params.toString()}` : ""}`
-      const response = await fetch(url)
-      const result = await response.json()
-
-      if (result.success) {
-        this.setCurrentAnalytics(result.analytics)
-      } else {
-        this.setError(result.error || "Failed to fetch analytics")
-      }
+      const analytics = await getCampaignAnalytics(id)
+      this.setCurrentAnalytics(analytics)
     } catch (error) {
       console.error("❌ Failed to fetch analytics:", error)
-      this.setError("Failed to fetch analytics")
+      const message = error instanceof ApiError ? error.message : "Failed to fetch analytics"
+      this.setError(message)
     } finally {
       this.setLoading(false)
     }
@@ -330,26 +196,16 @@ class CampaignStore {
     this.setError(null)
 
     try {
-      const params = new URLSearchParams()
-      if (filters?.isWinner !== undefined) params.append("isWinner", filters.isWinner.toString())
-      if (filters?.status) params.append("status", filters.status)
-      if (filters?.startDate) params.append("startDate", filters.startDate)
-      if (filters?.endDate) params.append("endDate", filters.endDate)
-      if (filters?.limit) params.append("limit", filters.limit.toString())
-      if (filters?.offset) params.append("offset", filters.offset.toString())
-      
-      const url = `/api/campaigns/${campaignId}/entries${params.toString() ? `?${params.toString()}` : ""}`
-      const response = await fetch(url)
-      const result = await response.json()
-
-      if (result.success) {
-        this.setEntries(result.entries)
-      } else {
-        this.setError(result.error || "Failed to fetch entries")
-      }
+      const result = await getCampaignEntries(campaignId, {
+        page: filters?.offset ? Math.floor(filters.offset / (filters.limit || 10)) + 1 : 1,
+        limit: filters?.limit,
+        status: filters?.status
+      })
+      this.setEntries(result.entries as LotteryEntry[])
     } catch (error) {
       console.error("❌ Failed to fetch entries:", error)
-      this.setError("Failed to fetch entries")
+      const message = error instanceof ApiError ? error.message : "Failed to fetch entries"
+      this.setError(message)
     } finally {
       this.setLoading(false)
     }
@@ -357,14 +213,13 @@ class CampaignStore {
 
   async verifyOrder(orderId: string) {
     try {
-      const response = await fetch(`/api/lottery/verify-order/${orderId}`)
-      const result = await response.json()
+      const result = await api.get(`/api/lottery/verify-order/${orderId}`)
       return result
     } catch (error) {
       console.error("❌ Failed to verify order:", error)
       return {
         success: false,
-        error: "Failed to verify order"
+        error: error instanceof ApiError ? error.message : "Failed to verify order"
       }
     }
   }
@@ -377,27 +232,21 @@ class CampaignStore {
     this.setError(null)
 
     try {
-      const response = await fetch("/api/lottery/play", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-      })
+      const result = await api.post("/api/lottery/play", data)
 
-      const result = await response.json()
-
-      if (!result.success) {
-        this.setError(result.error || "Failed to play lottery")
+      if (!(result as { success: boolean }).success) {
+        const error = (result as { error?: string }).error || "Failed to play lottery"
+        this.setError(error)
       }
 
       return result
     } catch (error) {
       console.error("❌ Failed to play lottery:", error)
-      this.setError("Failed to play lottery")
+      const message = error instanceof ApiError ? error.message : "Failed to play lottery"
+      this.setError(message)
       return {
         success: false,
-        error: "Failed to play lottery"
+        error: message
       }
     } finally {
       this.setLoading(false)
