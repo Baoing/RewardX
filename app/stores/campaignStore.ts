@@ -1,19 +1,14 @@
-import { makeAutoObservable } from "mobx"
+import {makeAutoObservable} from "mobx"
 import {
-  getCampaigns,
-  getCampaignById,
-  updateCampaign,
   deleteCampaign,
   getCampaignAnalytics,
-  getCampaignEntries
+  getCampaignById,
+  getCampaignEntries,
+  getCampaigns,
+  updateCampaign
 } from "@/utils/api.campaigns"
-import { api, ApiError } from "@/utils/api.client"
-import type {
-  Campaign,
-  Prize,
-  LotteryEntry,
-  CampaignAnalytics
-} from "@/types/campaign"
+import {api, ApiError} from "@/utils/api.client"
+import type {Campaign, CampaignAnalytics, LotteryEntry, Prize} from "@/types/campaign"
 
 // Re-export types for backward compatibility
 export type { Campaign, Prize, LotteryEntry, CampaignAnalytics }
@@ -64,7 +59,6 @@ class CampaignStore {
 
     try {
       const campaigns = await getCampaigns()
-      debugger
       this.setCampaigns(campaigns)
     } catch (error) {
       console.error("❌ Failed to fetch campaigns:", error)
@@ -210,8 +204,7 @@ class CampaignStore {
 
   async verifyOrder(orderId: string) {
     try {
-      const result = await api.get(`/api/lottery/verify-order/${orderId}`)
-      return result
+      return await api.get(`/api/lottery/verify-order/${orderId}`)
     } catch (error) {
       console.error("❌ Failed to verify order:", error)
       return {
