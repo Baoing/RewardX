@@ -106,7 +106,7 @@ export const updateCampaign = async (
  * 删除活动
  */
 export const deleteCampaign = async (id: string): Promise<void> => {
-  return api.delete<void>(`/api/campaigns/${id}`)
+  await api.delete<void>(`/api/campaigns/${id}`)
 }
 
 /**
@@ -132,15 +132,11 @@ export const getCampaignAnalytics = async (id: string): Promise<CampaignAnalytic
 export const getCampaignEntries = async (
   id: string,
   params?: {
-    page?: number
-    limit?: number
     status?: string
   }
 ): Promise<{
   entries: unknown[]
   total: number
-  page: number
-  limit: number
 }> => {
   return api.get(`/api/campaigns/${id}/entries`, { params })
 }

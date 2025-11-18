@@ -1,33 +1,29 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "d5f18f7769e1b15b9537ff44e1e911d2"
-name = "RewardX – Spin, Win & Repeat"
-application_url = "https://intersection-storage-birth-segments.trycloudflare.com"
+name = "RewardX – Spin, Win & Repeat"
+application_url = "https://example.com"
 embedded = true
 
 [build]
 automatically_update_urls_on_dev = true
 
 [webhooks]
-api_version = "2026-01"
-
-  [[webhooks.subscriptions]]
-  topics = [ "app/uninstalled" ]
-  uri = "/webhooks/app/uninstalled"
+api_version = "2025-10"
 
   [[webhooks.subscriptions]]
   topics = [ "app/scopes_update" ]
   uri = "/webhooks/app/scopes_update"
 
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/webhooks/app/uninstalled"
+
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-# 基础权限配置 - 根据需要调整
-# write_themes: 用于检测和自动启用 App Embed
-scopes = "read_products,write_products,read_customers,read_orders,read_content,read_themes,write_themes,read_locales"
+scopes = ""
+optional_scopes = [ ]
+use_legacy_install_flow = false
 
 [auth]
-redirect_urls = [
-  "https://intersection-storage-birth-segments.trycloudflare.com/api/auth",
-  "https://intersection-storage-birth-segments.trycloudflare.com/auth/callback"
-]
-
+redirect_urls = [ ]

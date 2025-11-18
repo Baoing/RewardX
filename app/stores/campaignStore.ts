@@ -23,10 +23,10 @@ class CampaignStore {
   currentCampaign: Campaign | null = null
   currentAnalytics: CampaignAnalytics | null = null
   entries: LotteryEntry[] = []
-  
+
   isLoading = false
   error: string | null = null
-  
+
   isInitialized = false
 
   constructor() {
@@ -64,6 +64,7 @@ class CampaignStore {
 
     try {
       const campaigns = await getCampaigns()
+      debugger
       this.setCampaigns(campaigns)
     } catch (error) {
       console.error("❌ Failed to fetch campaigns:", error)
@@ -189,16 +190,12 @@ class CampaignStore {
     status?: string
     startDate?: string
     endDate?: string
-    limit?: number
-    offset?: number
   }) {
     this.setLoading(true)
     this.setError(null)
 
     try {
       const result = await getCampaignEntries(campaignId, {
-        page: filters?.offset ? Math.floor(filters.offset / (filters.limit || 10)) + 1 : 1,
-        limit: filters?.limit,
         status: filters?.status
       })
       this.setEntries(result.entries as LotteryEntry[])

@@ -71,7 +71,7 @@ const createTimeoutSignal = (timeout: number): AbortSignal => {
 /**
  * 解析响应
  */
-const parseResponse = async <T>(response: Response): Promise<ApiResponse<T>> => {
+const parseResponse = async <T = unknown>(response: Response): Promise<ApiResponse<T>> => {
   const contentType = response.headers.get("content-type")
   
   // 处理空响应

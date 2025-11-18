@@ -46,7 +46,7 @@ const CampaignsPage = observer(() => {
 
     } catch (error) {
       console.error("❌ Error creating campaign:", error)
-      
+
       if (error instanceof ApiError) {
         showErrorToast(error.message)
       } else if (error instanceof Error) {
@@ -98,24 +98,7 @@ const CampaignsPage = observer(() => {
     return new Date(dateString).toLocaleDateString()
   }
 
-  const getCampaignsByStatus = () => {
-    switch (selectedTab) {
-      case 0:
-        return campaignStore.campaigns
-      case 1:
-        return campaignStore.activeCampaigns
-      case 2:
-        return campaignStore.draftCampaigns
-      case 3:
-        return campaignStore.pausedCampaigns
-      case 4:
-        return campaignStore.endedCampaigns
-      default:
-        return campaignStore.campaigns
-    }
-  }
-
-  const campaigns = getCampaignsByStatus()
+  const campaigns = campaignStore.campaigns
 
   const rows = campaigns.map((campaign) => [
     campaign.name,
