@@ -72,14 +72,14 @@ export const serverError = (error: unknown): Response => {
 /**
  * 200 OK - 返回数据
  */
-export const ok = <T>(data: T): Response => {
+export const ok = <T = unknown>(data: T): Response => {
   return Response.json(data)
 }
 
 /**
  * 201 Created - 创建成功
  */
-export const created = <T>(data: T): Response => {
+export const created = <T = unknown>(data: T): Response => {
   return Response.json(data, { status: 201 })
 }
 
@@ -124,7 +124,7 @@ export const requireUser = async (shop: string): Promise<User | Response> => {
  * 统一的 API 处理器包装
  * 自动处理错误并返回标准响应
  */
-export const apiHandler = async <T>(
+export const apiHandler = async <T = unknown>(
   handler: () => Promise<T>
 ): Promise<Response> => {
   try {
@@ -181,7 +181,7 @@ export interface PaginatedResponse<T> {
 /**
  * 创建分页响应
  */
-export const paginate = <T>(
+export const paginate = <T = unknown>(
   data: T[],
   total: number,
   page: number = 1,
