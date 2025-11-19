@@ -5,7 +5,8 @@ import {
   Checkbox,
   BlockStack,
   Button,
-  Text
+  Text,
+  Divider
 } from "@shopify/polaris"
 import { useCampaignEditorStore, useCampaignStore } from "@/stores"
 import { useParams } from "react-router"
@@ -45,74 +46,87 @@ const RulesTab = observer(() => {
     <div className={styles.content}>
       {/* Game Type */}
       <BlockStack gap="400">
-        <Select
-          label="Game Type"
-          options={[
-            { label: "9-Box", value: "ninebox" },
-            { label: "Lucky Wheel", value: "wheel" },
-            { label: "Slot Machine", value: "slot" },
-            { label: "Scratch Card", value: "scratch" }
-          ]}
-          value={campaign.gameType}
-          disabled={true}
-          onChange={(value) => {
-            editorStore.updateField("gameType", value as any)
-          }}
-          helpText="Game type cannot be changed after creation"
-        />
-
-        {/* Publish */}
         <div className={styles.section}>
-          <Text as="h3" variant="headingSm">
-            Publish
-          </Text>
-          <Checkbox
-            label="Make this campaign live"
-            checked={campaign.isActive}
-            onChange={handlePublishChange}
-            helpText="This will be saved immediately"
+          <Select
+            label="Game Type"
+            options={[
+              { label: "9-Box", value: "ninebox" },
+              { label: "Lucky Wheel", value: "wheel" },
+              { label: "Slot Machine", value: "slot" },
+              { label: "Scratch Card", value: "scratch" }
+            ]}
+            value={campaign.gameType}
+            disabled={true}
+            onChange={(value) => {
+              editorStore.updateField("gameType", value as any)
+            }}
+            helpText="Game type cannot be changed after creation"
           />
+
+          {/* Publish */}
+          <div style={{ marginTop: "16px" }}>
+            <Text as="h3" variant="headingSm">
+              Publish
+            </Text>
+            <Checkbox
+              label="Make this campaign live"
+              checked={campaign.isActive}
+              onChange={handlePublishChange}
+              helpText="This will be saved immediately"
+            />
+          </div>
         </div>
 
-        {/* Campaign Name */}
-        <TextField
-          label="Campaign Name"
-          value={campaign.name}
-          onChange={(value) => {
-            editorStore.updateField("name", value)
-          }}
-          autoComplete="off"
-          maxLength={50}
-          helpText="Only visible to you, not shown to customers"
-        />
+        <Divider />
 
-        {/* Campaign Type */}
-        <Select
-          label="Campaign Type"
-          options={[
-            { label: "Order Lottery", value: "order_lottery" },
-            { label: "Email Subscribe", value: "email_subscribe" }
-          ]}
-          value={campaign.type}
-          onChange={(value) => {
-            editorStore.updateField("type", value as any)
-          }}
-        />
-
-        {/* Min Order Amount (只在 order_lottery 时显示) */}
-        {campaign.type === "order_lottery" && (
+        {/* Campaign Basic Info */}
+        <div className={styles.section}>
+          <Text as="h3" variant="headingSm">
+            Basic Information
+          </Text>
+          
+          {/* Campaign Name */}
           <TextField
-            label="Min Order Amount"
-            type="number"
-            value={campaign.minOrderAmount?.toString() || ""}
+            label="Campaign Name"
+            value={campaign.name}
             onChange={(value) => {
-              editorStore.updateField("minOrderAmount", value ? parseFloat(value) : undefined)
+              editorStore.updateField("name", value)
             }}
-            prefix="$"
             autoComplete="off"
-            helpText="Minimum order amount required to play"
+            maxLength={50}
+            helpText="Only visible to you, not shown to customers"
           />
-        )}
+
+          {/* Campaign Type */}
+          <Select
+            label="Campaign Type"
+            options={[
+              { label: "Order Lottery", value: "order_lottery" },
+              { label: "Email Subscribe", value: "email_subscribe" }
+            ]}
+            value={campaign.type}
+            onChange={(value) => {
+              editorStore.updateField("type", value as any)
+            }}
+          />
+
+          {/* Min Order Amount (只在 order_lottery 时显示) */}
+          {campaign.type === "order_lottery" && (
+            <TextField
+              label="Min Order Amount"
+              type="number"
+              value={campaign.minOrderAmount?.toString() || ""}
+              onChange={(value) => {
+                editorStore.updateField("minOrderAmount", value ? parseFloat(value) : undefined)
+              }}
+              prefix="$"
+              autoComplete="off"
+              helpText="Minimum order amount required to play"
+            />
+          )}
+        </div>
+
+        <Divider />
 
         {/* Prize List */}
         <div className={styles.section}>
@@ -152,6 +166,8 @@ const RulesTab = observer(() => {
             </BlockStack>
           )}
         </div>
+
+        <Divider />
 
         {/* Schedule Rules */}
         <div className={styles.section}>

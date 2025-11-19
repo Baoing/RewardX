@@ -1,0 +1,104 @@
+.colorPickerPadding {
+  padding: var(--p-space-200);
+  width: 192px;
+}
+
+// 主容器 - 横向布局
+.colorPickerWrapper {
+  @apply flex items-center gap-3;
+  min-width: 48%;
+}
+
+// 颜色块激活器
+.activator {
+  @apply flex-shrink-0;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #C9CCCF;
+  border-radius: var(--p-border-radius-100);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #999;
+  }
+
+  // 空颜色状态 - 显示棋盘格背景 + 斜线
+  &.empty {
+    background:
+      linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
+      linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
+      linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+    background-size: 8px 8px;
+    background-position: 0 0, 0 4px, 4px -4px, -4px 0px;
+    background-color: #fff;
+  }
+}
+
+// Popover 内的小颜色块
+.activatorSmall {
+  @apply flex-shrink-0;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #C9CCCF;
+  border-radius: var(--p-border-radius-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+
+  // 空颜色状态
+  &.empty {
+    background:
+      linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
+      linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
+      linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+    background-size: 8px 8px;
+    background-position: 0 0, 0 4px, 4px -4px, -4px 0px;
+    background-color: #fff;
+  }
+}
+
+// 颜色信息（Label + 颜色值）
+.colorInfo {
+  @apply flex flex-col gap-0.5;
+  @apply flex-1;
+  @apply min-w-0; // 允许文本截断
+}
+
+.emptyIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.clearButton {
+  @apply w-full px-3 py-2;
+  @apply text-sm text-center;
+  @apply text-red-600;
+  @apply bg-white;
+  @apply border border-red-200;
+  @apply rounded;
+  @apply cursor-pointer;
+  @apply transition-colors;
+
+  &:hover {
+    @apply bg-red-50 border-red-300;
+  }
+
+  &:active {
+    @apply bg-red-100;
+  }
+}
+

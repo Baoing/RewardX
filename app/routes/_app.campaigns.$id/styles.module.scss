@@ -54,18 +54,8 @@
       @apply px-4 py-4; // 减小上下 padding
 
       .section {
-        @apply mb-6;
-
-        &:last-child {
-          @apply mb-0;
-        }
-
-        .sectionTitle {
-          @apply text-sm font-semibold text-gray-900 mb-3;
-        }
-
-        .sectionDescription {
-          @apply text-xs text-gray-600 mb-3;
+        .colorGroup {
+          @apply flex flex-row gap-3 mt-3 flex-wrap;
         }
       }
     }

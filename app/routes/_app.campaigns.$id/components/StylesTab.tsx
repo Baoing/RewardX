@@ -1,12 +1,13 @@
 import { observer } from "mobx-react-lite"
 import {
-  TextField,
   BlockStack,
-  Text
+  Text,
+  Divider
 } from "@shopify/polaris"
 import { useCampaignEditorStore } from "@/stores"
 import type { CampaignStyles } from "@/types/campaign"
 import CustomCssEditor from "@/components/CustomCssEditor"
+import { ColorPicker } from "@/components/ColorPicker"
 import styles from "../styles.module.scss"
 
 const StylesTab = observer(() => {
@@ -36,114 +37,114 @@ const StylesTab = observer(() => {
           <Text as="p" tone="subdued" variant="bodySm">
             Leave empty to inherit from theme
           </Text>
-          <BlockStack gap="200">
-            <TextField
+          <div className={styles.colorGroup}>
+            <ColorPicker
               label="Text Color"
-              value={campaignStyles.mainTextColor || ""}
+              color={campaignStyles.mainTextColor}
               onChange={(value) => updateStyle("mainTextColor", value)}
-              autoComplete="off"
-              placeholder="#000000"
-              prefix="#"
+              placeholder="Inherit from theme"
+              allowEmpty={true}
             />
-            <TextField
+            <ColorPicker
               label="Background Color"
-              value={campaignStyles.mainBackgroundColor || ""}
+              color={campaignStyles.mainBackgroundColor}
               onChange={(value) => updateStyle("mainBackgroundColor", value)}
-              autoComplete="off"
-              placeholder="#ffffff"
-              prefix="#"
+              placeholder="Inherit from theme"
+              allowEmpty={true}
             />
-          </BlockStack>
+          </div>
         </div>
+
+        <Divider />
 
         {/* TopBar Colors */}
         <div className={styles.section}>
           <Text as="h3" variant="headingSm">
             TopBar Colors
           </Text>
-          <BlockStack gap="200">
-            <TextField
+          <div className={styles.colorGroup}>
+            <ColorPicker
               label="Text Color"
-              value={campaignStyles.topBarTextColor || ""}
+              color={campaignStyles.topBarTextColor}
               onChange={(value) => updateStyle("topBarTextColor", value)}
-              autoComplete="off"
               placeholder="#000000"
-              prefix="#"
+              allowEmpty={true}
             />
-            <TextField
+            <ColorPicker
               label="Background Color"
-              value={campaignStyles.topBarBackgroundColor || ""}
+              color={campaignStyles.topBarBackgroundColor}
               onChange={(value) => updateStyle("topBarBackgroundColor", value)}
-              autoComplete="off"
               placeholder="#ff841f"
-              prefix="#"
+              allowEmpty={true}
             />
-          </BlockStack>
+          </div>
         </div>
+
+        <Divider />
 
         {/* Module Colors */}
         <div className={styles.section}>
           <Text as="h3" variant="headingSm">
             Module Colors
           </Text>
-          <BlockStack gap="200">
-            <TextField
+          <div className={styles.colorGroup}>
+            <ColorPicker
               label="Text Color"
-              value={campaignStyles.moduleTextColor || ""}
+              color={campaignStyles.moduleTextColor}
               onChange={(value) => updateStyle("moduleTextColor", value)}
-              autoComplete="off"
               placeholder="#000000"
-              prefix="#"
+              allowEmpty={true}
             />
-            <TextField
+            <ColorPicker
               label="Background Color"
-              value={campaignStyles.moduleBackgroundColor || ""}
+              color={campaignStyles.moduleBackgroundColor}
               onChange={(value) => updateStyle("moduleBackgroundColor", value)}
-              autoComplete="off"
               placeholder="#ffcfa7"
-              prefix="#"
+              allowEmpty={true}
             />
-            <TextField
+            <ColorPicker
               label="Border Color"
-              value={campaignStyles.moduleBorderColor || ""}
+              color={campaignStyles.moduleBorderColor}
               onChange={(value) => updateStyle("moduleBorderColor", value)}
-              autoComplete="off"
               placeholder="#ff841f"
-              prefix="#"
+              allowEmpty={true}
             />
-            <TextField
+            <ColorPicker
               label="Draw Background Color"
-              value={campaignStyles.moduleDrawBackgroundColor || ""}
+              color={campaignStyles.moduleDrawBackgroundColor}
               onChange={(value) => updateStyle("moduleDrawBackgroundColor", value)}
-              autoComplete="off"
               placeholder="#1a0202"
-              prefix="#"
+              allowEmpty={true}
             />
-            <TextField
+            <ColorPicker
               label="Button Color"
-              value={campaignStyles.moduleButtonColor || ""}
+              color={campaignStyles.moduleButtonColor}
               onChange={(value) => updateStyle("moduleButtonColor", value)}
-              autoComplete="off"
               placeholder="#ff841f"
-              prefix="#"
+              allowEmpty={true}
             />
-          </BlockStack>
+          </div>
         </div>
+
+        <Divider />
 
         {/* Footer */}
         <div className={styles.section}>
           <Text as="h3" variant="headingSm">
             Footer
           </Text>
-          <TextField
-            label="Text Color"
-            value={campaignStyles.footerTextColor || ""}
-            onChange={(value) => updateStyle("footerTextColor", value)}
-            autoComplete="off"
-            placeholder="#666666"
-            prefix="#"
-          />
+          <div className={styles.colorGroup}>
+            <ColorPicker
+              label="Text Color"
+              color={campaignStyles.footerTextColor}
+              onChange={(value) => updateStyle("footerTextColor", value)}
+              placeholder="#666666"
+              allowEmpty={true}
+            />
+          </div>
         </div>
+
+        <Divider />
 
         {/* Custom CSS */}
         <div className={styles.section}>
