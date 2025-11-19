@@ -8,9 +8,10 @@
   // 自定义标题栏
   &__header {
     @apply flex-shrink-0;
-    @apply bg-white border-b border-gray-200;
-    @apply px-6 py-4;
+    @apply border-b border-gray-200;
+    @apply px-4 py-2;
     @apply shadow-sm;
+    background: var(--p-color-bg-surface-tertiary, #fff);
   }
 
   &__headerContent {
@@ -19,8 +20,10 @@
   }
 
   &__title {
-    @apply text-xl font-semibold text-gray-900;
+    @apply text-sm font-semibold;
     @apply m-0 p-0;
+    min-height: 32px;
+    line-height: 32px;
   }
 
   &__actions {
@@ -52,6 +55,7 @@
     .content {
       @apply flex-1 overflow-y-auto;
       @apply px-4 py-4; // 减小上下 padding
+      position: relative; // 确保 Popover 定位正确
 
       .section {
         @apply flex flex-col gap-2;

@@ -192,12 +192,14 @@ const CampaignDetailPage = observer(() => {
           </div>
           <div className={styles.campaignEditor__actions}>
             <Button
+              size={"large"}
               onClick={handleDiscard}
               disabled={!editorStore.hasUnsavedChanges}
             >
               Discard
             </Button>
             <Button
+              size={"large"}
               variant="primary"
               onClick={handleSave}
               disabled={!editorStore.hasUnsavedChanges}
@@ -207,6 +209,7 @@ const CampaignDetailPage = observer(() => {
             </Button>
 
             <Button
+              size={"large"}
               icon={XIcon}
               variant={"tertiary"}
               onClick={handleClose}
