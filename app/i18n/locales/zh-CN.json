@@ -10,7 +10,35 @@
   },
   "home": {
     "welcome": "Hi {{userName}} 👋, 欢迎使用 {{appName}}",
-    "welcomeMessage": "您的 Shopify 应用已成功安装并运行"
+    "welcomeMessage": "您的 Shopify 应用已成功安装并运行",
+    "guide": {
+      "title": "快速开始指南",
+      "progress": "已完成 {completed}/{total} 个步骤",
+      "completed": "🎉 太棒了！你已经完成所有设置步骤",
+      "step1": {
+        "title": "创建你的第一个抽奖活动",
+        "desc": "通过创建抽奖活动来吸引和奖励你的客户，提高复购率和客户忠诚度",
+        "action": "创建活动"
+      },
+      "step2": {
+        "title": "配置奖品和规则",
+        "desc": "设置吸引人的奖品，包括折扣码、赠品等，并配置抽奖规则",
+        "item1": "折扣百分比（10% off, 20% off）",
+        "item2": "固定金额折扣（$5 off, $10 off）",
+        "item3": "免费赠品",
+        "link": "了解更多关于奖品配置"
+      },
+      "step3": {
+        "title": "自定义活动样式",
+        "desc": "让抽奖活动与你的品牌风格保持一致,提升用户体验",
+        "action": "去自定义"
+      },
+      "step4": {
+        "title": "发布你的活动",
+        "desc": "检查活动配置，确认无误后发布，让客户开始参与抽奖",
+        "action": "去发布"
+      }
+    }
   },
   "shopInfo": {
     "title": "店铺信息",

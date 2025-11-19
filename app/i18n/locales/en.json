@@ -10,7 +10,35 @@
   },
   "home": {
     "welcome": "Hi {{userName}} 👋, welcome to {{appName}}",
-    "welcomeMessage": "Your Shopify app is successfully installed and running"
+    "welcomeMessage": "Your Shopify app is successfully installed and running",
+    "guide": {
+      "title": "Quick Setup Guide",
+      "progress": "{completed} of {total} tasks complete",
+      "completed": "🎉 Awesome! You've completed all setup steps",
+      "step1": {
+        "title": "Create your first lottery campaign",
+        "desc": "Attract and reward your customers by creating a lottery campaign to increase repeat purchases and customer loyalty",
+        "action": "Create Campaign"
+      },
+      "step2": {
+        "title": "Configure prizes and rules",
+        "desc": "Set up attractive prizes including discount codes, free gifts, etc., and configure lottery rules",
+        "item1": "Percentage discount (10% off, 20% off)",
+        "item2": "Fixed amount discount ($5 off, $10 off)",
+        "item3": "Free gifts",
+        "link": "Learn more about prize configuration"
+      },
+      "step3": {
+        "title": "Customize campaign style",
+        "desc": "Make your lottery campaign match your brand style and enhance user experience",
+        "action": "Customize"
+      },
+      "step4": {
+        "title": "Publish your campaign",
+        "desc": "Review your campaign configuration, confirm everything is correct, and publish to let customers start participating in the lottery",
+        "action": "Publish"
+      }
+    }
   },
   "shopInfo": {
     "title": "Shop Information",

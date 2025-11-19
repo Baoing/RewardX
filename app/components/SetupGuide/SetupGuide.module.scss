@@ -1,0 +1,228 @@
+// 主容器
+.setupGuide {
+  :global {
+    .Polaris-LegacyCard__LastSectionPadding {
+      padding-top: 0 !important;
+    }
+    .Polaris-LegacyCard__Header {
+      padding-bottom: 0;
+    }
+    .Polaris-LegacyCard__Header .Polaris-InlineStack {
+      align-items: start;
+    }
+    .Polaris-LegacyCard__Header .Polaris-ButtonGroup {
+      position: relative;
+      top: -2px;
+    }
+  }
+}
+
+.expandSetupGuide {
+  .progressBar {
+    padding-bottom: var(--p-space-200);
+  }
+  .isDoneStatus {
+    padding-bottom: var(--p-space-200);
+  }
+}
+
+// 顶部自定义内容区域
+.topContentWrapper {
+  position: absolute;
+  left: 50%;
+  top: 16px;
+  transform: translateX(-50%);
+
+  @media (max-width: 640px) {
+    position: initial;
+    transform: initial;
+    padding: 8px 16px;
+
+    :global {
+      .flex {
+        flex-direction: row;
+        justify-content: start;
+      }
+    }
+  }
+}
+
+// 步骤列表容器
+.guideContentWrapper {
+  padding: 0 var(--p-space-200) var(--p-space-200);
+}
+
+// 进度条
+.progressBar {
+  display: flex;
+  align-items: center;
+  line-height: 20px;
+  padding: 0 var(--p-space-card-padding) var(--p-space-card-padding);
+
+  :global {
+    .Polaris-ProgressBar {
+      height: 4px;
+      flex: 1;
+      margin-left: 1.25rem;
+    }
+  }
+}
+
+// 完成状态
+.isDoneStatus {
+  display: flex;
+  gap: var(--p-space-100, 4px);
+  width: max-content;
+  line-height: 20px;
+  padding: 0 var(--p-space-400) var(--p-space-400);
+}
+
+// 步骤项
+.stepWrapper {
+  display: flex;
+  margin-bottom: 1px;
+  border-radius: var(--p-border-radius-200);
+  padding: 0 var(--p-space-200);
+
+  &:hover {
+    background-color: var(--p-color-bg-surface-hover);
+  }
+
+  &.active {
+    background-color: var(--p-color-bg-surface-active);
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  .stepIcon {
+    flex-shrink: 0;
+  }
+
+  .stepTitle {
+    cursor: pointer;
+    width: 100%;
+    padding: var(--p-space-200) 0;
+  }
+
+  .iconWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--size-500, 20px);
+    width: var(--size-500, 20px);
+    cursor: pointer;
+    margin-top: var(--p-space-200);
+
+    :global {
+      .Polaris-Spinner {
+        display: flex;
+      }
+    }
+  }
+
+  .activeStepTitle {
+    cursor: default;
+    padding-bottom: var(--p-space-100);
+  }
+
+  .content {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    position: relative;
+    flex: 1;
+    margin-left: var(--p-space-300);
+    gap: var(--p-space-300);
+    width: 100%;
+    max-height: 2.25rem;
+    overflow: hidden;
+    transition: all var(--p-motion-duration-300) var(--p-motion-ease-in);
+
+    .textContent {
+      align-items: flex-start;
+      display: flex;
+      flex: 1 1;
+      width: 100%;
+      flex-direction: column;
+      max-width: 96%;
+      word-wrap: break-word;
+
+      .desc {
+        max-width: 95%;
+        width: 500px;
+      }
+    }
+  }
+
+  .activeContent {
+    max-height: 30rem;
+  }
+}
+
+// 媒体包装器
+.mediaWrapper {
+  align-items: center;
+  display: flex;
+  max-height: 9.375rem;
+  max-width: 15rem;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  padding: var(--p-space-200) 0;
+}
+
+.pictureWrapper {
+  align-items: center;
+  display: flex;
+  flex: 1 1;
+  flex-direction: column;
+  position: relative;
+  max-height: 100%;
+
+  img {
+    max-width: 90%;
+    height: 100%;
+  }
+}
+
+.pictureMask {
+  --task-image-fade-color: var(--task-image-fade-color-override, #ffffff);
+  background: linear-gradient(
+    0deg,
+    var(--p-color-bg-surface-active),
+    var(--p-color-bg-surface-active) 60%,
+    var(--p-color-bg-surface-transparent) 100%
+  );
+  bottom: -8px;
+  height: 20%;
+  position: absolute;
+  right: 0;
+  width: 100%;
+}
+
+// HoverCircle 图标
+.hoverCircleSvg {
+  cursor: pointer;
+
+  path {
+    fill: var(--p-color-icon-secondary);
+  }
+
+  circle {
+    display: none;
+    stroke: var(--p-color-icon-secondary);
+  }
+
+  &:hover {
+    path {
+      display: none;
+    }
+
+    circle {
+      display: block;
+    }
+  }
+}
+
