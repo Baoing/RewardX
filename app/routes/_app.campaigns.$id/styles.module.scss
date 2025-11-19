@@ -44,30 +44,8 @@
 
     // 标签栏
     .tabs {
+      padding: 6px 0;
       @apply border-b border-gray-200;
-      @apply px-4 pt-4;
-
-      .tabList {
-        @apply flex gap-4;
-
-        .tabButton {
-          @apply px-4 py-2;
-          @apply text-sm font-medium;
-          @apply text-gray-600;
-          @apply border-b-2 border-transparent;
-          @apply transition-colors;
-          @apply cursor-pointer;
-          @apply bg-transparent;
-
-          &:hover {
-            @apply text-gray-900;
-          }
-
-          &.active {
-            @apply text-blue-600 border-blue-600;
-          }
-        }
-      }
     }
 
     // 配置内容区域

@@ -5,7 +5,8 @@ import {
   Button,
   ButtonGroup,
   Spinner,
-  Text
+  Text,
+  Tabs
 } from "@shopify/polaris"
 import { DesktopIcon, MobileIcon, XIcon } from "@shopify/polaris-icons"
 import { observer } from "mobx-react-lite"
@@ -33,10 +34,29 @@ const CampaignDetailPage = observer(() => {
   const editorStore = useCampaignEditorStore()
   const campaign = campaignStore.currentCampaign
 
-  // 标签状态
-  const [activeTab, setActiveTab] = useState<"rules" | "content" | "styles">("rules")
+  // 标签状态 (使用索引)
+  const [selectedTab, setSelectedTab] = useState(0)
   // 预览设备状态
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop")
+
+  // 定义标签页
+  const tabs = [
+    {
+      id: "rules",
+      content: "Rules",
+      panelID: "rules-panel"
+    },
+    {
+      id: "content",
+      content: "Content",
+      panelID: "content-panel"
+    },
+    {
+      id: "styles",
+      content: "Styles",
+      panelID: "styles-panel"
+    }
+  ]
 
   // 🔥 处理关闭操作
   const handleClose = () => {
@@ -86,12 +106,12 @@ const CampaignDetailPage = observer(() => {
 
   // 渲染左侧配置面板的内容
   const renderSidebarContent = () => {
-    switch (activeTab) {
-      case "rules":
+    switch (selectedTab) {
+      case 0: // Rules
         return <RulesTab />
-      case "content":
+      case 1: // Content
         return <ContentTab />
-      case "styles":
+      case 2: // Styles
         return <StylesTab />
       default:
         return null
@@ -106,7 +126,7 @@ const CampaignDetailPage = observer(() => {
     try {
       const changes = editorStore.changedFields
       const success = await campaignStore.updateCampaign(id, changes)
-      
+
       if (success) {
         editorStore.markSaved()
         showToast({ content: "Campaign saved successfully" })
@@ -202,26 +222,7 @@ const CampaignDetailPage = observer(() => {
         <div className={styles.campaignEditor__sidebar}>
           {/* 标签切换 */}
           <div className={styles.tabs}>
-            <div className={styles.tabList}>
-              <button
-                className={`${styles.tabButton} ${activeTab === "rules" ? styles.active : ""}`}
-                onClick={() => setActiveTab("rules")}
-              >
-                Rules
-              </button>
-              <button
-                className={`${styles.tabButton} ${activeTab === "content" ? styles.active : ""}`}
-                onClick={() => setActiveTab("content")}
-              >
-                Content
-              </button>
-              <button
-                className={`${styles.tabButton} ${activeTab === "styles" ? styles.active : ""}`}
-                onClick={() => setActiveTab("styles")}
-              >
-                Styles
-              </button>
-            </div>
+            <Tabs tabs={tabs} selected={selectedTab} onSelect={setSelectedTab} fitted />
           </div>
 
           {/* 配置内容 */}
