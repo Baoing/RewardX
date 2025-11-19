@@ -7,7 +7,7 @@ import {
   Text,
   TextField
 } from "@shopify/polaris"
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import styles from "./ColorPicker.module.scss"
 
 export interface ColorPickerProps {
@@ -53,14 +53,14 @@ export const ColorPicker = ({
       if (placeholder && placeholder.startsWith("#")) {
         const placeholderColor = placeholder.toLocaleUpperCase().replace("#", "")
         const { red, green, blue } = hexToRgb(`#${placeholderColor}`)
-        
+
         if (!isNaN(red) && !isNaN(green) && !isNaN(blue)) {
           setPickerColor({ ...rgbToHsb({ blue, green, red }), alpha: 1 })
           setHexColor(placeholderColor)
           return
         }
       }
-      
+
       // 否则设置为空
       setHexColor("")
       return
@@ -129,7 +129,7 @@ export const ColorPicker = ({
   // 判断是否为空（用户选择了清空）vs 使用默认值
   // color 为空 且 placeholder 不是颜色值 = 真正的空
   const isReallyEmpty = (!color || color === "") && (!placeholder || !placeholder.startsWith("#"))
-  
+
   // 显示颜色：优先使用 color，否则使用 placeholder（如果是颜色）
   const displayColor = color || (placeholder?.startsWith("#") ? placeholder.replace("#", "") : "")
 
@@ -166,6 +166,7 @@ export const ColorPicker = ({
         onClose={togglePopoverActive}
         preferInputActivator={false}
         preferredAlignment="left"
+        fullHeight
       >
         <div className={styles.colorPickerPadding}>
           <PolarisColorPicker
@@ -217,7 +218,7 @@ export const ColorPicker = ({
           )}
         </div>
       </Popover>
-      
+
       <div className={styles.colorInfo}>
         {label && (
           <Text variant="bodyMd" as="span" fontWeight="medium">
