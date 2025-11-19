@@ -64,16 +64,18 @@ class CampaignEditorStore {
   }
 
   /**
-   * 注册监听器 - 自动检测变化
+   * 注册监听器 - 自动检测变化（作为备用机制）
+   * updateField/updateFields 已有同步比较，这里作为安全网
    */
   private registerListener() {
     if (!this.editingCampaign) return
 
-    this.disposer = deepObserve(this, (change) => {
-      // 只监听 editingCampaign 的更新
-      if (change.type === "update" && change.observableKind === "object") {
-        this.compareAndUpdateStatus()
-      }
+    // 直接监听 editingCampaign 对象的深层变化
+    this.disposer = deepObserve(this.editingCampaign, () => {
+      // 捕获所有类型的变化（update, add, remove）
+      // 注意：updateField 已经同步调用了 compareAndUpdateStatus
+      // 这里的调用会被 compareAndUpdateStatus 内部的检查过滤掉（如果状态没变）
+      this.compareAndUpdateStatus()
     })
 
     console.log("✅ Campaign editor listener registered")
@@ -91,6 +93,26 @@ class CampaignEditorStore {
   }
 
   /**
+   * 规范化空值：将 undefined、null、空字符串统一处理
+   * 并删除这些空值字段，确保比较时 key 的存在性一致
+   */
+  private normalizeEmptyValues(obj: Record<string, any>): Record<string, any> {
+    const normalized: Record<string, any> = {}
+    
+    for (const key in obj) {
+      const value = obj[key]
+      // 如果是空值（空字符串、null、undefined），则跳过（不添加到 normalized）
+      // 这样可以确保：原本没有 key 和 key 为空值的情况被视为相同
+      if (value !== "" && value !== null && value !== undefined) {
+        normalized[key] = value
+      }
+      // 注意：空值字段不会被添加到 normalized，从而实现 key 存在性的统一
+    }
+    
+    return normalized
+  }
+
+  /**
    * 比较并更新状态
    */
   private compareAndUpdateStatus() {
@@ -100,10 +122,10 @@ class CampaignEditorStore {
     }
 
     // 扁平化对象，忽略某些字段（如 updatedAt, createdAt 等只读字段）
-    const baseFlat = flatten(this.originalCampaign, {
+    let baseFlat = flatten(this.originalCampaign, {
       safe: true // 保持数组不被扁平化
     }) as Record<string, any>
-    const nowFlat = flatten(this.editingCampaign, {
+    let nowFlat = flatten(this.editingCampaign, {
       safe: true
     }) as Record<string, any>
 
@@ -114,12 +136,36 @@ class CampaignEditorStore {
       delete nowFlat[field]
     })
 
+    // 规范化空值（删除所有空值字段，确保 key 存在性一致）
+    baseFlat = this.normalizeEmptyValues(baseFlat)
+    nowFlat = this.normalizeEmptyValues(nowFlat)
+
+    // 调试：打印 key 数量
+    const baseKeys = Object.keys(baseFlat).length
+    const nowKeys = Object.keys(nowFlat).length
+    console.log(`🔍 Comparing: baseFlat has ${baseKeys} keys, nowFlat has ${nowKeys} keys`)
+
     // 精确比较
     const isChanged = !isEqual(baseFlat, nowFlat)
 
     if (this.hasUnsavedChanges !== isChanged) {
       this.hasUnsavedChanges = isChanged
-      console.log(`📊 hasUnsavedChanges: ${isChanged}`)
+      console.log(`📊 hasUnsavedChanges changed: ${isChanged}`)
+      
+      // 调试：打印差异字段
+      if (isChanged) {
+        const allKeys = new Set([...Object.keys(baseFlat), ...Object.keys(nowFlat)])
+        const diffKeys = Array.from(allKeys).filter(key => !isEqual(baseFlat[key], nowFlat[key]))
+        console.log(`🔍 Changed fields (${diffKeys.length}):`, diffKeys.slice(0, 5)) // 只显示前5个
+        // 打印具体的差异值
+        diffKeys.slice(0, 3).forEach(key => {
+          const baseVal = key in baseFlat ? JSON.stringify(baseFlat[key]) : "(not exists)"
+          const nowVal = key in nowFlat ? JSON.stringify(nowFlat[key]) : "(not exists)"
+          console.log(`   ${key}: ${baseVal} → ${nowVal}`)
+        })
+      } else {
+        console.log(`✅ All changes reverted, back to original state`)
+      }
     }
   }
 
@@ -128,8 +174,12 @@ class CampaignEditorStore {
    */
   updateField<K extends keyof Campaign>(field: K, value: Campaign[K]) {
     if (!this.editingCampaign) return
+    
+    console.log(`✏️ updateField: ${String(field)}`)
     this.editingCampaign[field] = value
-    // deepObserve 会自动触发 compareAndUpdateStatus
+    
+    // 立即同步比较，不依赖 deepObserve 的延迟触发
+    this.compareAndUpdateStatus()
   }
 
   /**
@@ -138,7 +188,8 @@ class CampaignEditorStore {
   updateFields(updates: Partial<Campaign>) {
     if (!this.editingCampaign) return
     Object.assign(this.editingCampaign, updates)
-    // deepObserve 会自动触发 compareAndUpdateStatus
+    // 立即同步比较，不依赖 deepObserve 的延迟触发
+    this.compareAndUpdateStatus()
   }
 
   /**

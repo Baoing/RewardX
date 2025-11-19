@@ -124,7 +124,6 @@ export const ColorPicker = ({
     if (isInteractingRef.current) {
       return
     }
-    console.log("✅ Closing popover")
     setActiveState(false)
   }, [setActiveState])
 
@@ -219,11 +218,9 @@ export const ColorPicker = ({
           onClick={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
           onMouseEnter={() => {
-            console.log("🖱️ Mouse entered popover")
             isInteractingRef.current = true
           }}
           onMouseLeave={() => {
-            console.log("🖱️ Mouse left popover")
             isInteractingRef.current = false
           }}
         >
