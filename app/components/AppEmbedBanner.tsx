@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { Banner, BlockStack, Text, Button, InlineStack } from "@shopify/polaris"
 import { useTranslation } from "react-i18next"
-import { getAppEmbedUuid } from "../config/app.config"
+import { getAppEmbedUuid } from "@/config/app.config"
 
 export function AppEmbedBanner() {
   const { t } = useTranslation()

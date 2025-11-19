@@ -5,16 +5,16 @@ import {
   Button,
   ButtonGroup,
   Spinner,
-  Text,
-  TextField,
-  Select,
-  Checkbox
+  Text
 } from "@shopify/polaris"
 import { DesktopIcon, MobileIcon, XIcon } from "@shopify/polaris-icons"
 import { observer } from "mobx-react-lite"
-import { useCampaignStore } from "@/stores"
+import { useCampaignStore, useCampaignEditorStore } from "@/stores"
 import { authenticate } from "@/shopify.server"
 import { showToast } from "@/utils/toast"
+import RulesTab from "./components/RulesTab"
+import ContentTab from "./components/ContentTab"
+import StylesTab from "./components/StylesTab"
 import styles from "./styles.module.scss"
 
 // loader 进行 Shopify 认证
@@ -30,10 +30,11 @@ const CampaignDetailPage = observer(() => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const campaignStore = useCampaignStore()
+  const editorStore = useCampaignEditorStore()
   const campaign = campaignStore.currentCampaign
 
   // 标签状态
-  const [activeTab, setActiveTab] = useState<"rules" | "design" | "prizes">("rules")
+  const [activeTab, setActiveTab] = useState<"rules" | "content" | "styles">("rules")
   // 预览设备状态
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop")
 
@@ -65,7 +66,12 @@ const CampaignDetailPage = observer(() => {
       campaignStore.setEntries([])
 
       // 获取新数据
-      campaignStore.fetchCampaign(id)
+      campaignStore.fetchCampaign(id).then(() => {
+        // 初始化编辑器
+        if (campaignStore.currentCampaign) {
+          editorStore.initEditor(campaignStore.currentCampaign)
+        }
+      })
       campaignStore.fetchEntries(id)
     }
 
@@ -74,166 +80,49 @@ const CampaignDetailPage = observer(() => {
       console.log("🧹 Cleaning up campaign detail page")
       campaignStore.setCurrentCampaign(null)
       campaignStore.setEntries([])
+      editorStore.resetEditor()
     }
-  }, [id, campaignStore])
+  }, [id, campaignStore, editorStore])
 
   // 渲染左侧配置面板的内容
   const renderSidebarContent = () => {
-    if (!campaign) return null
-
     switch (activeTab) {
       case "rules":
-        return (
-          <div className={styles.content}>
-            <div className={styles.section}>
-              <div className={styles.sectionTitle}>
-                Publish Campaign
-              </div>
-              <Checkbox
-                label="Make this campaign live"
-                checked={campaign.isActive}
-                onChange={(checked) => {
-                  if (id) {
-                    campaignStore.updateCampaign(id, { isActive: checked })
-                  }
-                }}
-              />
-            </div>
-
-            <div className={styles.section}>
-              <TextField
-                label="Campaign Name"
-                value={campaign.name}
-                onChange={(value) => {
-                  if (id) {
-                    campaignStore.updateCampaign(id, { name: value })
-                  }
-                }}
-                autoComplete="off"
-                maxLength={50}
-                helpText={"Only visible to you, not shown to customers"}
-              />
-            </div>
-
-            <div className={styles.section}>
-              <Select
-                label="Campaign Type"
-                options={[
-                  { label: "Order Lottery", value: "order_lottery" },
-                  { label: "Email Subscribe", value: "email_subscribe" }
-                ]}
-                value={campaign.type}
-                onChange={(value) => {
-                  if (id) {
-                    campaignStore.updateCampaign(id, { type: value })
-                  }
-                }}
-              />
-            </div>
-
-            <div className={styles.section}>
-              <TextField
-                label="Min Order Amount"
-                type="number"
-                value={campaign.minOrderAmount?.toString() || ""}
-                onChange={(value) => {
-                  if (id) {
-                    campaignStore.updateCampaign(id, {
-                      minOrderAmount: value ? parseFloat(value) : undefined
-                    })
-                  }
-                }}
-                prefix="$"
-                autoComplete="off"
-                helpText={"Minimum order amount required to play"}
-              />
-            </div>
-
-            <div className={styles.section}>
-              <TextField
-                label="Max Plays Per Customer"
-                type="number"
-                value={campaign.maxPlaysPerCustomer?.toString() || ""}
-                onChange={(value) => {
-                  if (id) {
-                    campaignStore.updateCampaign(id, {
-                      maxPlaysPerCustomer: value ? parseInt(value) : undefined
-                    })
-                  }
-                }}
-                autoComplete="off"
-                helpText={"Leave empty for unlimited plays"}
-              />
-            </div>
-          </div>
-        )
-
-      case "design":
-        return (
-          <div className={styles.content}>
-            <div className={styles.section}>
-              <div className={styles.sectionTitle}>
-                Game Type
-              </div>
-              <Select
-                label=""
-                options={[
-                  { label: "9-Box", value: "ninebox" },
-                  { label: "Lucky Wheel", value: "wheel" },
-                  { label: "Slot Machine", value: "slot" },
-                  { label: "Scratch Card", value: "scratch" }
-                ]}
-                value={campaign.gameType}
-                onChange={(value) => {
-                  if (id) {
-                    campaignStore.updateCampaign(id, { gameType: value })
-                  }
-                }}
-              />
-            </div>
-
-            <div className={styles.section}>
-              <div className={styles.sectionTitle}>
-                Theme Colors
-              </div>
-              <Text as="p" tone="subdued">
-                Customize colors (Coming soon)
-              </Text>
-            </div>
-          </div>
-        )
-
-      case "prizes":
-        return (
-          <div className={styles.content}>
-            <div className={styles.section}>
-              <div className={styles.sectionTitle}>
-                Prize Configuration
-              </div>
-              <div className={styles.sectionDescription}>
-                Total Prizes: {campaign.prizes?.length || 0}
-              </div>
-              <Button onClick={() => { /* TODO: Add prize modal */ }}>
-                Add Prize
-              </Button>
-            </div>
-
-            {campaign.prizes && campaign.prizes.length > 0 && (
-              <div className={styles.section}>
-                {campaign.prizes.map((prize) => (
-                  <div key={prize.id} style={{ padding: "12px", border: "1px solid #e1e3e5", borderRadius: "8px", marginBottom: "8px" }}>
-                    <Text as="p" fontWeight="semibold">{prize.name}</Text>
-                    <Text as="p" tone="subdued">{prize.type} - {prize.chancePercentage}%</Text>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )
-
+        return <RulesTab />
+      case "content":
+        return <ContentTab />
+      case "styles":
+        return <StylesTab />
       default:
         return null
     }
+  }
+
+  // 处理保存
+  const handleSave = async () => {
+    if (!id || !editorStore.hasUnsavedChanges) return
+
+    editorStore.setIsSaving(true)
+    try {
+      const changes = editorStore.changedFields
+      const success = await campaignStore.updateCampaign(id, changes)
+      
+      if (success) {
+        editorStore.markSaved()
+        showToast({ content: "Campaign saved successfully" })
+      }
+    } catch (error) {
+      console.error("Failed to save campaign:", error)
+      showToast({ content: "Failed to save campaign", error: true })
+    } finally {
+      editorStore.setIsSaving(false)
+    }
+  }
+
+  // 处理撤销
+  const handleDiscard = () => {
+    editorStore.discardChanges()
+    showToast({ content: "Changes discarded" })
   }
 
   if (campaignStore.isLoading && !campaign) {
@@ -282,15 +171,17 @@ const CampaignDetailPage = observer(() => {
             <h1 className={styles.campaignEditor__title}>{campaign.name}</h1>
           </div>
           <div className={styles.campaignEditor__actions}>
-            <Button disabled={true}>
+            <Button
+              onClick={handleDiscard}
+              disabled={!editorStore.hasUnsavedChanges}
+            >
               Discard
             </Button>
             <Button
               variant="primary"
-              onClick={() => {
-                console.log("💾 Saving campaign...")
-                showToast({ content: "Campaign saved (Coming soon)" })
-              }}
+              onClick={handleSave}
+              disabled={!editorStore.hasUnsavedChanges}
+              loading={editorStore.isSaving}
             >
               Save
             </Button>
@@ -319,16 +210,16 @@ const CampaignDetailPage = observer(() => {
                 Rules
               </button>
               <button
-                className={`${styles.tabButton} ${activeTab === "design" ? styles.active : ""}`}
-                onClick={() => setActiveTab("design")}
+                className={`${styles.tabButton} ${activeTab === "content" ? styles.active : ""}`}
+                onClick={() => setActiveTab("content")}
               >
-                Design
+                Content
               </button>
               <button
-                className={`${styles.tabButton} ${activeTab === "prizes" ? styles.active : ""}`}
-                onClick={() => setActiveTab("prizes")}
+                className={`${styles.tabButton} ${activeTab === "styles" ? styles.active : ""}`}
+                onClick={() => setActiveTab("styles")}
               >
-                Prizes
+                Styles
               </button>
             </div>
           </div>

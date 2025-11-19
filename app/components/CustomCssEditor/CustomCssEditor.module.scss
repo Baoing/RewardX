@@ -1,0 +1,45 @@
+.customCssEditor {
+  @apply rounded-lg overflow-hidden;
+  @apply border border-gray-200;
+  @apply shadow-sm;
+
+  // CodeMirror 编辑器样式覆盖
+  :global {
+    .cm-editor {
+      @apply rounded-lg;
+      outline: none;
+    }
+
+    .cm-scroller {
+      @apply font-mono text-sm;
+    }
+
+    // 行号区域
+    .cm-gutters {
+      @apply bg-gray-800;
+      @apply border-r border-gray-700;
+    }
+
+    // 行号
+    .cm-lineNumbers .cm-gutterElement {
+      @apply text-gray-400;
+      @apply min-w-[40px];
+    }
+
+    // 活跃行
+    .cm-activeLine {
+      @apply bg-gray-800 bg-opacity-50;
+    }
+
+    // 选中文本
+    .cm-selectionBackground {
+      @apply bg-blue-500 bg-opacity-30;
+    }
+
+    // 光标
+    .cm-cursor {
+      @apply border-l-2 border-blue-400;
+    }
+  }
+}
+

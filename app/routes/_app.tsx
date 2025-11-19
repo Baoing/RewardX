@@ -34,7 +34,7 @@ import { authenticate } from "@/shopify.server"
 import { getShopInfo } from "@/utils/shop.server"
 import { upsertUser } from "@/utils/user.server"
 import { getCurrentSubscription } from "@/services/subscription.server"
-import { StoreContext, userInfoStore, commonStore, campaignStore, useCommonStore } from "@/stores"
+import { StoreContext, userInfoStore, commonStore, campaignStore, campaignEditorStore, useCommonStore } from "@/stores"
 import { LoadingScreen } from "@/components/LoadingScreen"
 import "@/i18n/config"
 
@@ -265,7 +265,7 @@ export default function App() {
   }, [i18n])
 
   return (
-    <StoreContext.Provider value={{ userInfoStore, commonStore, campaignStore }}>
+    <StoreContext.Provider value={{ userInfoStore, commonStore, campaignStore, campaignEditorStore }}>
       <AppContent />
     </StoreContext.Provider>
   )

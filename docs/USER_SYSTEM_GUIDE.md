@@ -59,7 +59,7 @@ FormData:
 ### userInfoStore
 
 ```typescript
-import { useUserInfoStore } from "../stores"
+import { useUserInfoStore } from "@/stores"
 
 function MyComponent() {
   const userInfoStore = useUserInfoStore()
@@ -84,7 +84,7 @@ function MyComponent() {
 
 ```typescript
 import { observer } from "mobx-react-lite"
-import { useUserInfoStore } from "../stores"
+import { useUserInfoStore } from "@/stores"
 
 export const MyComponent = observer(() => {
   const userInfoStore = useUserInfoStore()
@@ -196,7 +196,7 @@ useEffect(() => {
 你可以使用 `settings` 字段保存任何 JSON 数据：
 
 ```typescript
-import { useUserInfoStore } from "../stores"
+import { useUserInfoStore } from "@/stores"
 
 function MyComponent() {
   const userInfoStore = useUserInfoStore()
@@ -294,7 +294,7 @@ app/
 // app/routes/_app.settings.tsx
 import { observer } from "mobx-react-lite"
 import { Page, Card, BlockStack, Select } from "@shopify/polaris"
-import { useUserInfoStore } from "../stores"
+import { useUserInfoStore } from "@/stores"
 import { useTranslation } from "react-i18next"
 
 export default observer(function SettingsPage() {

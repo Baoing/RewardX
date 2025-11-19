@@ -2,15 +2,18 @@ import { createContext, useContext } from "react"
 import { userInfoStore } from "./userInfoStore"
 import { commonStore } from "./commonStore"
 import { campaignStore } from "./campaignStore"
+import { campaignEditorStore } from "./campaignEditorStore"
 
 export { userInfoStore } from "./userInfoStore"
 export { commonStore } from "./commonStore"
 export { campaignStore } from "./campaignStore"
+export { campaignEditorStore } from "./campaignEditorStore"
 
 export const StoreContext = createContext({
   userInfoStore,
   commonStore,
-  campaignStore
+  campaignStore,
+  campaignEditorStore
 })
 
 export const useStores = () => {
@@ -34,5 +37,10 @@ export const useCommonStore = () => {
 export const useCampaignStore = () => {
   const { campaignStore } = useStores()
   return campaignStore
+}
+
+export const useCampaignEditorStore = () => {
+  const { campaignEditorStore } = useStores()
+  return campaignEditorStore
 }
 

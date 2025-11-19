@@ -1,7 +1,7 @@
 import { Card, BlockStack, Text, Badge, InlineStack } from "@shopify/polaris"
 import { useTranslation } from "react-i18next"
 import { observer } from "mobx-react-lite"
-import { useCommonStore } from "../stores"
+import { useCommonStore } from "@/stores"
 
 export const ShopInfoCard = observer(() => {
   const { t } = useTranslation()

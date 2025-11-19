@@ -1,9 +1,9 @@
 import { Card, BlockStack, Text, Button } from "@shopify/polaris"
 import { useTranslation } from "react-i18next"
 import { observer } from "mobx-react-lite"
-import { SettingsPageContainer, type SettingSection } from "../../components/settings"
-import { useUserInfoStore, useCommonStore } from "../../stores"
-import { SUPPORTED_LANGUAGES } from "../../i18n/languages"
+import { SettingsPageContainer, type SettingSection } from "@/components/settings"
+import { useUserInfoStore, useCommonStore } from "@/stores"
+import { SUPPORTED_LANGUAGES } from "@/i18n/languages"
 
 const SettingsPage = observer(() => {
   const { t } = useTranslation()
@@ -20,7 +20,7 @@ const SettingsPage = observer(() => {
   const handleLanguageChange = async (language: string) => {
     // 1. 通过 commonStore 切换语言（会自动同步 i18n）
     commonStore.setLanguage(language as any)
-    
+
     // 2. 保存到数据库
     await userInfoStore.updateLanguage(language)
   }

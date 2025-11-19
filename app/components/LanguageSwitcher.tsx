@@ -3,8 +3,8 @@ import { useTranslation } from "react-i18next"
 import { Button, Popover, ActionList, Scrollable } from "@shopify/polaris"
 import { LanguageIcon } from "@shopify/polaris-icons"
 import { observer } from "mobx-react-lite"
-import { SUPPORTED_LANGUAGES, type LanguageCode } from "../i18n/languages"
-import { useUserInfoStore, useCommonStore } from "../stores"
+import { SUPPORTED_LANGUAGES, type LanguageCode } from "@/i18n/languages"
+import { useUserInfoStore, useCommonStore } from "@/stores"
 
 export const LanguageSwitcher = observer(() => {
   const { i18n } = useTranslation()
@@ -21,10 +21,10 @@ export const LanguageSwitcher = observer(() => {
     async (shopifyLangCode: LanguageCode) => {
       // 1. 通过 commonStore 切换语言（会自动同步 i18n）
       commonStore.setLanguage(shopifyLangCode)
-      
+
       // 2. 关闭弹窗
       setPopoverActive(false)
-      
+
       // 3. 保存到数据库（Shopify 格式）
       await userInfoStore.updateLanguage(shopifyLangCode)
     },

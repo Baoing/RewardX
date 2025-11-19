@@ -1,7 +1,7 @@
 import { Card, BlockStack, Text, Badge, InlineStack, Grid } from "@shopify/polaris"
 import { observer } from "mobx-react-lite"
 import { useTranslation } from "react-i18next"
-import { useUserInfoStore } from "../stores"
+import { useUserInfoStore } from "@/stores"
 
 export const UserInfoCard = observer(() => {
   const { t } = useTranslation()
@@ -40,7 +40,7 @@ export const UserInfoCard = observer(() => {
             <Text as="h3" variant="headingSm" fontWeight="semibold">
               {t("userInfo.shopInfo")}
             </Text>
-            
+
             <BlockStack gap="200">
               <InlineStack gap="200">
                 <Text as="span" fontWeight="medium">{t("userInfo.shopName")}:</Text>
@@ -68,7 +68,7 @@ export const UserInfoCard = observer(() => {
             <Text as="h3" variant="headingSm" fontWeight="semibold">
               {t("userInfo.geography")}
             </Text>
-            
+
             <BlockStack gap="200">
               <InlineStack gap="200">
                 <Text as="span" fontWeight="medium">{t("userInfo.country")}:</Text>
@@ -96,7 +96,7 @@ export const UserInfoCard = observer(() => {
             <Text as="h3" variant="headingSm" fontWeight="semibold">
               {t("userInfo.currencyAndLanguage")}
             </Text>
-            
+
             <BlockStack gap="200">
               <InlineStack gap="200">
                 <Text as="span" fontWeight="medium">{t("userInfo.currency")}:</Text>
@@ -126,7 +126,7 @@ export const UserInfoCard = observer(() => {
             <Text as="h3" variant="headingSm" fontWeight="semibold">
               {t("userInfo.metadata")}
             </Text>
-            
+
             <BlockStack gap="200">
               <InlineStack gap="200">
                 <Text as="span" fontWeight="medium">{t("userInfo.installedAt")}:</Text>
