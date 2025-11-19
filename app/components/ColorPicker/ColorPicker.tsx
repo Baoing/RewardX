@@ -7,7 +7,7 @@ import {
   Text,
   TextField
 } from "@shopify/polaris"
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import styles from "./ColorPicker.module.scss"
 
 export interface ColorPickerProps {
@@ -17,8 +17,9 @@ export interface ColorPickerProps {
   disabled?: boolean
   id?: string
   allowEmpty?: boolean // 是否允许无色
+  active?: boolean // 外部控制的 Popover 打开状态
   onChange(color: string | undefined, id?: string): void
-  onClickActivator?(id?: string): void
+  onActiveChange?(active: boolean, id?: string): void // 通知父组件状态变化
 }
 
 /**
@@ -31,11 +32,13 @@ export const ColorPicker = ({
   label,
   id,
   onChange,
-  onClickActivator,
+  onActiveChange,
   disabled,
+  active: externalActive,
   allowEmpty = true
 }: ColorPickerProps) => {
-  const [active, setActive] = useState<boolean>(false)
+  // 内部状态（仅在没有外部控制时使用）
+  const [internalActive, setInternalActive] = useState<boolean>(false)
   const [hexColor, setHexColor] = useState<string>("")
 
   const [pickerColor, setPickerColor] = useState<HSBAColor>({
@@ -44,6 +47,14 @@ export const ColorPicker = ({
     saturation: 1,
     alpha: 1
   })
+
+  // 标记是否刚刚打开，用于防止立即关闭
+  const justOpenedRef = useRef(false)
+  // 标记是否正在交互，用于防止操作时关闭
+  const isInteractingRef = useRef(false)
+
+  // 使用外部 active 或内部 active（向后兼容）
+  const active = externalActive !== undefined ? externalActive : internalActive
 
   /** 监听 color 值从外部修改 */
   useEffect(() => {
@@ -78,14 +89,44 @@ export const ColorPicker = ({
     setHexColor(_color)
   }, [color, placeholder])
 
-  const togglePopoverActive = useCallback(
-    () => {
-      if (!disabled) {
-        setActive((popoverActive) => !popoverActive)
-      }
-    },
-    [disabled]
-  )
+  // 设置 active 状态（内部或外部）
+  const setActiveState = useCallback((newActive: boolean) => {
+    if (externalActive !== undefined) {
+      // 如果使用外部状态，通知父组件
+      onActiveChange?.(newActive, id)
+    } else {
+      // 否则使用内部状态
+      setInternalActive(newActive)
+    }
+  }, [externalActive, onActiveChange, id])
+
+  // 打开 Popover
+  const openPopover = useCallback(() => {
+    if (!disabled) {
+      justOpenedRef.current = true
+      isInteractingRef.current = false // 重置交互标记
+      setActiveState(true)
+
+      // 150ms 后清除标记（给 Popover 足够的时间完成打开动画）
+      setTimeout(() => {
+        justOpenedRef.current = false
+      }, 150)
+    }
+  }, [disabled, setActiveState])
+
+  // 关闭 Popover（带防抖保护）
+  const closePopover = useCallback(() => {
+    // 如果刚刚打开，忽略这次关闭
+    if (justOpenedRef.current) {
+      return
+    }
+    // 如果正在交互，忽略这次关闭
+    if (isInteractingRef.current) {
+      return
+    }
+    console.log("✅ Closing popover")
+    setActiveState(false)
+  }, [setActiveState])
 
   const handleColorPickerChange = (HSBA: HSBAColor) => {
     setPickerColor(HSBA)
@@ -120,11 +161,14 @@ export const ColorPicker = ({
   }
 
   // 清空颜色
-  const handleClearColor = () => {
+  const handleClearColor = useCallback(() => {
     setHexColor("")
     onChange(undefined, id)
-    setActive(false)
-  }
+    // 清除交互标记，允许关闭
+    isInteractingRef.current = false
+    // 直接设置为 false，不需要防抖检查
+    setActiveState(false)
+  }, [onChange, id, setActiveState])
 
   // 判断是否为空（用户选择了清空）vs 使用默认值
   // color 为空 且 placeholder 不是颜色值 = 真正的空
@@ -136,9 +180,10 @@ export const ColorPicker = ({
   const colorBlock = (
     <div
       className={`${styles.activator} ${isReallyEmpty ? styles.empty : ""}`}
-      onClick={() => {
-        togglePopoverActive()
-        onClickActivator && onClickActivator(id)
+      onClick={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        openPopover()
       }}
       style={
         !isReallyEmpty && displayColor
@@ -163,12 +208,25 @@ export const ColorPicker = ({
       <Popover
         activator={colorBlock}
         active={active}
-        onClose={togglePopoverActive}
+        onClose={closePopover}
         preferInputActivator={false}
         preferredAlignment="left"
-        fullHeight
+        autofocusTarget="none"
+        preventCloseOnChildOverlayClick
       >
-        <div className={styles.colorPickerPadding}>
+        <div
+          className={styles.colorPickerPadding}
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onMouseEnter={() => {
+            console.log("🖱️ Mouse entered popover")
+            isInteractingRef.current = true
+          }}
+          onMouseLeave={() => {
+            console.log("🖱️ Mouse left popover")
+            isInteractingRef.current = false
+          }}
+        >
           <PolarisColorPicker
             allowAlpha={false}
             color={pickerColor}

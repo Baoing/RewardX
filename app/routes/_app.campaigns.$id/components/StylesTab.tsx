@@ -1,4 +1,5 @@
 import { observer } from "mobx-react-lite"
+import { useState, useCallback } from "react"
 import {
   BlockStack,
   Text,
@@ -14,6 +15,9 @@ const StylesTab = observer(() => {
   const editorStore = useCampaignEditorStore()
   const campaign = editorStore.editingCampaign
 
+  // 统一管理 Popover 打开状态，同一时间只能打开一个
+  const [activeColorPickerId, setActiveColorPickerId] = useState<string | null>(null)
+
   if (!campaign) return null
 
   // 确保 styles 对象存在
@@ -25,6 +29,17 @@ const StylesTab = observer(() => {
       [field]: value
     })
   }
+
+  // 处理 ColorPicker Popover 状态变化
+  const handleColorPickerActiveChange = useCallback((active: boolean, id?: string) => {
+    if (active && id) {
+      // 打开指定的 ColorPicker，关闭其他的
+      setActiveColorPickerId(id)
+    } else {
+      // 关闭所有
+      setActiveColorPickerId(null)
+    }
+  }, [])
 
   return (
     <div className={styles.content}>
@@ -39,18 +54,24 @@ const StylesTab = observer(() => {
           </Text>
           <div className={styles.colorGroup}>
             <ColorPicker
+              id="mainTextColor"
               label="Text Color"
               color={campaignStyles.mainTextColor}
               onChange={(value) => updateStyle("mainTextColor", value)}
               placeholder="Inherit from theme"
               allowEmpty={true}
+              active={activeColorPickerId === "mainTextColor"}
+              onActiveChange={handleColorPickerActiveChange}
             />
             <ColorPicker
+              id="mainBackgroundColor"
               label="Background Color"
               color={campaignStyles.mainBackgroundColor}
               onChange={(value) => updateStyle("mainBackgroundColor", value)}
               placeholder="Inherit from theme"
               allowEmpty={true}
+              active={activeColorPickerId === "mainBackgroundColor"}
+              onActiveChange={handleColorPickerActiveChange}
             />
           </div>
         </div>
@@ -64,18 +85,24 @@ const StylesTab = observer(() => {
           </Text>
           <div className={styles.colorGroup}>
             <ColorPicker
+              id="topBarTextColor"
               label="Text Color"
               color={campaignStyles.topBarTextColor}
               onChange={(value) => updateStyle("topBarTextColor", value)}
               placeholder="#000000"
               allowEmpty={true}
+              active={activeColorPickerId === "topBarTextColor"}
+              onActiveChange={handleColorPickerActiveChange}
             />
             <ColorPicker
+              id="topBarBackgroundColor"
               label="Background Color"
               color={campaignStyles.topBarBackgroundColor}
               onChange={(value) => updateStyle("topBarBackgroundColor", value)}
               placeholder="#ff841f"
               allowEmpty={true}
+              active={activeColorPickerId === "topBarBackgroundColor"}
+              onActiveChange={handleColorPickerActiveChange}
             />
           </div>
         </div>
@@ -89,39 +116,54 @@ const StylesTab = observer(() => {
           </Text>
           <div className={styles.colorGroup}>
             <ColorPicker
+              id="moduleTextColor"
               label="Text Color"
               color={campaignStyles.moduleTextColor}
               onChange={(value) => updateStyle("moduleTextColor", value)}
               placeholder="#000000"
               allowEmpty={true}
+              active={activeColorPickerId === "moduleTextColor"}
+              onActiveChange={handleColorPickerActiveChange}
             />
             <ColorPicker
+              id="moduleBackgroundColor"
               label="Background Color"
               color={campaignStyles.moduleBackgroundColor}
               onChange={(value) => updateStyle("moduleBackgroundColor", value)}
               placeholder="#ffcfa7"
               allowEmpty={true}
+              active={activeColorPickerId === "moduleBackgroundColor"}
+              onActiveChange={handleColorPickerActiveChange}
             />
             <ColorPicker
+              id="moduleBorderColor"
               label="Border Color"
               color={campaignStyles.moduleBorderColor}
               onChange={(value) => updateStyle("moduleBorderColor", value)}
               placeholder="#ff841f"
               allowEmpty={true}
+              active={activeColorPickerId === "moduleBorderColor"}
+              onActiveChange={handleColorPickerActiveChange}
             />
             <ColorPicker
+              id="moduleDrawBackgroundColor"
               label="Draw Background Color"
               color={campaignStyles.moduleDrawBackgroundColor}
               onChange={(value) => updateStyle("moduleDrawBackgroundColor", value)}
               placeholder="#1a0202"
               allowEmpty={true}
+              active={activeColorPickerId === "moduleDrawBackgroundColor"}
+              onActiveChange={handleColorPickerActiveChange}
             />
             <ColorPicker
+              id="moduleButtonColor"
               label="Button Color"
               color={campaignStyles.moduleButtonColor}
               onChange={(value) => updateStyle("moduleButtonColor", value)}
               placeholder="#ff841f"
               allowEmpty={true}
+              active={activeColorPickerId === "moduleButtonColor"}
+              onActiveChange={handleColorPickerActiveChange}
             />
           </div>
         </div>
@@ -135,11 +177,14 @@ const StylesTab = observer(() => {
           </Text>
           <div className={styles.colorGroup}>
             <ColorPicker
+              id="footerTextColor"
               label="Text Color"
               color={campaignStyles.footerTextColor}
               onChange={(value) => updateStyle("footerTextColor", value)}
               placeholder="#666666"
               allowEmpty={true}
+              active={activeColorPickerId === "footerTextColor"}
+              onActiveChange={handleColorPickerActiveChange}
             />
           </div>
         </div>
