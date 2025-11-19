@@ -41,7 +41,6 @@ const ContentTab = observer(() => {
             onChange={(value) => updateContent("title", value)}
             autoComplete="off"
             maxLength={100}
-            helpText="Main title displayed at the top of the game"
           />
 
           {/* Description */}
@@ -52,7 +51,6 @@ const ContentTab = observer(() => {
             autoComplete="off"
             multiline={3}
             maxLength={500}
-            helpText="Short description or instructions"
           />
         </div>
 
@@ -71,7 +69,6 @@ const ContentTab = observer(() => {
             onChange={(value) => updateContent("inputTitle", value)}
             autoComplete="off"
             placeholder="E.g., Please enter your order number (e.g., #HTVRONT1234567)"
-            helpText="Label above the input field"
           />
 
           {/* Input Placeholder */}
@@ -81,7 +78,6 @@ const ContentTab = observer(() => {
             onChange={(value) => updateContent("inputPlaceholder", value)}
             autoComplete="off"
             placeholder="Please enter your order number"
-            helpText="Placeholder text inside the input field"
           />
 
           {/* Input Empty Error */}
@@ -91,7 +87,6 @@ const ContentTab = observer(() => {
             onChange={(value) => updateContent("inputEmptyError", value)}
             autoComplete="off"
             placeholder="Order number is required"
-            helpText="Error message when input is empty"
           />
 
           {/* Generic Error Message */}
@@ -101,7 +96,6 @@ const ContentTab = observer(() => {
             onChange={(value) => updateContent("errorMessage", value)}
             autoComplete="off"
             placeholder="Something went wrong. Please try again."
-            helpText="Generic error message for unexpected errors"
           />
         </div>
 
@@ -121,7 +115,6 @@ const ContentTab = observer(() => {
             autoComplete="off"
             placeholder="Play Now"
             maxLength={30}
-            helpText="Text displayed on the play button"
           />
         </div>
 
@@ -140,7 +133,6 @@ const ContentTab = observer(() => {
             onChange={(value) => updateContent("rulesText1", value)}
             autoComplete="off"
             multiline={6}
-            helpText="First rules section"
           />
 
           {/* Rules Text 2 */}
@@ -150,7 +142,6 @@ const ContentTab = observer(() => {
             onChange={(value) => updateContent("rulesText2", value)}
             autoComplete="off"
             multiline={6}
-            helpText="Second rules section"
           />
         </div>
       </BlockStack>
