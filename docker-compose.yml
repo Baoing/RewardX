@@ -20,6 +20,27 @@ services:
       timeout: 5s
       retries: 5
 
+  # RewardX 应用
+  app:
+    build: .
+    container_name: rewardx-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://rewardx:rewardx_password@postgres:5432/rewardx
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./build:/app/build
+      - ./prisma:/app/prisma
+    networks:
+      - rewardx-network
+
   # pgAdmin (可选，用于数据库管理)
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -34,6 +55,12 @@ services:
       - pgadmin_data:/var/lib/pgadmin
     depends_on:
       - postgres
+    networks:
+      - rewardx-network
+
+networks:
+  rewardx-network:
+    driver: bridge
 
 volumes:
   postgres_data:
