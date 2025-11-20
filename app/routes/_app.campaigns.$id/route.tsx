@@ -16,6 +16,7 @@ import { showToast } from "@/utils/toast"
 import RulesTab from "./components/RulesTab"
 import ContentTab from "./components/ContentTab"
 import StylesTab from "./components/StylesTab"
+import PreviewGame from "./components/PreviewGame"
 import styles from "./styles.module.scss"
 
 // loader 进行 Shopify 认证
@@ -257,14 +258,7 @@ const CampaignDetailPage = observer(() => {
           {/* 预览内容 */}
           <div className={styles.previewContent}>
             <div className={`${styles.previewWrapper} ${styles[previewDevice]}`}>
-              <div className={styles.gameCanvas}>
-                <Text as="p" variant="bodyLg" tone="subdued">
-                  Game Preview ({campaign.gameType})
-                </Text>
-                <Text as="p" tone="subdued">
-                  Coming soon
-                </Text>
-              </div>
+              <PreviewGame />
             </div>
           </div>
         </div>

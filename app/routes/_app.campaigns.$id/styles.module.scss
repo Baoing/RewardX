@@ -115,6 +115,14 @@
   }
 }
 
+// 预览游戏组件
+.previewGame {
+  @apply w-full h-full;
+  @apply flex items-center justify-center;
+  @apply p-4;
+  @apply overflow-y-auto;
+}
+
 // 响应式：移动端
 @media (max-width: 1023px) {
   .campaignEditor {
