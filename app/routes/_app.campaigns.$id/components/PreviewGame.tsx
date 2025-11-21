@@ -4,7 +4,10 @@ import { BlockStack, Text, Spinner } from "@shopify/polaris"
 import { useCampaignEditorStore } from "@/stores"
 import { NineBoxLottery } from "@plugin/main"
 import type { Prize } from "@plugin/main"
+import { getComponentClassName } from "@/utils/className"
 import styles from "../styles.module.scss"
+
+const cn = (name: string) => getComponentClassName("block", name)
 
 /**
  * 活动预览组件
@@ -21,8 +24,8 @@ export const PreviewGame = observer(() => {
 
   if (!campaign) {
     return (
-      <div className={styles.previewGame}>
-        <div style={{ textAlign: "center", padding: "40px" }}>
+      <div className={`${styles.previewGame} ${cn("container")}`}>
+        <div className={cn("loading")} style={{ textAlign: "center", padding: "40px" }}>
           <Spinner size="large" />
           <div style={{ marginTop: "16px" }}>
             <Text as="p" tone="subdued">
@@ -41,10 +44,12 @@ export const PreviewGame = observer(() => {
 
   if (prizes.length === 0) {
     return (
-      <div className={styles.previewGame}>
-        <Text as="p" tone="subdued" alignment="center">
-          请先在 Rules 标签页添加奖品
-        </Text>
+      <div className={`${styles.previewGame} ${cn("container")}`}>
+        <div className={cn("empty")}>
+          <Text as="p" tone="subdued" alignment="center">
+            请先在 Rules 标签页添加奖品
+          </Text>
+        </div>
       </div>
     )
   }
@@ -68,7 +73,7 @@ export const PreviewGame = observer(() => {
   }
 
   const buttonStyle: React.CSSProperties = {
-    backgroundColor: campaignStyles.moduleButtonColor || campaignStyles.buttonColor || "#8B4513",
+    backgroundColor: campaignStyles.moduleButtonColor || "#8B4513",
     color: "#fff",
     border: "none",
     padding: "10px 24px",
@@ -124,16 +129,16 @@ export const PreviewGame = observer(() => {
     }
 
     return (
-      <div style={footerStyle}>
+      <div className={cn("rulesContent")} style={footerStyle}>
         {content.rulesText1 && (
-          <div style={{ marginBottom: content.rulesText2 ? "16px" : "0" }}>
+          <div className={cn("rulesSection")} style={{ marginBottom: content.rulesText2 ? "16px" : "0" }}>
             <div style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>
               {content.rulesText1}
             </div>
           </div>
         )}
         {content.rulesText2 && (
-          <div>
+          <div className={cn("rulesSection")}>
             <div style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>
               {content.rulesText2}
             </div>
@@ -142,83 +147,74 @@ export const PreviewGame = observer(() => {
       </div>
     )
   }
-
   return (
-    <div className={styles.previewGame}>
+    <div className={`${styles.previewGame} ${cn("container")}`} style={{ backgroundColor: campaignStyles.mainBackgroundColor }}>
       {/* 自定义 CSS */}
       {campaignStyles.customCSS && <style>{campaignStyles.customCSS}</style>}
 
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          maxWidth: "600px",
-          width: "100%",
-          margin: "0 auto",
-          borderRadius: "8px",
-          overflow: "hidden",
-          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)"
-        }}
-      >
+      <div className={cn("wrapper")} style={{
+        display: "flex",
+        flexDirection: "column",
+        maxWidth: "600px",
+        width: "100%",
+        margin: "0 auto",
+        borderRadius: "8px",
+        overflow: "hidden",
+      }}>
         {/* 顶部条 - 显示中奖信息 */}
         {recentWinner && (
-          <div style={topBarStyle}>
+          <div className={cn("topBar")} style={topBarStyle}>
             {recentWinner} 赢得了"{recentWinner}"奖。
           </div>
         )}
 
         {/* 主内容区 */}
-        <div style={mainStyle}>
+        <div className={cn("main")} style={mainStyle}>
           {/* 标题 */}
           {content.title && (
-            <h2
-              style={{
-                fontSize: "24px",
-                fontWeight: 600,
-                margin: "0 0 12px",
-                textAlign: "center"
-              }}
-            >
+            <h2 className={cn("title")} style={{
+              fontSize: "24px",
+              fontWeight: 600,
+              margin: "0 0 8px",
+              textAlign: "center"
+            }}>
               {content.title}
             </h2>
           )}
 
           {/* 描述 */}
           {content.description && (
-            <p
-              style={{
-                fontSize: "14px",
-                lineHeight: "1.6",
-                margin: "0 0 24px",
-                textAlign: "center",
-                color: campaignStyles.mainTextColor || "#666"
-              }}
-            >
+            <p className={cn("description")} style={{
+              fontSize: "14px",
+              lineHeight: "1.6",
+              margin: "0 0 24px",
+              textAlign: "center",
+              color: campaignStyles.mainTextColor || "#666"
+            }}>
               {content.description}
             </p>
           )}
 
           {/* 订单号验证（仅 order_lottery 类型） */}
           {campaign.type === "order_lottery" && !verified && (
-            <div style={{ marginBottom: "24px" }}>
+            <div className={cn("verifySection")} style={{ marginBottom: "24px" }}>
               {/* 输入框标题 */}
               {content.inputTitle && (
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "8px",
-                    fontSize: "14px",
-                    fontWeight: 500
-                  }}
-                >
+                <label className={cn("inputLabel")} style={{
+                  display: "block",
+                  marginBottom: "8px",
+                  fontSize: "14px",
+                  fontWeight: 500
+                }}>
                   {content.inputTitle}
                 </label>
               )}
 
               {/* 输入框和按钮 */}
-              <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
+              <div className={cn("inputGroup")} style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
                 <input
                   type="text"
+                  className={cn("input")}
                   value={orderNumber}
                   onChange={(e) => {
                     setOrderNumber(e.target.value)
@@ -240,6 +236,7 @@ export const PreviewGame = observer(() => {
                   }}
                 />
                 <button
+                  className={cn("verifyButton")}
                   onClick={handleVerify}
                   disabled={loading}
                   style={buttonStyle}
@@ -250,14 +247,12 @@ export const PreviewGame = observer(() => {
 
               {/* 错误提示 */}
               {error && (
-                <p
-                  style={{
-                    color: "#e74c3c",
-                    fontSize: "13px",
-                    margin: "8px 0 0",
-                    minHeight: "20px"
-                  }}
-                >
+                <p className={cn("error")} style={{
+                  color: "#e74c3c",
+                  fontSize: "13px",
+                  margin: "8px 0 0",
+                  minHeight: "20px"
+                }}>
                   {error}
                 </p>
               )}
@@ -266,17 +261,15 @@ export const PreviewGame = observer(() => {
 
           {/* 九宫格抽奖 */}
           {(verified || campaign.type !== "order_lottery") && (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                margin: "24px 0",
-                padding: "20px",
-                background: campaignStyles.moduleDrawBackgroundColor || campaignStyles.drawBackgroundColor || "#1a0202",
-                borderRadius: "8px"
-              }}
-            >
+            <div className={cn("lotterySection")} style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              margin: "24px 0",
+              padding: "20px",
+              background: campaignStyles.moduleDrawBackgroundColor || "#1a0202",
+              borderRadius: "8px"
+            }}>
               <NineBoxLottery
                 prizes={prizes}
                 campaignStyles={campaignStyles}
@@ -288,14 +281,18 @@ export const PreviewGame = observer(() => {
           )}
 
           {!campaign.isActive && (
-            <Text as="p" tone="subdued" alignment="center" variant="bodySm">
-              ⚠️ 活动已禁用 - 预览模式
-            </Text>
+            <div className={cn("disabledNotice")}>
+              <Text as="p" tone="subdued" alignment="center" variant="bodySm">
+                ⚠️ 活动已禁用 - 预览模式
+              </Text>
+            </div>
           )}
         </div>
 
         {/* 底部规则说明 */}
-        {renderRules()}
+        <div className={cn("rules")}>
+          {renderRules()}
+        </div>
       </div>
     </div>
   )
