@@ -258,7 +258,7 @@ const CampaignDetailPage = observer(() => {
           {/* 预览内容 */}
           <div className={styles.previewContent}>
             <div className={`${styles.previewWrapper} ${styles[previewDevice]}`}>
-              <PreviewGame />
+              <PreviewGame isAdmin={true} />
             </div>
           </div>
         </div>

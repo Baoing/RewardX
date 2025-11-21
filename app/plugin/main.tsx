@@ -109,6 +109,7 @@ const initStorefront = () => {
         root.render(
           <LotteryModal
             campaign={campaign}
+            isAdmin={false} // Storefront 环境
             onPrizeWon={(prize) => {
               console.log("Prize won:", prize)
             }}
@@ -129,12 +130,14 @@ const initStorefront = () => {
  */
 export const renderLotteryPreview = (
   container: HTMLElement,
-  campaign: Campaign
+  campaign: Campaign,
+  isAdmin: boolean = true // Admin 预览模式默认为 true
 ) => {
   const root = ReactDOM.createRoot(container)
   root.render(
     <LotteryModal
       campaign={campaign}
+      isAdmin={isAdmin}
       onPrizeWon={(prize) => {
         console.log("🎉 Prize won:", prize)
       }}

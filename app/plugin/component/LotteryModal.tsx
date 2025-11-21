@@ -4,6 +4,7 @@ import type { Campaign, Prize, CampaignContent, CampaignStyles } from "@plugin/m
 
 interface LotteryModalProps {
   campaign: Campaign
+  isAdmin?: boolean // 是否在 Admin 环境中
   onClose?: () => void
   onPrizeWon?: (prize: Prize) => void
 }
@@ -14,6 +15,7 @@ interface LotteryModalProps {
  */
 export const LotteryModal = ({
   campaign,
+  isAdmin = false,
   onClose,
   onPrizeWon
 }: LotteryModalProps) => {
@@ -24,6 +26,13 @@ export const LotteryModal = ({
   const [recentWinner, setRecentWinner] = useState<string | null>(null)
 
   const { content = {}, styles = {}, prizes = [], type, isActive } = campaign
+
+  // 判断是否应该显示内容
+  // Admin 环境：始终显示（包括未发布的活动，用于预览）
+  // Storefront 环境：只显示已发布的活动
+  if (!isAdmin && !isActive) {
+    return null
+  }
 
   // 应用样式
   const topBarStyle: React.CSSProperties = {
