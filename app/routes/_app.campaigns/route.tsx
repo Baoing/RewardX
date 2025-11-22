@@ -185,7 +185,7 @@ const CampaignsPage = observer(() => {
         <Layout.Section>
           {
             campaigns.length === 0
-              ? <EmptyState />
+              ? <EmptyState onCreateCampaign={handleCreateCampaign} isCreating={isCreating} />
               : <Card title="Campaigns library" titleDivider padding="0">
                 {campaigns.map((campaign) => (
                   <CampaignItem

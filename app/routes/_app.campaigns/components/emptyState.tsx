@@ -1,20 +1,22 @@
-import { useNavigate } from "react-router"
 import { useTranslation } from "react-i18next"
 import { Card } from "@/components/EnhancePolaris"
 import { EmptyState as EmptyComponent } from "@shopify/polaris"
 
-export default function EmptyState () {
+export interface EmptyStateProps {
+  onCreateCampaign: () => void | Promise<void>
+  isCreating?: boolean
+}
+
+const EmptyState = ({ onCreateCampaign, isCreating }: EmptyStateProps) => {
   const { t } = useTranslation()
-  const navigate = useNavigate()
 
   return <Card>
     <EmptyComponent
       heading="No campaigns found"
       action={{
         content: "Create your first campaign",
-        onAction: () => {
-          navigate("/campaigns/create")
-        }
+        onAction: onCreateCampaign,
+        loading: isCreating
       }}
       image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
     >
@@ -22,3 +24,5 @@ export default function EmptyState () {
     </EmptyComponent>
   </Card>
 }
+
+export default EmptyState

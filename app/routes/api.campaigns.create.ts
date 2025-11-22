@@ -1,4 +1,5 @@
-import type { ActionFunctionArgs } from "react-router"
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router"
+import { redirect } from "react-router"
 import { authenticate } from "@/shopify.server"
 import { apiHandler, getUserByShop, created } from "@/utils/api.server"
 import { createCampaign } from "@/services/campaign.server"
@@ -29,6 +30,13 @@ interface CreateCampaignRequest {
     icon?: string
   }>
   [key: string]: unknown
+}
+
+// ⚠️ 这是一个 API 路由，不应该通过 GET 访问
+// 如果用户直接访问这个 URL，重定向到 campaigns 列表页
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  console.log("⚠️ GET request to /api/campaigns/create, redirecting to /campaigns")
+  return redirect("/campaigns")
 }
 
 export const action = async ({ request }: ActionFunctionArgs) => {
