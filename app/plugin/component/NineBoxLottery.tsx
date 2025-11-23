@@ -91,7 +91,7 @@ export const NineBoxLottery = ({
       background: campaignStyles.moduleButtonColor || campaignStyles.buttonColor || "#8B4513",
       fonts: [
         {
-          text: campaignContent.buttonText || "开始",
+          text: campaignContent.buttonText || "Start",
           fontSize: "18px",
           fontColor: "#fff"
         }
@@ -136,7 +136,7 @@ export const NineBoxLottery = ({
   const handleEnd = (prizeIndex: any) => {
     setIsPlaying(false)
     const wonPrize = prizes[prizeIndex]
-    
+
     if (onComplete && wonPrize) {
       onComplete(wonPrize)
     }
@@ -160,7 +160,7 @@ export const NineBoxLottery = ({
         onStart={handleStart}
         onEnd={handleEnd}
       />
-      
+
       {disabled && (
         <div
           style={{

@@ -33,7 +33,7 @@ export const PreviewGame = observer(({ isAdmin = false }: PreviewGameProps) => {
           <Spinner size="large" />
           <div>
             <Text as="p" tone="subdued">
-              加载中...
+              Loading...
             </Text>
           </div>
         </div>
@@ -51,7 +51,7 @@ export const PreviewGame = observer(({ isAdmin = false }: PreviewGameProps) => {
       <div className={`${styles.previewGame} ${cn("container")}`}>
         <div className={cn("empty")}>
           <Text as="p" tone="subdued" alignment="center">
-            请先在 Rules 标签页添加奖品
+            Please add the prize in the Rules tab first.
           </Text>
         </div>
       </div>
