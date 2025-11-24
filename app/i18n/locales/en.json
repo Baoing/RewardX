@@ -45,7 +45,7 @@
     "devShop": "Development Shop",
     "name": "Shop Name",
     "domain": "Domain",
-    "email": "Email",
+    "order": "order",
     "plan": "Plan",
     "currency": "Currency",
     "timezone": "Timezone"
@@ -58,7 +58,7 @@
     "shopInfo": "Shop Information",
     "shopName": "Shop Name",
     "domain": "Domain",
-    "email": "Email",
+    "order": "order",
     "plan": "Plan",
     "geography": "Geography",
     "country": "Country",

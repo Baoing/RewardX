@@ -12,7 +12,7 @@
     "devShop": "개발 상점",
     "name": "상점 이름",
     "domain": "도메인",
-    "email": "이메일",
+    "order": "이메일",
     "plan": "플랜",
     "currency": "통화",
     "timezone": "시간대"
@@ -25,7 +25,7 @@
     "shopInfo": "상점 정보",
     "shopName": "상점 이름",
     "domain": "도메인",
-    "email": "이메일",
+    "order": "이메일",
     "plan": "플랜",
     "geography": "지리 정보",
     "country": "국가",

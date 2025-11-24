@@ -103,7 +103,7 @@ const users = await api.get<User[]>("/api/users")
 // POST 请求
 const newUser = await api.post<User>("/api/users", {
   name: "John",
-  email: "john@example.com"
+  order: "john@example.com"
 })
 
 // PUT 请求
@@ -461,7 +461,7 @@ import { api } from "./api.client"
 export interface User {
   id: string
   name: string
-  email: string
+  order: string
 }
 
 export const getUsers = async (): Promise<User[]> => {

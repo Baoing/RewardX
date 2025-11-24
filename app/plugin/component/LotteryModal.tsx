@@ -20,9 +20,10 @@ export const LotteryModal = ({
   onPrizeWon
 }: LotteryModalProps) => {
   const [orderNumber, setOrderNumber] = useState("")
-  const [error, setError] = useState("")
+  const [order, setOrder] = useState("")
+  const [name, setName] = useState("")
+  const [phone, setPhone] = useState("")
   const [verified, setVerified] = useState(false)
-  const [loading, setLoading] = useState(false)
   const [recentWinner, setRecentWinner] = useState<string | null>(null)
 
   const { content = {}, styles = {}, prizes = [], type, isActive } = campaign
@@ -51,18 +52,6 @@ export const LotteryModal = ({
     minHeight: "500px"
   }
 
-  const buttonStyle: React.CSSProperties = {
-    backgroundColor: styles.moduleButtonColor || styles.buttonColor || "#8B4513",
-    color: "#fff",
-    border: "none",
-    padding: "10px 24px",
-    borderRadius: "4px",
-    fontSize: "14px",
-    fontWeight: 500,
-    cursor: loading ? "not-allowed" : "pointer",
-    opacity: loading ? 0.6 : 1
-  }
-
   const footerStyle: React.CSSProperties = {
     backgroundColor: "#8B4513",
     color: styles.footerTextColor || "#fff",
@@ -71,71 +60,9 @@ export const LotteryModal = ({
     lineHeight: "1.6"
   }
 
-  // 验证订单号
-  const handleVerify = async () => {
-    if (!orderNumber.trim()) {
-      setError(content.inputEmptyError || content.inputTitle || "Please enter your order number")
-      return
-    }
-
-    setLoading(true)
-    setError("")
-
-    try {
-      // 调用后端 API 验证订单号
-      const response = await fetch("/api/lottery/verify-order-number", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          orderNumber: orderNumber.trim(),
-          campaignId: campaign.id
-        })
-      })
-
-      const data = await response.json()
-
-      if (!response.ok || !data.success) {
-        // 处理错误响应
-        const errorMessage = data.error || data.reason || content.errorMessage || "Order verification failed. Please check if the order number is correct."
-        setError(errorMessage)
-        return
-      }
-
-      // 检查是否可以抽奖
-      if (!data.canPlay) {
-        if (data.hasPlayed) {
-          // 已经抽过奖，显示之前的结果
-          setError(
-            data.previousEntry?.isWinner
-              ? `You have already played. You won: ${data.previousEntry.prizeName}${data.previousEntry.discountCode ? ` (Code: ${data.previousEntry.discountCode})` : ""}`
-              : "You have already played this lottery."
-          )
-        } else {
-          // 其他原因不能抽奖
-          setError(data.reason || "This order cannot be used for lottery")
-        }
-        return
-      }
-
-      // 验证成功，可以抽奖
-      setVerified(true)
-      
-      // 可选：存储订单信息供后续使用
-      if (data.order) {
-        console.log("✅ Order verified:", data.order)
-      }
-    } catch (err) {
-      console.error("❌ Error verifying order:", err)
-      setError(
-        err instanceof Error 
-          ? err.message 
-          : content.errorMessage || "Order verification failed. Please check if the order number is correct."
-      )
-    } finally {
-      setLoading(false)
-    }
+  // 验证状态变化回调
+  const handleVerified = (isVerified: boolean) => {
+    setVerified(isVerified)
   }
 
   // 抽奖完成
@@ -245,74 +172,22 @@ export const LotteryModal = ({
           </p>
         )}
 
-        {/* 订单号验证（仅 order_lottery 类型） */}
-        {type === "order_lottery" && !verified && (
-          <div style={{ marginBottom: "24px" }}>
-            {/* 输入框标题 */}
-            {content.inputTitle && (
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "8px",
-                  fontSize: "14px",
-                  fontWeight: 500
-                }}
-              >
-                {content.inputTitle}
-              </label>
-            )}
-
-            {/* 输入框和按钮 */}
-            <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
-              <input
-                type="text"
-                value={orderNumber}
-                onChange={(e) => {
-                  setOrderNumber(e.target.value)
-                  setError("")
-                }}
-                placeholder={content.inputPlaceholder || "请输入您的订单号"}
-                disabled={loading}
-                style={{
-                  flex: 1,
-                  padding: "10px 12px",
-                  border: error ? "1px solid #e74c3c" : "1px solid #ddd",
-                  borderRadius: "4px",
-                  fontSize: "14px"
-                }}
-                onKeyPress={(e) => {
-                  if (e.key === "Enter") {
-                    handleVerify()
-                  }
-                }}
-              />
-              <button
-                onClick={handleVerify}
-                disabled={loading}
-                style={buttonStyle}
-              >
-                {loading ? "验证中..." : content.buttonText || "加入"}
-              </button>
-            </div>
-
-            {/* 错误提示 */}
-            {error && (
-              <p
-                style={{
-                  color: "#e74c3c",
-                  fontSize: "13px",
-                  margin: "8px 0 0",
-                  minHeight: "20px"
-                }}
-              >
-                {error}
-              </p>
-            )}
-          </div>
+        {/* 输入框标题（仅 order 类型，未验证时显示） */}
+        {type === "order" && !verified && content.inputTitle && (
+          <label
+            style={{
+              display: "block",
+              marginBottom: "8px",
+              fontSize: "14px",
+              fontWeight: 500
+            }}
+          >
+            {content.inputTitle}
+          </label>
         )}
 
-        {/* 九宫格抽奖 */}
-        {(verified || type !== "order_lottery") && (
+        {/* 九宫格抽奖画布（仅包含画布） */}
+        {(verified || type !== "order") && (
           <div
             style={{
               display: "flex",
@@ -330,9 +205,56 @@ export const LotteryModal = ({
               campaignContent={content}
               onComplete={handleComplete}
               disabled={!isActive}
+              campaignId={campaign.id}
+              campaignType={type}
+              orderNumber={orderNumber}
+              order={order}
+              name={name}
+              phone={phone}
+              onOrderNumberChange={(value) => {
+                setOrderNumber(value)
+              }}
+              onOrderChange={(value) => {
+                setOrder(value)
+              }}
+              onNameChange={(value) => {
+                setName(value)
+              }}
+              onPhoneChange={(value) => {
+                setPhone(value)
+              }}
+              onVerified={handleVerified}
             />
           </div>
         )}
+
+        {/* 输入框和按钮（在 lotterySection 外面） */}
+        <NineBoxLottery
+          prizes={prizes}
+          campaignStyles={styles}
+          campaignContent={content}
+          onComplete={handleComplete}
+          disabled={!isActive}
+          campaignId={campaign.id}
+          campaignType={type}
+          orderNumber={orderNumber}
+          order={order}
+          name={name}
+          phone={phone}
+          onOrderNumberChange={(value) => {
+            setOrderNumber(value)
+          }}
+          onOrderChange={(value) => {
+            setOrder(value)
+          }}
+          onNameChange={(value) => {
+            setName(value)
+          }}
+          onPhoneChange={(value) => {
+            setPhone(value)
+          }}
+          onVerified={handleVerified}
+        />
 
         {/* 关闭按钮 */}
         {onClose && (

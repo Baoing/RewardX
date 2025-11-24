@@ -12,7 +12,7 @@
     "devShop": "開発ショップ",
     "name": "ショップ名",
     "domain": "ドメイン",
-    "email": "メール",
+    "order": "メール",
     "plan": "プラン",
     "currency": "通貨",
     "timezone": "タイムゾーン"
@@ -25,7 +25,7 @@
     "shopInfo": "ショップ情報",
     "shopName": "ショップ名",
     "domain": "ドメイン",
-    "email": "メール",
+    "order": "メール",
     "plan": "プラン",
     "geography": "地理情報",
     "country": "国",

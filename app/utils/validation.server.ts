@@ -43,7 +43,7 @@ export const validatePrizeProbability = (prizes: Prize[]): void => {
   }
 
   const totalChance = prizes.reduce((sum, p) => sum + (p.chancePercentage || 0), 0)
-  
+
   if (Math.abs(totalChance - 100) > 0.01) {
     throw new Error(
       `VALIDATION_Total prize probability must equal 100%, current: ${totalChance.toFixed(2)}%`
@@ -162,7 +162,7 @@ export const validateEnum = <T extends string>(
  */
 export const validateUUID = (value: string, fieldName: string = "ID"): void => {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-  
+
   if (!uuidRegex.test(value)) {
     throw new Error(`VALIDATION_Invalid ${fieldName} format`)
   }
@@ -171,11 +171,11 @@ export const validateUUID = (value: string, fieldName: string = "ID"): void => {
 /**
  * 验证邮箱格式
  */
-export const validateEmail = (email: string): void => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  
-  if (!emailRegex.test(email)) {
-    throw new Error("VALIDATION_Invalid email format")
+export const validateorder = (order: string): void => {
+  const orderRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+  if (!orderRegex.test(order)) {
+    throw new Error("VALIDATION_Invalid order format")
   }
 }
 

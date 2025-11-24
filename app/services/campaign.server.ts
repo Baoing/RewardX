@@ -13,11 +13,11 @@ import { validateCampaignData } from "@/utils/validation.server"
 interface CreateCampaignData {
   name: string
   description?: string
-  type: "order" | "email_form" | "share"
+  type: "order" | "order_form" | "share"
   gameType: "wheel" | "ninebox" | "slot"
   minOrderAmount?: number
   maxPlaysPerCustomer?: number
-  requireEmail?: boolean
+  requireOrder?: boolean
   requireName?: boolean
   requirePhone?: boolean
   startAt?: string
@@ -46,7 +46,7 @@ interface UpdateCampaignData {
   gameType?: string
   minOrderAmount?: number
   maxPlaysPerCustomer?: number
-  requireEmail?: boolean
+  requireOrder?: boolean
   requireName?: boolean
   requirePhone?: boolean
   startAt?: string
@@ -108,7 +108,7 @@ export const getCampaignsByUserId = async (
       createdAt: "desc"
     }
   }) as any[]
-  
+
   // 转换字段名以保持前端代码一致性
   return campaigns.map(c => ({
     ...c,
@@ -138,18 +138,18 @@ export const getCampaignById = async (
         orderBy: { displayOrder: "asc" }
       },
       _count: {
-        select: { 
+        select: {
           Prize: true,
-          LotteryEntry: true 
+          LotteryEntry: true
         } as any
       }
     } as any
   }) as any
-  
+
   if (!campaign) {
     return null
   }
-  
+
   // 转换字段名以保持前端代码一致性
   return {
     ...campaign,
@@ -206,7 +206,7 @@ export const createCampaign = async (
       minOrderAmount: data.minOrderAmount,
       allowedOrderStatus: "paid",
       maxPlaysPerCustomer: data.maxPlaysPerCustomer,
-      requireEmail: data.requireEmail ?? true,
+      requireOrder: data.requireOrder ?? true,
       requireName: data.requireName ?? false,
       requirePhone: data.requirePhone ?? false,
       startAt: data.startAt ? new Date(data.startAt) : null,
@@ -241,7 +241,7 @@ export const createCampaign = async (
   }) as any
 
   console.log("✅ Campaign created:", campaign.id)
-  
+
   // 转换字段名以保持前端代码一致性
   return {
     ...campaign,
@@ -278,20 +278,20 @@ export const updateCampaign = async (
 
     // 构建更新数据，过滤掉 undefined 字段
     const updateData: any = {}
-    
+
     if (data.name !== undefined) updateData.name = data.name
     if (data.description !== undefined) updateData.description = data.description
     if (data.type !== undefined) updateData.type = data.type
     if (data.gameType !== undefined) updateData.gameType = data.gameType
     if (data.minOrderAmount !== undefined) updateData.minOrderAmount = data.minOrderAmount
     if (data.maxPlaysPerCustomer !== undefined) updateData.maxPlaysPerCustomer = data.maxPlaysPerCustomer
-    if (data.requireEmail !== undefined) updateData.requireEmail = data.requireEmail
+    if (data.requireOrder !== undefined) updateData.requireOrder = data.requireOrder
     if (data.requireName !== undefined) updateData.requireName = data.requireName
     if (data.requirePhone !== undefined) updateData.requirePhone = data.requirePhone
     if (data.startAt !== undefined) updateData.startAt = data.startAt ? new Date(data.startAt) : null
     if (data.endAt !== undefined) updateData.endAt = data.endAt ? new Date(data.endAt) : null
     if (data.isActive !== undefined) updateData.isActive = data.isActive
-    
+
     // 处理奖品（如果提供了）
     if (data.prizes) {
       updateData.Prize = {
@@ -327,7 +327,7 @@ export const updateCampaign = async (
         } as any
       } as any
     }) as any
-    
+
     // 转换字段名以保持前端代码一致性
     return {
       ...updated,
@@ -367,8 +367,8 @@ export const deleteCampaign = async (
  * 获取活动统计信息
  */
 export const getCampaignStats = (campaign: Campaign) => {
-  const winRate = campaign.totalPlays > 0 
-    ? (campaign.totalWins / campaign.totalPlays) * 100 
+  const winRate = campaign.totalPlays > 0
+    ? (campaign.totalWins / campaign.totalPlays) * 100
     : 0
 
   return {

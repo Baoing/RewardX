@@ -12,7 +12,7 @@
     "devShop": "開發店鋪",
     "name": "店鋪名稱",
     "domain": "域名",
-    "email": "郵箱",
+    "order": "郵箱",
     "plan": "套餐",
     "currency": "貨幣",
     "timezone": "時區"
@@ -25,7 +25,7 @@
     "shopInfo": "店鋪信息",
     "shopName": "店鋪名稱",
     "domain": "域名",
-    "email": "郵箱",
+    "order": "郵箱",
     "plan": "套餐",
     "geography": "地理位置",
     "country": "國家",

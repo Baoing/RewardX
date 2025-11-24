@@ -137,7 +137,7 @@ const CampaignDetailPage = observer(() => {
       showToast({ content: "Failed to save campaign", error: true })
     } finally {
       editorStore.setIsSaving(false)
-    }
+  }
   }
 
   // 处理撤销
@@ -156,13 +156,13 @@ const CampaignDetailPage = observer(() => {
         </div>
         <div style={{ padding: "40px", textAlign: "center", flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div>
-            <Spinner size="large" />
-            <div style={{ marginTop: "16px" }}>
-              <Text as="p" tone="subdued">
-                Loading campaign...
-              </Text>
-            </div>
-          </div>
+                <Spinner size="large" />
+                <div style={{ marginTop: "16px" }}>
+                  <Text as="p" tone="subdued">
+                    Loading campaign...
+                  </Text>
+                </div>
+              </div>
         </div>
       </div>
     )
@@ -177,7 +177,7 @@ const CampaignDetailPage = observer(() => {
           </div>
         </div>
         <div style={{ padding: "40px", flex: 1 }}>
-          <Text as="p">Campaign not found</Text>
+              <Text as="p">Campaign not found</Text>
         </div>
       </div>
     )
@@ -198,7 +198,7 @@ const CampaignDetailPage = observer(() => {
               disabled={!editorStore.hasUnsavedChanges}
             >
               Discard
-            </Button>
+                      </Button>
             <Button
               size={"large"}
               variant="primary"
@@ -207,7 +207,7 @@ const CampaignDetailPage = observer(() => {
               loading={editorStore.isSaving}
             >
               Save
-            </Button>
+                      </Button>
 
             <Button
               size={"large"}
@@ -218,7 +218,7 @@ const CampaignDetailPage = observer(() => {
             />
           </div>
         </div>
-      </div>
+                  </div>
 
       {/* 编辑器容器 */}
       <div className={styles.campaignEditor__container}>
@@ -227,11 +227,11 @@ const CampaignDetailPage = observer(() => {
           {/* 标签切换 */}
           <div className={styles.tabs}>
             <Tabs tabs={tabs} selected={selectedTab} onSelect={setSelectedTab} fitted />
-          </div>
+                  </div>
 
           {/* 配置内容 */}
           {renderSidebarContent()}
-        </div>
+                  </div>
 
         {/* 右侧预览区域 */}
         <div className={styles.campaignEditor__preview}>
@@ -253,17 +253,17 @@ const CampaignDetailPage = observer(() => {
                 accessibilityLabel="Mobile preview"
               />
             </ButtonGroup>
-          </div>
+                </div>
 
           {/* 预览内容 */}
           <div className={styles.previewContent}>
             <div className={`${styles.previewWrapper} ${styles[previewDevice]}`}>
               <PreviewGame isAdmin={true} />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+                        </div>
+                      </div>
+                        </div>
+                      </div>
+                  </div>
   )
 })
 

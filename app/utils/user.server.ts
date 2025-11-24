@@ -5,21 +5,21 @@ import type { ShopInfo } from "./shop.server"
 export interface UserInfo {
   id: string
   shop: string
-  
+
   // 店铺基本信息
   shopId: string | null
-  email: string | null
+  order: string | null
   shopName: string | null
   domain: string | null
   myshopifyDomain: string | null
   primaryDomain: string | null
   primaryLocale: string | null
-  
+
   // 店主信息
   ownerName: string | null
   firstName: string | null
   lastName: string | null
-  
+
   // 地理位置信息
   country: string | null
   countryCode: string | null
@@ -28,7 +28,7 @@ export interface UserInfo {
   address: string | null
   zip: string | null
   phone: string | null
-  
+
   // 货币和语言
   currency: string | null
   currencyCode: string
@@ -36,17 +36,17 @@ export interface UserInfo {
   appLanguage: string | null
   timezone: string | null
   ianaTimezone: string | null
-  
+
   // 店铺计划信息
   planName: string | null
   planDisplayName: string | null
   isShopifyPlus: boolean
   isPartnerDev: boolean
-  
+
   // 应用配置
   theme: string
   notifications: boolean
-  
+
   // 元数据
   installedAt: Date
   lastLoginAt: Date
@@ -54,7 +54,7 @@ export interface UserInfo {
   isActive: boolean
   isTrial: boolean
   trialEndsAt: Date | null
-  
+
   settings: Record<string, any>
   metadata: Record<string, any>
 }
@@ -68,64 +68,64 @@ export async function upsertUser(shop: string, shopInfo?: ShopInfo | null, partn
     update: {
       // 更新店铺基本信息（从 Shopify API 缓存）
       shopId: shopInfo?.id,
-      email: shopInfo?.email,
+      order: shopInfo?.order,
       shopName: shopInfo?.name,
       domain: shopInfo?.domain,
       myshopifyDomain: shopInfo?.myshopifyDomain,
       primaryDomain: shopInfo?.primaryDomain,
       primaryLocale: shopInfo?.primaryLocale,
-      
+
       // 更新货币和时区
       currency: shopInfo?.currencyCode,
       currencyCode: shopInfo?.currencyCode || undefined,
       timezone: shopInfo?.timezone,
       ianaTimezone: shopInfo?.ianaTimezone,
-      
+
       // 更新计划信息
       planDisplayName: shopInfo?.plan?.displayName,
       isShopifyPlus: shopInfo?.plan?.shopifyPlus || false,
       isPartnerDev: shopInfo?.plan?.partnerDevelopment || false,
-      
+
       // 更新 storefront 语言（如果 shopInfo 有值）
       language: shopInfo?.primaryLocale || undefined,
-      
+
       // 更新元数据
       lastLoginAt: new Date(),
       lastSyncAt: shopInfo ? new Date() : undefined, // 如果有 shopInfo，更新同步时间
       isActive: true,
-      
+
       // 注意：不更新 appLanguage，保持用户的选择
     },
     create: {
       id: randomUUID(), // 生成 UUID
       shop,
-      
+
       // 店铺基本信息
       shopId: shopInfo?.id,
-      email: shopInfo?.email,
+      order: shopInfo?.order,
       shopName: shopInfo?.name,
       domain: shopInfo?.domain,
       myshopifyDomain: shopInfo?.myshopifyDomain,
       primaryDomain: shopInfo?.primaryDomain,
       primaryLocale: shopInfo?.primaryLocale,
-      
+
       // 货币和时区
       currency: shopInfo?.currencyCode,
       currencyCode: shopInfo?.currencyCode || "USD",
       timezone: shopInfo?.timezone,
       ianaTimezone: shopInfo?.ianaTimezone,
-      
+
       // 计划信息
       planDisplayName: shopInfo?.plan?.displayName,
       isShopifyPlus: shopInfo?.plan?.shopifyPlus || false,
       isPartnerDev: shopInfo?.plan?.partnerDevelopment || false,
-      
+
       // 设置 language 为店铺的 storefront 默认语言
       language: shopInfo?.primaryLocale || "en",
-      
+
       // 时间戳
       updatedAt: new Date(),
-      
+
       // appLanguage 不设置，保持为 null
       // 只有用户手动切换语言时才会保存
     }
@@ -217,21 +217,21 @@ function formatUser(user: any): UserInfo {
   return {
     id: user.id,
     shop: user.shop,
-    
+
     // 店铺基本信息
     shopId: user.shopId,
-    email: user.email,
+    order: user.order,
     shopName: user.shopName,
     domain: user.domain,
     myshopifyDomain: user.myshopifyDomain,
     primaryDomain: user.primaryDomain,
     primaryLocale: user.primaryLocale,
-    
+
     // 店主信息
     ownerName: user.ownerName,
     firstName: user.firstName,
     lastName: user.lastName,
-    
+
     // 地理位置信息
     country: user.country,
     countryCode: user.countryCode,
@@ -240,7 +240,7 @@ function formatUser(user: any): UserInfo {
     address: user.address,
     zip: user.zip,
     phone: user.phone,
-    
+
     // 货币和语言
     currency: user.currency,
     currencyCode: user.currencyCode,
@@ -248,17 +248,17 @@ function formatUser(user: any): UserInfo {
     appLanguage: user.appLanguage,
     timezone: user.timezone,
     ianaTimezone: user.ianaTimezone,
-    
+
     // 店铺计划信息
     planName: user.planName,
     planDisplayName: user.planDisplayName,
     isShopifyPlus: user.isShopifyPlus,
     isPartnerDev: user.isPartnerDev,
-    
+
     // 应用配置
     theme: user.theme,
     notifications: user.notifications,
-    
+
     // 元数据
     installedAt: user.installedAt,
     lastLoginAt: user.lastLoginAt,
@@ -266,7 +266,7 @@ function formatUser(user: any): UserInfo {
     isActive: user.isActive,
     isTrial: user.isTrial,
     trialEndsAt: user.trialEndsAt,
-    
+
     settings: user.settings ? JSON.parse(user.settings) : {},
     metadata: user.metadata ? JSON.parse(user.metadata) : {}
   }
@@ -284,18 +284,18 @@ export function userToShopInfo(user: UserInfo): ShopInfo | null {
   }
 
   const shopDomain = user.myshopifyDomain || user.shop
-  
+
   console.log("💾 从数据库恢复 ShopInfo:", {
     shopId: user.shopId,
     shopName: user.shopName,
-    email: user.email,
+    order: user.order,
     domain: shopDomain
   })
 
   return {
     id: user.shopId || `gid://shopify/Shop/0`, // 临时 ID
     name: user.shopName || user.shop,
-    email: user.email || "",
+    order: user.order || "",
     domain: user.domain || shopDomain,
     myshopifyDomain: shopDomain,
     primaryDomain: user.primaryDomain || shopDomain,

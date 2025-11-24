@@ -116,7 +116,7 @@ MVP 版本专注于**订单抽奖**功能，简化了数据库设计，只保留
 | `orderId` | String | Shopify 订单 ID（**唯一**） | ✅ |
 | `orderNumber` | String | 订单号（如：#1001） | ✅ |
 | `orderAmount` | Float | 订单金额 | ✅ |
-| `orderEmail` | String | 订单邮箱 | ❌ |
+| `orderorder` | String | 订单邮箱 | ❌ |
 | `customerName` | String | 客户名称 | ❌ |
 | `customerId` | String | Shopify 客户 ID | ❌ |
 | `prizeId` | UUID | 中奖奖品 ID | ❌ |
@@ -162,7 +162,7 @@ orderId String @unique  // 确保每个订单只能抽一次
 @@index([campaignId, createdAt])
 @@index([userId, createdAt])
 @@index([orderId])
-@@index([orderEmail])
+@@index([orderorder])
 @@index([customerId])
 @@index([status])
 @@index([isWinner])
@@ -379,7 +379,7 @@ async function verifyOrder(orderId: string, campaignId: string) {
         name
         totalPriceSet { shopMoney { amount } }
         displayFinancialStatus
-        email
+        order
         customer { displayName id }
       }
     }
@@ -426,7 +426,7 @@ async function verifyOrder(orderId: string, campaignId: string) {
       id: order.id,
       number: order.name,
       amount: order.totalPrice,
-      email: order.email,
+      order: order.order,
       customerName: order.customer?.displayName,
       customerId: order.customer?.id
     }

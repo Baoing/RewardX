@@ -53,8 +53,8 @@ export const UserInfoCard = observer(() => {
               </InlineStack>
 
               <InlineStack gap="200">
-                <Text as="span" fontWeight="medium">{t("userInfo.email")}:</Text>
-                <Text as="span" breakWord>{userInfo.email || "-"}</Text>
+                <Text as="span" fontWeight="medium">{t("userInfo.order")}:</Text>
+                <Text as="span" breakWord>{userInfo.order || "-"}</Text>
               </InlineStack>
 
               <InlineStack gap="200">

@@ -11,34 +11,34 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   try {
     const { admin, session } = await authenticate.admin(request)
     const data = await request.json()
-    
+
     const { orderNumber, campaignId } = data
-    
+
     if (!orderNumber) {
-      return Response.json({ 
-        success: false, 
-        error: "Order number is required" 
+      return Response.json({
+        success: false,
+        error: "Order number is required"
       }, { status: 400 })
     }
-    
+
     if (!campaignId) {
-      return Response.json({ 
-        success: false, 
-        error: "Campaign ID is required" 
+      return Response.json({
+        success: false,
+        error: "Campaign ID is required"
       }, { status: 400 })
     }
-    
+
     const user = await prisma.user.findUnique({
       where: { shop: session.shop }
     })
-    
+
     if (!user) {
-      return Response.json({ 
-        success: false, 
-        error: "User not found" 
+      return Response.json({
+        success: false,
+        error: "User not found"
       }, { status: 404 })
     }
-    
+
     // 获取活动
     const campaign = await prisma.campaign.findFirst({
       where: {
@@ -48,19 +48,19 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         isActive: true
       },
       include: {
-        prizes: {
+        Prize: {
           where: { isActive: true }
         }
       }
     })
-    
+
     if (!campaign) {
       return Response.json({
         success: false,
         error: "Campaign not found or not active"
       }, { status: 404 })
     }
-    
+
     // 验证活动有效性
     const validity = isCampaignValid(campaign)
     if (!validity.valid) {
@@ -69,10 +69,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         error: validity.reason
       }, { status: 400 })
     }
-    
+
     // 通过订单号查找订单（去掉 # 号）
     const cleanOrderNumber = orderNumber.replace(/^#/, "").trim()
-    
+
     // 使用 GraphQL 查询订单（通过订单号）
     const orderResponse = await admin.graphql(
       `#graphql
@@ -90,11 +90,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
               }
               displayFinancialStatus
               displayFulfillmentStatus
-              email
+              order
               customer {
                 id
                 displayName
-                email
+                order
                 phone
               }
             }
@@ -102,30 +102,30 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         }
       }`,
       {
-        variables: { 
-          query: `name:${cleanOrderNumber}` 
+        variables: {
+          query: `name:${cleanOrderNumber}`
         }
       }
     )
-    
+
     const orderData = await orderResponse.json()
     const orders = orderData.data?.orders?.edges || []
-    
+
     if (orders.length === 0) {
       return Response.json({
         success: false,
         error: "Order not found"
       }, { status: 404 })
     }
-    
+
     const order = orders[0].node
     const orderId = order.id
-    
+
     // 检查订单是否已经抽过奖
     const existingEntry = await prisma.lotteryEntry.findUnique({
       where: { orderId }
     })
-    
+
     if (existingEntry) {
       return Response.json({
         success: true,
@@ -141,7 +141,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         }
       })
     }
-    
+
     // 检查订单状态
     if (order.displayFinancialStatus !== campaign.allowedOrderStatus) {
       return Response.json({
@@ -149,7 +149,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         error: `Order status must be '${campaign.allowedOrderStatus}', current: '${order.displayFinancialStatus}'`
       }, { status: 400 })
     }
-    
+
     // 检查订单金额
     const orderAmount = parseFloat(order.totalPriceSet.shopMoney.amount)
     if (campaign.minOrderAmount && orderAmount < campaign.minOrderAmount) {
@@ -158,7 +158,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         error: `Order amount (${orderAmount}) is below minimum requirement (${campaign.minOrderAmount})`
       }, { status: 400 })
     }
-    
+
     // 检查客户参与次数限制
     if (campaign.maxPlaysPerCustomer && order.customer) {
       const customerPlays = await prisma.lotteryEntry.count({
@@ -167,7 +167,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           customerId: order.customer.id
         }
       })
-      
+
       if (customerPlays >= campaign.maxPlaysPerCustomer) {
         return Response.json({
           success: false,
@@ -175,7 +175,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         }, { status: 400 })
       }
     }
-    
+
     // 通过所有验证
     return Response.json({
       success: true,
@@ -185,7 +185,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         number: order.name,
         amount: orderAmount,
         currency: order.totalPriceSet.shopMoney.currencyCode,
-        email: order.email || order.customer?.email,
+        order: order.order || order.customer?.order,
         customerName: order.customer?.displayName,
         customerId: order.customer?.id,
         phone: order.customer?.phone
@@ -196,7 +196,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         gameType: campaign.gameType
       }
     })
-    
+
   } catch (error) {
     console.error("❌ Error verifying order number:", error)
     return Response.json({

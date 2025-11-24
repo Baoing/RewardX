@@ -39,8 +39,8 @@ export const ShopInfoCard = observer(() => {
           </InlineStack>
 
           <InlineStack gap="200" blockAlign="center">
-            <Text as="span" fontWeight="semibold">{t("shopInfo.email")}:</Text>
-            <Text as="span">{shopInfo.email}</Text>
+            <Text as="span" fontWeight="semibold">{t("shopInfo.order")}:</Text>
+            <Text as="span">{shopInfo.order}</Text>
           </InlineStack>
 
           <InlineStack gap="200" blockAlign="center">

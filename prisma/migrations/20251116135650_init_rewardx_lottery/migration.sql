@@ -10,11 +10,11 @@ CREATE TABLE "Session" (
     "userId" BIGINT,
     "firstName" TEXT,
     "lastName" TEXT,
-    "email" TEXT,
+    "order" TEXT,
     "accountOwner" BOOLEAN NOT NULL DEFAULT false,
     "locale" TEXT,
     "collaborator" BOOLEAN DEFAULT false,
-    "emailVerified" BOOLEAN DEFAULT false,
+    "orderVerified" BOOLEAN DEFAULT false,
 
     CONSTRAINT "Session_pkey" PRIMARY KEY ("id")
 );
@@ -24,7 +24,7 @@ CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "shop" TEXT NOT NULL,
     "shopId" TEXT,
-    "email" TEXT,
+    "order" TEXT,
     "shopName" TEXT,
     "domain" TEXT,
     "myshopifyDomain" TEXT,
@@ -216,7 +216,7 @@ CREATE TABLE "Campaign" (
     "gameType" TEXT NOT NULL DEFAULT 'ninebox',
     "minOrderAmount" DOUBLE PRECISION,
     "allowedOrderStatus" TEXT NOT NULL DEFAULT 'paid',
-    "requireEmail" BOOLEAN NOT NULL DEFAULT true,
+    "requireOrder" BOOLEAN NOT NULL DEFAULT true,
     "requireName" BOOLEAN NOT NULL DEFAULT false,
     "requirePhone" BOOLEAN NOT NULL DEFAULT false,
     "maxPlaysPerCustomer" INTEGER DEFAULT 1,
@@ -267,7 +267,7 @@ CREATE TABLE "LotteryEntry" (
     "orderId" TEXT,
     "orderNumber" TEXT,
     "orderAmount" DOUBLE PRECISION,
-    "email" TEXT,
+    "order" TEXT,
     "customerName" TEXT,
     "phone" TEXT,
     "customerId" TEXT,
@@ -382,7 +382,7 @@ CREATE INDEX "LotteryEntry_campaignType_idx" ON "LotteryEntry"("campaignType");
 CREATE INDEX "LotteryEntry_orderId_idx" ON "LotteryEntry"("orderId");
 
 -- CreateIndex
-CREATE INDEX "LotteryEntry_email_idx" ON "LotteryEntry"("email");
+CREATE INDEX "LotteryEntry_order_idx" ON "LotteryEntry"("order");
 
 -- CreateIndex
 CREATE INDEX "LotteryEntry_customerId_idx" ON "LotteryEntry"("customerId");

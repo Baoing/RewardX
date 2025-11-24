@@ -7,19 +7,19 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   try {
     const { session } = await authenticate.admin(request)
     const { id: campaignId } = params
-    
+
     if (!campaignId) {
       return Response.json({ success: false, error: "Campaign ID is required" }, { status: 400 })
     }
-    
+
     const user = await prisma.user.findUnique({
       where: { shop: session.shop }
     })
-    
+
     if (!user) {
       return Response.json({ success: false, error: "User not found" }, { status: 404 })
     }
-    
+
     // 验证活动所有权
     const campaign = await prisma.campaign.findFirst({
       where: {
@@ -27,35 +27,35 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
         userId: user.id
       }
     })
-    
+
     if (!campaign) {
       return Response.json({ success: false, error: "Campaign not found" }, { status: 404 })
     }
-    
+
     const url = new URL(request.url)
     const status = url.searchParams.get("status")
     const isWinner = url.searchParams.get("isWinner")
     const page = parseInt(url.searchParams.get("page") || "1")
     const limit = parseInt(url.searchParams.get("limit") || "50")
-    
+
     const skip = (page - 1) * limit
-    
+
     // 构建查询条件
     const where: any = {
       campaignId
     }
-    
+
     if (status && status !== "undefined") {
       where.status = status
     }
-    
+
     if (isWinner !== null) {
       where.isWinner = isWinner === "true"
     }
-    
+
     // 查询总数
     const total = await prisma.lotteryEntry.count({ where })
-    
+
     // 查询记录
     const entries = await prisma.lotteryEntry.findMany({
       where,
@@ -74,7 +74,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
       skip,
       take: limit
     })
-    
+
     return Response.json({
       success: true,
       entries: entries.map(e => ({
@@ -101,7 +101,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
         totalPages: Math.ceil(total / limit)
       }
     })
-    
+
   } catch (error) {
     console.error("❌ Error fetching entries:", error)
     return Response.json({

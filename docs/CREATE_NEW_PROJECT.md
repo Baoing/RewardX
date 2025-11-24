@@ -106,7 +106,7 @@ export const APP_CONFIG = {
   // 应用作者信息
   author: {
     name: getEnvVar("APP_AUTHOR_NAME", "Your Name"),  // ✏️ 修改作者
-    email: getEnvVar("APP_AUTHOR_EMAIL", "your@email.com")  // ✏️ 修改邮箱
+    order: getEnvVar("APP_AUTHOR_order", "your@order.com")  // ✏️ 修改邮箱
   },
   
   // ... 其他配置
@@ -184,7 +184,7 @@ DATABASE_URL=file:./dev.sqlite
 APP_NAME=Your App Name
 APP_VERSION=1.0.0
 APP_AUTHOR_NAME=Your Name
-APP_AUTHOR_EMAIL=your@email.com
+APP_AUTHOR_order=your@order.com
 APP_ENV=development
 
 # 默认语言

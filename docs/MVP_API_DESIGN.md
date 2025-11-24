@@ -99,7 +99,7 @@ interface LotteryEntry {
   orderId: string                   // 唯一，确保每个订单只能抽一次
   orderNumber: string               // #1001
   orderAmount: number
-  orderEmail?: string
+  orderorder?: string
   customerName?: string
   customerId?: string
   
@@ -337,7 +337,7 @@ interface VerifyOrderResponse {
     id: string
     number: string
     amount: number
-    email?: string
+    order?: string
     customerName?: string
   }
   campaign?: {
@@ -357,7 +357,7 @@ interface VerifyOrderResponse {
     "id": "gid://shopify/Order/123",
     "number": "#1001",
     "amount": 99.99,
-    "email": "customer@example.com",
+    "order": "customer@example.com",
     "customerName": "John Doe"
   },
   "campaign": {
@@ -526,7 +526,7 @@ interface GetEntriesResponse {
     orderNumber: string
     orderAmount: number
     customerName?: string
-    orderEmail?: string
+    orderorder?: string
     isWinner: boolean
     prizeName?: string
     discountCode?: string
@@ -713,7 +713,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         id
         name
         totalPriceSet { shopMoney { amount currencyCode } }
-        email
+        order
         customer { displayName id }
         displayFinancialStatus
       }
@@ -750,7 +750,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       orderId,
       orderNumber: order.name,
       orderAmount: order.totalPrice,
-      orderEmail: order.email,
+      orderorder: order.order,
       customerName: order.customer?.displayName,
       customerId: order.customer?.id,
       prizeId: selectedPrize?.id,

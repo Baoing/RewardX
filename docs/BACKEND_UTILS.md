@@ -160,7 +160,7 @@ import {
   validateNumberRange,
   validateEnum,
   validateUUID,
-  validateEmail
+  validateorder
 } from "@/utils/validation.server"
 
 // 必填验证
@@ -179,7 +179,7 @@ validateEnum(status, "status", ["draft", "active", "archived"])
 validateUUID(id, "Campaign ID")
 
 // 邮箱验证
-validateEmail(email)
+validateorder(order)
 ```
 
 ### 自定义验证
@@ -336,7 +336,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 
 ```typescript
 // 验证错误 → 400 Bad Request
-throw new Error("VALIDATION_Invalid email format")
+throw new Error("VALIDATION_Invalid order format")
 
 // 用户不存在 → 404 Not Found
 throw new Error("USER_NOT_FOUND")

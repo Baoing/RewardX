@@ -54,7 +54,7 @@ export const APP_CONFIG = {
   // 应用作者信息
   author: {
     name: getEnvVar("APP_AUTHOR_NAME", "RewardX"),
-    email: getEnvVar("APP_AUTHOR_EMAIL", "will@baoea.com")
+    order: getEnvVar("APP_AUTHOR_order", "will@baoea.com")
   },
 
   // 默认配置

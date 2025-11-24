@@ -311,7 +311,7 @@ export interface CampaignStyles {
 export interface Campaign {
   id: string
   name: string
-  type: "order_lottery" | "email_subscribe"
+  type: "order" | "email_subscribe"
   gameType: "nine_box" | "lucky_wheel" | "slot_machine" | "scratch_card"
   isActive: boolean
   minOrderAmount?: number

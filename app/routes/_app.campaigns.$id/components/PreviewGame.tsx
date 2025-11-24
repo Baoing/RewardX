@@ -21,9 +21,7 @@ export const PreviewGame = observer(({ isAdmin = false }: PreviewGameProps) => {
   const editorStore = useCampaignEditorStore()
   const campaign = editorStore.editingCampaign
   const [orderNumber, setOrderNumber] = useState("")
-  const [error, setError] = useState("")
   const [verified, setVerified] = useState(false)
-  const [loading, setLoading] = useState(false)
   const [recentWinner, setRecentWinner] = useState<string | null>(null)
 
   if (!campaign) {
@@ -71,25 +69,9 @@ export const PreviewGame = observer(({ isAdmin = false }: PreviewGameProps) => {
     "--description-color": campaignStyles.mainTextColor || "#666"
   } as React.CSSProperties
 
-  // 验证订单号
-  const handleVerify = async () => {
-    if (!orderNumber.trim()) {
-      setError(content.inputEmptyError || content.inputTitle || "请输入您的订单号")
-      return
-    }
-
-    setLoading(true)
-    setError("")
-
-    try {
-      // TODO: 调用后端 API 验证订单号
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      setVerified(true)
-    } catch (err) {
-      setError(content.errorMessage || "订单验证失败，请检查订单号是否正确")
-    } finally {
-      setLoading(false)
-    }
+  // 验证状态变化回调
+  const handleVerified = (isVerified: boolean) => {
+    setVerified(isVerified)
   }
 
   // 抽奖完成
@@ -161,63 +143,18 @@ export const PreviewGame = observer(({ isAdmin = false }: PreviewGameProps) => {
             </p>
           )}
 
-          {/* 订单号验证（仅 order_lottery 类型） */}
-          {campaign.type === "order_lottery" && !verified && (
-            <div className={cn("verifySection")}>
-              {/* 输入框标题 */}
-              {content.inputTitle && (
-                <label className={cn("inputLabel")}>
-                  {content.inputTitle}
-                </label>
-              )}
-
-              {/* 输入框和按钮 */}
-              <div className={cn("inputGroup")}>
-                <input
-                  type="text"
-                  className={`${cn("input")} ${error ? cn("input--error") : ""}`}
-                  value={orderNumber}
-                  onChange={(e) => {
-                    setOrderNumber(e.target.value)
-                    setError("")
-                  }}
-                  placeholder={content.inputPlaceholder}
-                  disabled={loading}
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter") {
-                      handleVerify()
-                    }
-                  }}
-                />
-                <button
-                  className={cn("verifyButton")}
-                  onClick={handleVerify}
-                  disabled={loading}
-                >
-                  {loading ? "Verifying..." : content.buttonText}
-                </button>
-              </div>
-
-              {/* 错误提示 */}
-              {error && (
-                <p className={cn("error")}>
-                  {error}
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* 九宫格抽奖 */}
-          {(verified || campaign.type !== "order_lottery") && (
-            <div className={cn("lotterySection")}>
-              <NineBoxLottery
-                prizes={prizes}
-                campaignStyles={campaignStyles}
-                campaignContent={content}
-                onComplete={handleComplete}
-              />
-            </div>
-          )}
+          {/* 输入框和按钮（在 lotterySection 外面，主内容区中） */}
+          <NineBoxLottery
+            prizes={prizes}
+            campaignStyles={campaignStyles}
+            campaignContent={content}
+            onComplete={handleComplete}
+            campaignId={campaign.id}
+            campaignType={campaign.type}
+            orderNumber={orderNumber}
+            onOrderNumberChange={setOrderNumber}
+            onVerified={handleVerified}
+          />
         </div>
 
         {/* 底部规则说明 */}

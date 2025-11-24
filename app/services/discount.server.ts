@@ -134,7 +134,7 @@ export async function getDiscountStats(discountId: string) {
           user: {
             select: {
               shop: true,
-              email: true
+              order: true
             }
           }
         }
@@ -144,7 +144,7 @@ export async function getDiscountStats(discountId: string) {
           user: {
             select: {
               shop: true,
-              email: true
+              order: true
             }
           }
         }
@@ -182,7 +182,7 @@ export const DISCOUNT_TEMPLATES = {
     maxUsesPerUser: 1,
     description: "20% off for new users"
   },
-  
+
   // 黑色星期五
   BLACK_FRIDAY: {
     code: "BF2024",
@@ -190,7 +190,7 @@ export const DISCOUNT_TEMPLATES = {
     value: 30,
     description: "Black Friday 30% off"
   },
-  
+
   // 年付优惠
   ANNUAL_SAVE: {
     code: "ANNUAL15",
@@ -199,7 +199,7 @@ export const DISCOUNT_TEMPLATES = {
     billingCycles: ["yearly"],
     description: "15% off for annual plans"
   },
-  
+
   // 企业套餐优惠
   ENTERPRISE_100: {
     code: "ENTERPRISE100",
@@ -219,10 +219,10 @@ export async function createBulkDiscounts(
   params: Omit<CreateDiscountParams, "code">
 ) {
   const discounts = []
-  
+
   for (let i = 1; i <= count; i++) {
     const code = `${prefix}${String(i).padStart(4, "0")}`
-    
+
     try {
       const discount = await createDiscount({
         ...params,

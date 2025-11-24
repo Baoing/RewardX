@@ -16,7 +16,7 @@
 model User {
   id            String   @id @default(uuid())
   shop          String   @unique
-  email         String?
+  order         String?
   shopName      String?
   domain        String?
   
@@ -112,7 +112,7 @@ export function MyComponent() {
   return (
     <div>
       <p>Shop: {userInfo?.shop}</p>
-      <p>Email: {userInfo?.email}</p>
+      <p>order: {userInfo?.order}</p>
       <p>Language: {userInfo?.language}</p>
     </div>
   )

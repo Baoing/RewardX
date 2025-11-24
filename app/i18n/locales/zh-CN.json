@@ -45,7 +45,7 @@
     "devShop": "开发店铺",
     "name": "店铺名称",
     "domain": "域名",
-    "email": "邮箱",
+    "order": "邮箱",
     "plan": "套餐",
     "currency": "货币",
     "timezone": "时区"
@@ -58,7 +58,7 @@
     "shopInfo": "店铺信息",
     "shopName": "店铺名称",
     "domain": "域名",
-    "email": "邮箱",
+    "order": "邮箱",
     "plan": "套餐",
     "geography": "地理位置",
     "country": "国家",

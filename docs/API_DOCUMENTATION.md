@@ -38,13 +38,13 @@ https://your-app.myshopify.com
 {
   name: string                                    // 活动名称 (required)
   description?: string                            // 活动描述
-  type: "order" | "email_form" | "share"         // 活动类型 (required)
+  type: "order" | "order_form" | "share"         // 活动类型 (required)
   gameType: "wheel" | "ninebox" | "slot"         // 游戏类型 (required)
   minOrderAmount?: number                         // 最小订单金额
   maxPlaysPerCustomer?: number                    // 每客户最大参与次数
-  requireEmail?: boolean                          // 是否需要邮箱 (type=email_form)
-  requireName?: boolean                           // 是否需要姓名 (type=email_form)
-  requirePhone?: boolean                          // 是否需要电话 (type=email_form)
+  requireOrder?: boolean                          // 是否需要邮箱 (type=order_form)
+  requireName?: boolean                           // 是否需要姓名 (type=order_form)
+  requirePhone?: boolean                          // 是否需要电话 (type=order_form)
   startAt?: string                                // 开始时间 (ISO 8601)
   endAt?: string                                  // 结束时间 (ISO 8601)
   prizes?: Array<{
@@ -148,7 +148,7 @@ curl -X POST https://your-app.myshopify.com/api/campaigns/create \
     minOrderAmount?: number
     allowedOrderStatus: string
     maxPlaysPerCustomer?: number
-    requireEmail: boolean
+    requireOrder: boolean
     requireName: boolean
     requirePhone: boolean
     startAt?: string
@@ -202,7 +202,7 @@ curl https://your-app.myshopify.com/api/campaigns/uuid-xxxx
   gameType?: string
   minOrderAmount?: number
   maxPlaysPerCustomer?: number
-  requireEmail?: boolean
+  requireOrder?: boolean
   requireName?: boolean
   requirePhone?: boolean
   startAt?: string
@@ -274,7 +274,7 @@ curl -X DELETE https://your-app.myshopify.com/api/campaigns/uuid-xxxx
 | Name | Type | Description |
 |------|------|-------------|
 | `status` | string | 活动状态筛选 (draft/active/paused/ended) |
-| `type` | string | 活动类型筛选 (order/email_form/share) |
+| `type` | string | 活动类型筛选 (order/order_form/share) |
 | `gameType` | string | 游戏类型筛选 (wheel/ninebox/slot) |
 | `page` | number | 页码 (default: 1) |
 | `limit` | number | 每页数量 (default: 20, max: 100) |
@@ -351,7 +351,7 @@ curl "https://your-app.myshopify.com/api/campaigns?status=active&type=order&page
     orderId?: string
     orderNumber?: string
     orderAmount?: number
-    email?: string
+    order?: string
     customerName?: string
     phone?: string
     isWinner: boolean
@@ -414,7 +414,7 @@ curl "https://your-app.myshopify.com/api/campaigns/uuid-xxxx/entries?isWinner=tr
     number: string
     amount: number
     currency: string
-    email?: string
+    order?: string
     customerName?: string
     customerId?: string
     phone?: string
@@ -445,7 +445,7 @@ curl "https://your-app.myshopify.com/api/lottery/verify-order/gid://shopify/Orde
     "number": "#1001",
     "amount": 99.99,
     "currency": "USD",
-    "email": "customer@example.com",
+    "order": "customer@example.com",
     "customerName": "John Doe"
   },
   "campaign": {
@@ -505,8 +505,8 @@ curl "https://your-app.myshopify.com/api/lottery/verify-order/gid://shopify/Orde
 ```typescript
 {
   campaignId: string              // 活动 ID (required)
-  type: "email_form"              // 抽奖类型 (required)
-  email: string                   // 邮箱 (required if requireEmail=true)
+  type: "order_form"              // 抽奖类型 (required)
+  order: string                   // 邮箱 (required if requireOrder=true)
   name?: string                   // 姓名 (required if requireName=true)
   phone?: string                  // 电话 (required if requirePhone=true)
 }
@@ -563,8 +563,8 @@ curl -X POST https://your-app.myshopify.com/api/lottery/play \
   -H "Content-Type: application/json" \
   -d '{
     "campaignId": "uuid-xxxx",
-    "type": "email_form",
-    "email": "user@example.com",
+    "type": "order_form",
+    "order": "user@example.com",
     "name": "John Doe"
   }'
 ```
@@ -639,9 +639,9 @@ curl -X POST https://your-app.myshopify.com/api/lottery/play \
     }
     
     // 邮件统计
-    emails: {
-      totalEmails: number
-      uniqueEmails: number
+    orders: {
+      totalorders: number
+      uniqueorders: number
     }
     
     // 时间范围
@@ -719,9 +719,9 @@ curl "https://your-app.myshopify.com/api/campaigns/uuid-xxxx/analytics?startDate
       "totalAmount": 149850,
       "avgAmount": 99.9
     },
-    "emails": {
-      "totalEmails": 1400,
-      "uniqueEmails": 850
+    "orders": {
+      "totalorders": 1400,
+      "uniqueorders": 850
     },
     "dateRange": {
       "startDate": "2025-01-01",
@@ -805,12 +805,12 @@ interface Campaign {
   userId: string
   name: string
   description?: string
-  type: "order" | "email_form" | "share"
+  type: "order" | "order_form" | "share"
   gameType: "wheel" | "ninebox" | "slot"
   minOrderAmount?: number
   allowedOrderStatus: string
   maxPlaysPerCustomer?: number
-  requireEmail: boolean
+  requireOrder: boolean
   requireName: boolean
   requirePhone: boolean
   startAt?: Date
@@ -860,11 +860,11 @@ interface LotteryEntry {
   id: string
   campaignId: string
   userId?: string
-  campaignType: "order" | "email_form" | "share"
+  campaignType: "order" | "order_form" | "share"
   orderId?: string
   orderNumber?: string
   orderAmount?: number
-  email?: string
+  order?: string
   customerName?: string
   phone?: string
   customerId?: string

@@ -301,13 +301,13 @@ editorStore.markSaved() // 重要：避免被标记为未保存
 // ✅ 批量更新
 editorStore.updateFields({
   name: "New Name",
-  type: "order_lottery",
+  type: "order",
   minOrderAmount: 100
 })
 
 // ❌ 多次单独更新（会触发多次比较）
 editorStore.updateField("name", "New Name")
-editorStore.updateField("type", "order_lottery")
+editorStore.updateField("type", "order")
 editorStore.updateField("minOrderAmount", 100)
 ```
 

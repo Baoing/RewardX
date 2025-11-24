@@ -26,9 +26,9 @@ const RulesTab = observer(() => {
   // 处理Publish状态变更（立即更新）
   const handlePublishChange = async (checked: boolean) => {
     if (!id) return
-    
+
     editorStore.updateField("isActive", checked)
-    
+
     try {
       const success = await campaignStore.updateCampaign(id, { isActive: checked })
       if (success) {
@@ -86,7 +86,7 @@ const RulesTab = observer(() => {
           <Text as="h3" variant="headingSm">
             Basic Information
           </Text>
-          
+
           {/* Campaign Name */}
           <TextField
             label="Campaign Name"
@@ -103,7 +103,7 @@ const RulesTab = observer(() => {
           <Select
             label="Campaign Type"
             options={[
-              { label: "Order Lottery", value: "order_lottery" },
+              { label: "Order Lottery", value: "order" },
               { label: "Email Subscribe", value: "email_subscribe" }
             ]}
             value={campaign.type}
@@ -112,8 +112,8 @@ const RulesTab = observer(() => {
             }}
           />
 
-          {/* Min Order Amount (只在 order_lottery 时显示) */}
-          {campaign.type === "order_lottery" && (
+          {/* Min Order Amount (只在 order 时显示) */}
+          {campaign.type === "order" && (
             <TextField
               label="Min Order Amount"
               type="number"
@@ -141,7 +141,7 @@ const RulesTab = observer(() => {
                 Total Prizes: {campaign.prizes?.length || 0} / 9
               </Text>
             </div>
-            
+
             <Button
               onClick={() => {
                 const prizes = [...(campaign.prizes || [])]
@@ -149,14 +149,14 @@ const RulesTab = observer(() => {
                   showToast({ content: "Maximum 9 prizes allowed", error: true })
                   return
                 }
-                
+
                 const newPrize: Prize = {
                   name: "",
                   type: "no_prize",
                   chancePercentage: 0,
                   displayOrder: prizes.length
                 }
-                
+
                 editorStore.updateField("prizes", [...prizes, newPrize])
                 showToast({ content: "Prize added" })
               }}
@@ -164,7 +164,7 @@ const RulesTab = observer(() => {
             >
               Add Prize
             </Button>
-            
+
             {/* Prize List */}
             {campaign.prizes && campaign.prizes.length > 0 && (
               <BlockStack gap="200">
@@ -192,22 +192,22 @@ const RulesTab = observer(() => {
               )
               if (totalChance !== 100) {
                 return (
-                  <div style={{ 
-                    padding: "12px", 
-                    background: totalChance > 100 
-                      ? "var(--p-color-bg-surface-critical-subdued, #fef2f2)" 
+                  <div style={{
+                    padding: "12px",
+                    background: totalChance > 100
+                      ? "var(--p-color-bg-surface-critical-subdued, #fef2f2)"
                       : "var(--p-color-bg-surface-warning-subdued, #fff4e5)",
-                    border: `1px solid ${totalChance > 100 
-                      ? "var(--p-color-border-critical, #d72c0d)" 
+                    border: `1px solid ${totalChance > 100
+                      ? "var(--p-color-border-critical, #d72c0d)"
                       : "var(--p-color-border-warning, #f59e0b)"}`,
                     borderRadius: "8px"
                   }}>
-                    <Text 
-                      as="p" 
+                    <Text
+                      as="p"
                       variant="bodySm"
                       tone={totalChance > 100 ? "critical" : "subdued"}
                     >
-                      {totalChance > 100 
+                      {totalChance > 100
                         ? `⚠️ Total chance exceeds 100% (${totalChance.toFixed(2)}%)`
                         : `ℹ️ Total chance is ${totalChance.toFixed(2)}% (should be 100%)`
                       }
@@ -238,7 +238,7 @@ const RulesTab = observer(() => {
               editorStore.updateField("scheduleType", value as any)
             }}
           />
-          
+
           {campaign.scheduleType === "time_period" && (
             <BlockStack gap="200">
               <TextField

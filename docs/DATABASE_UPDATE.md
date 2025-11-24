@@ -8,7 +8,7 @@
 
 ```prisma
 type String @default("order")
-// order（订单抽奖）, email_form（邮件表单抽奖）, share（分享抽奖）
+// order（订单抽奖）, order_form（邮件表单抽奖）, share（分享抽奖）
 ```
 
 **用途**：区分不同的活动触发方式
@@ -16,7 +16,7 @@ type String @default("order")
 | 类型 | 说明 | 使用场景 |
 |------|------|---------|
 | `order` | 订单抽奖 | 用户购买后凭订单号抽奖 |
-| `email_form` | 邮件表单抽奖 | 用户填写邮箱即可参与（收集 Email） |
+| `order_form` | 邮件表单抽奖 | 用户填写邮箱即可参与（收集 order） |
 | `share` | 分享抽奖 | 用户分享后获得抽奖机会（后续扩展） |
 
 #### 2. **gameType** 字段更新（游戏类型）
@@ -37,8 +37,8 @@ gameType String @default("ninebox")
 #### 3. **邮件表单配置字段**（新增）
 
 ```prisma
-// type=email_form 时使用
-requireEmail    Boolean  @default(true)   // 是否需要填写邮箱
+// type=order_form 时使用
+requireOrder    Boolean  @default(true)   // 是否需要填写邮箱
 requireName     Boolean  @default(false)  // 是否需要填写姓名
 requirePhone    Boolean  @default(false)  // 是否需要填写电话
 ```
@@ -51,7 +51,7 @@ requirePhone    Boolean  @default(false)  // 是否需要填写电话
 
 ```prisma
 campaignType String
-// order（订单抽奖）, email_form（邮件抽奖）, share（分享抽奖）
+// order（订单抽奖）, order_form（邮件抽奖）, share（分享抽奖）
 ```
 
 记录参与抽奖的活动类型，便于统计和查询。
@@ -63,7 +63,7 @@ campaignType String
 | `orderId` | `orderId` | ❌ 改为可选 | 只在 type=order 时必填 |
 | `orderNumber` | `orderNumber` | ❌ 改为可选 | - |
 | `orderAmount` | `orderAmount` | ❌ 改为可选 | - |
-| `orderEmail` | `email` | ✅ 重命名 | 改为通用邮箱字段 |
+| `orderorder` | `order` | ✅ 重命名 | 改为通用邮箱字段 |
 | - | `phone` | ✅ 新增 | 电话号码（可选） |
 
 ---
@@ -80,15 +80,15 @@ interface Campaign {
   description?: string
   
   // === 核心字段 ===
-  type: "order" | "email_form" | "share"          // ⭐ 活动类型
+  type: "order" | "order_form" | "share"          // ⭐ 活动类型
   gameType: "wheel" | "ninebox" | "slot"          // ⭐ 游戏类型
   
   // === 订单抽奖配置（type=order）===
   minOrderAmount?: number
   allowedOrderStatus: string
   
-  // === 邮件表单配置（type=email_form）===
-  requireEmail: boolean                            // ⭐ 是否需要邮箱
+  // === 邮件表单配置（type=order_form）===
+  requireOrder: boolean                            // ⭐ 是否需要邮箱
   requireName: boolean                             // ⭐ 是否需要姓名
   requirePhone: boolean                            // ⭐ 是否需要电话
   
@@ -122,7 +122,7 @@ interface LotteryEntry {
   userId?: string
   
   // === 活动类型 ===
-  campaignType: "order" | "email_form" | "share"  // ⭐ 新增
+  campaignType: "order" | "order_form" | "share"  // ⭐ 新增
   
   // === 订单信息（type=order）===
   orderId?: string                                 // ⭐ 改为可选
@@ -130,7 +130,7 @@ interface LotteryEntry {
   orderAmount?: number
   
   // === 用户信息（通用）===
-  email?: string                                   // ⭐ 重命名（原 orderEmail）
+  order?: string                                   // ⭐ 重命名（原 orderorder）
   customerName?: string
   phone?: string                                   // ⭐ 新增
   customerId?: string
@@ -192,7 +192,7 @@ interface LotteryEntry {
 
 ---
 
-### 2. 邮件表单抽奖（type=email_form）⭐ 新增
+### 2. 邮件表单抽奖（type=order_form）⭐ 新增
 
 **适用场景**：收集用户邮箱，提升转化率
 
@@ -200,9 +200,9 @@ interface LotteryEntry {
 ```json
 {
   "name": "新用户欢迎抽奖",
-  "type": "email_form",
+  "type": "order_form",
   "gameType": "ninebox",
-  "requireEmail": true,
+  "requireOrder": true,
   "requireName": false,
   "requirePhone": false,
   "maxPlaysPerCustomer": 1
@@ -216,7 +216,7 @@ interface LotteryEntry {
 4. 中奖后获得折扣码
 
 **优势**：
-- ✅ 收集 Email 用于后续营销
+- ✅ 收集 order 用于后续营销
 - ✅ 提升转化率（吸引用户留下信息）
 - ✅ 无需购买即可参与
 - ✅ 降低参与门槛
@@ -233,7 +233,7 @@ interface LotteryEntry {
   "name": "分享得抽奖机会",
   "type": "share",
   "gameType": "slot",
-  "requireEmail": true
+  "requireOrder": true
 }
 ```
 
@@ -354,9 +354,9 @@ POST /api/campaigns/create
 // 邮件表单抽奖
 {
   "name": "新用户欢迎抽奖",
-  "type": "email_form",
+  "type": "order_form",
   "gameType": "ninebox",
-  "requireEmail": true,
+  "requireOrder": true,
   "requireName": true,
   "requirePhone": false
 }
@@ -379,8 +379,8 @@ POST /api/lottery/play
 // 邮件表单抽奖
 {
   "campaignId": "uuid",
-  "type": "email_form",
-  "email": "user@example.com",
+  "type": "order_form",
+  "order": "user@example.com",
   "name": "John Doe",
   "phone": "+1234567890"
 }
@@ -407,7 +407,7 @@ POST /api/lottery/play
 @@index([userId, createdAt])
 @@index([campaignType])         // ⭐ 新增：按活动类型查询
 @@index([orderId])
-@@index([email])                // ⭐ 更新：原 orderEmail
+@@index([order])                // ⭐ 更新：原 orderorder
 @@index([customerId])
 @@index([status])
 @@index([isWinner])
@@ -440,7 +440,7 @@ npx prisma generate
 UPDATE "Campaign" 
 SET 
   "type" = 'order',
-  "requireEmail" = true,
+  "requireOrder" = true,
   "requireName" = false,
   "requirePhone" = false
 WHERE "type" IS NULL;
@@ -459,7 +459,7 @@ WHERE "campaignType" IS NULL;
 
 1. ✅ **活动类型（type）**
    - 订单抽奖（order）
-   - 邮件表单抽奖（email_form）
+   - 邮件表单抽奖（order_form）
    - 分享抽奖（share，预留）
 
 2. ✅ **游戏类型（gameType）**
@@ -468,14 +468,14 @@ WHERE "campaignType" IS NULL;
    - 老虎机（slot）
 
 3. ✅ **邮件表单配置**
-   - requireEmail - 是否需要邮箱
+   - requireOrder - 是否需要邮箱
    - requireName - 是否需要姓名
    - requirePhone - 是否需要电话
 
 4. ✅ **灵活的数据字段**
    - orderId 改为可选（只在订单抽奖时必填）
    - 新增 phone 字段
-   - email 字段通用化
+   - order 字段通用化
 
 ### 向后兼容
 
@@ -495,11 +495,11 @@ WHERE "campaignType" IS NULL;
 - 鼓励大额订单
 - 清理库存
 
-### 邮件表单抽奖活动（Email Form）
+### 邮件表单抽奖活动（order Form）
 
 **推荐游戏**：大转盘、老虎机
 **适用场景**：
-- 收集 Email
+- 收集 order
 - 提升首次购买转化
 - 新用户欢迎礼
 - 节日促销

@@ -92,7 +92,7 @@ class CampaignStore {
     gameType?: string
     minOrderAmount?: number
     allowedOrderStatus?: string
-    requireEmail?: boolean
+    requireOrder?: boolean
     requireName?: boolean
     requirePhone?: boolean
     maxPlaysPerCustomer?: number

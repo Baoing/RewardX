@@ -4,9 +4,9 @@ import { LotteryModal } from "./component/LotteryModal"
 
 /**
  * RewardX Plugin - Main Entry
- * 
+ *
  * 这个文件会被打包成 IIFE 格式，可以直接在 Shopify Storefront 中使用
- * 
+ *
  * 使用方式：
  * 1. Storefront: 在 Liquid 中通过 data 属性传递数据
  * 2. Admin 预览: 直接导入组件使用
@@ -61,7 +61,7 @@ export interface Campaign {
   id: string
   userId: string
   name: string
-  type: "order_lottery" | "email_subscribe"
+  type: "order" | "email_subscribe"
   gameType: "ninebox" | "wheel" | "slot" | "scratch"
   minOrderAmount?: number
   maxPlaysPerCustomer?: number
@@ -72,7 +72,7 @@ export interface Campaign {
   content?: CampaignContent
   styles?: CampaignStyles
   allowedOrderStatus: string
-  requireEmail: boolean
+  requireOrder: boolean
   requireName: boolean
   requirePhone: boolean
   gameConfig: string
@@ -92,10 +92,10 @@ export interface Campaign {
  */
 const initStorefront = () => {
   const containers = document.querySelectorAll("[data-rewardx-lottery]")
-  
+
   containers.forEach((container) => {
     const campaignId = container.getAttribute("data-campaign-id")
-    
+
     if (!campaignId) {
       console.warn("RewardX: data-campaign-id is required")
       return
@@ -143,7 +143,7 @@ export const renderLotteryPreview = (
       }}
     />
   )
-  
+
   return () => {
     root.unmount()
   }

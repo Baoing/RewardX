@@ -39,21 +39,21 @@ export interface CampaignStyles {
   // Main组
   mainTextColor?: string // 主文本颜色
   mainBackgroundColor?: string // 主背景颜色
-  
+
   // TopBar组
   topBarTextColor?: string // 顶部栏文本颜色（默认#000000）
   topBarBackgroundColor?: string // 顶部栏背景颜色（默认#ff841f）
-  
+
   // Module组
   moduleTextColor?: string // 模块文本颜色
   moduleBackgroundColor?: string // 模块背景颜色（默认#ffcfa7）
   moduleBorderColor?: string // 模块边框颜色（默认#ff841f）
   moduleDrawBackgroundColor?: string // 抽奖背景颜色（默认#1a0202）
   moduleButtonColor?: string // 按钮颜色
-  
+
   // Footer
   footerTextColor?: string // 底部文本颜色
-  
+
   // 自定义CSS
   customCSS?: string // 自定义CSS代码
 }
@@ -63,27 +63,27 @@ export interface CampaignStyles {
 export interface Campaign {
   id: string
   userId: string
-  
+
   // Rules 规则
   name: string // Campaign Name
-  type: "order_lottery" | "email_subscribe" // 游戏类型
+  type: "order" | "email_subscribe" // 游戏类型
   gameType: "ninebox" | "wheel" | "slot" | "scratch" // 游戏类型（默认ninebox）
-  minOrderAmount?: number // 最低订单金额（仅order_lottery）
+  minOrderAmount?: number // 最低订单金额（仅order）
   maxPlaysPerCustomer?: number // 每个用户最大游戏次数
   startAt?: string // 开始时间
   endAt?: string // 结束时间
   scheduleType?: "all_time" | "time_period" // 时间规则类型（默认all_time）
   isActive: boolean // 是否发布
-  
+
   // Content 内容
   content?: CampaignContent
-  
+
   // Styles 样式
   styles?: CampaignStyles
-  
+
   // 其他字段
   allowedOrderStatus: string
-  requireEmail: boolean
+  requireOrder: boolean
   requireName: boolean
   requirePhone: boolean
   gameConfig: string
@@ -100,11 +100,11 @@ export interface Campaign {
 export interface CreateCampaignRequest {
   name: string
   description?: string
-  type: "order" | "email_form" | "share"
+  type: "order" | "order_form" | "share"
   gameType: "wheel" | "ninebox" | "slot"
   minOrderAmount?: number
   maxPlaysPerCustomer?: number
-  requireEmail?: boolean
+  requireOrder?: boolean
   requireName?: boolean
   requirePhone?: boolean
   startAt?: string
@@ -133,7 +133,7 @@ export interface LotteryEntry {
   orderId?: string
   orderNumber?: string
   orderAmount?: number
-  email?: string
+  order?: string
   customerName?: string
   phone?: string
   customerId?: string

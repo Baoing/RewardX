@@ -55,7 +55,7 @@ print_header "📝 第 1 步：收集项目信息"
 read -p "项目名称（如 my-shopify-app）: " PROJECT_NAME
 read -p "应用显示名称（如 My Shopify App）: " APP_DISPLAY_NAME
 read -p "作者名称: " AUTHOR_NAME
-read -p "作者邮箱: " AUTHOR_EMAIL
+read -p "作者邮箱: " AUTHOR_order
 read -p "应用描述（可选）: " APP_DESCRIPTION
 
 # 设置默认值
@@ -65,7 +65,7 @@ print_success "项目信息收集完成"
 echo ""
 echo "项目名称: $PROJECT_NAME"
 echo "应用显示名称: $APP_DISPLAY_NAME"
-echo "作者: $AUTHOR_NAME <$AUTHOR_EMAIL>"
+echo "作者: $AUTHOR_NAME <$AUTHOR_order>"
 echo "描述: $APP_DESCRIPTION"
 echo ""
 
@@ -140,13 +140,13 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   sed -i '' "s/name: getEnvVar(\"APP_NAME\", \"Smart SEO\")/name: getEnvVar(\"APP_NAME\", \"$APP_DISPLAY_NAME\")/" app/config/app.config.ts
   sed -i '' "s/description: \"Shopify SEO 优化应用\"/description: \"$APP_DESCRIPTION\"/" app/config/app.config.ts
   sed -i '' "s/name: getEnvVar(\"APP_AUTHOR_NAME\", \"a333\")/name: getEnvVar(\"APP_AUTHOR_NAME\", \"$AUTHOR_NAME\")/" app/config/app.config.ts
-  sed -i '' "s/email: getEnvVar(\"APP_AUTHOR_EMAIL\", \"support@smartseo.com\")/email: getEnvVar(\"APP_AUTHOR_EMAIL\", \"$AUTHOR_EMAIL\")/" app/config/app.config.ts
+  sed -i '' "s/order: getEnvVar(\"APP_AUTHOR_order\", \"support@smartseo.com\")/order: getEnvVar(\"APP_AUTHOR_order\", \"$AUTHOR_order\")/" app/config/app.config.ts
 else
   # Linux
   sed -i "s/name: getEnvVar(\"APP_NAME\", \"Smart SEO\")/name: getEnvVar(\"APP_NAME\", \"$APP_DISPLAY_NAME\")/" app/config/app.config.ts
   sed -i "s/description: \"Shopify SEO 优化应用\"/description: \"$APP_DESCRIPTION\"/" app/config/app.config.ts
   sed -i "s/name: getEnvVar(\"APP_AUTHOR_NAME\", \"a333\")/name: getEnvVar(\"APP_AUTHOR_NAME\", \"$AUTHOR_NAME\")/" app/config/app.config.ts
-  sed -i "s/email: getEnvVar(\"APP_AUTHOR_EMAIL\", \"support@smartseo.com\")/email: getEnvVar(\"APP_AUTHOR_EMAIL\", \"$AUTHOR_EMAIL\")/" app/config/app.config.ts
+  sed -i "s/order: getEnvVar(\"APP_AUTHOR_order\", \"support@smartseo.com\")/order: getEnvVar(\"APP_AUTHOR_order\", \"$AUTHOR_order\")/" app/config/app.config.ts
 fi
 print_success "app/config/app.config.ts 已更新"
 
@@ -165,7 +165,7 @@ DATABASE_URL=file:./dev.sqlite
 APP_NAME=$APP_DISPLAY_NAME
 APP_VERSION=1.0.0
 APP_AUTHOR_NAME=$AUTHOR_NAME
-APP_AUTHOR_EMAIL=$AUTHOR_EMAIL
+APP_AUTHOR_order=$AUTHOR_order
 APP_ENV=development
 
 # 默认语言
@@ -297,7 +297,7 @@ app/
 
 ## 作者
 
-$AUTHOR_NAME <$AUTHOR_EMAIL>
+$AUTHOR_NAME <$AUTHOR_order>
 
 ## 许可证
 

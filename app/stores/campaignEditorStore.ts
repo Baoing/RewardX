@@ -7,7 +7,7 @@ import type { Campaign } from "@/types/campaign"
 /**
  * Campaign 编辑器状态管理
  * 负责追踪编辑状态、diff比较、保存/撤销逻辑
- * 
+ *
  * 核心特性：
  * 1. 使用 mobx-utils deepObserve 自动监听状态变化
  * 2. 使用 flat 扁平化对象，提供精确的深度比较
@@ -16,19 +16,19 @@ import type { Campaign } from "@/types/campaign"
 class CampaignEditorStore {
   // 原始数据（从服务器加载的）
   originalCampaign: Campaign | null = null
-  
+
   // 当前编辑中的数据
   editingCampaign: Campaign | null = null
-  
+
   // 是否有未保存的更改（自动计算）
   hasUnsavedChanges = false
-  
+
   // 是否正在保存
   isSaving = false
-  
+
   // 监听器句柄
   private disposer: IDisposer | null = null
-  
+
   constructor() {
     makeAutoObservable(this)
   }
@@ -38,15 +38,15 @@ class CampaignEditorStore {
    */
   initEditor(campaign: Campaign) {
     console.log("🔧 Initializing campaign editor")
-    
+
     // 先销毁旧的监听器
     this.destroyListener()
-    
+
     // 深拷贝数据
     this.originalCampaign = cloneDeep(campaign)
     this.editingCampaign = cloneDeep(campaign)
     this.hasUnsavedChanges = false
-    
+
     // 注册新的监听器
     this.registerListener()
   }
@@ -98,7 +98,7 @@ class CampaignEditorStore {
    */
   private normalizeEmptyValues(obj: Record<string, any>): Record<string, any> {
     const normalized: Record<string, any> = {}
-    
+
     for (const key in obj) {
       const value = obj[key]
       // 如果是空值（空字符串、null、undefined），则跳过（不添加到 normalized）
@@ -108,7 +108,7 @@ class CampaignEditorStore {
       }
       // 注意：空值字段不会被添加到 normalized，从而实现 key 存在性的统一
     }
-    
+
     return normalized
   }
 
@@ -151,7 +151,7 @@ class CampaignEditorStore {
     if (this.hasUnsavedChanges !== isChanged) {
       this.hasUnsavedChanges = isChanged
       console.log(`📊 hasUnsavedChanges changed: ${isChanged}`)
-      
+
       // 调试：打印差异字段
       if (isChanged) {
         const allKeys = new Set([...Object.keys(baseFlat), ...Object.keys(nowFlat)])
@@ -174,10 +174,10 @@ class CampaignEditorStore {
    */
   updateField<K extends keyof Campaign>(field: K, value: Campaign[K]) {
     if (!this.editingCampaign) return
-    
+
     console.log(`✏️ updateField: ${String(field)}`)
     this.editingCampaign[field] = value
-    
+
     // 立即同步比较，不依赖 deepObserve 的延迟触发
     this.compareAndUpdateStatus()
   }
@@ -197,16 +197,16 @@ class CampaignEditorStore {
    */
   discardChanges() {
     if (!this.originalCampaign) return
-    
+
     console.log("↩️ Discarding all changes")
-    
+
     // 临时销毁监听器，避免触发不必要的比较
     this.destroyListener()
-    
+
     // 深拷贝恢复原始数据
     this.editingCampaign = cloneDeep(this.originalCampaign)
     this.hasUnsavedChanges = false
-    
+
     // 重新注册监听器
     this.registerListener()
   }
@@ -216,21 +216,21 @@ class CampaignEditorStore {
    */
   get changedFields(): Partial<Campaign> {
     if (!this.originalCampaign || !this.editingCampaign) return {}
-    
+
     const changes: any = {}
     const keys = Object.keys(this.editingCampaign) as Array<keyof Campaign>
-    
+
     // 忽略只读字段
-    const ignoredFields = ["id", "userId", "createdAt", "updatedAt", "totalPlays", "totalWins", "totalOrders", "allowedOrderStatus", "requireEmail", "requireName", "requirePhone", "gameConfig"]
-    
+    const ignoredFields = ["id", "userId", "createdAt", "updatedAt", "totalPlays", "totalWins", "totalOrders", "allowedOrderStatus", "requireOrder", "requireName", "requirePhone", "gameConfig"]
+
     for (const key of keys) {
       if (ignoredFields.includes(key as string)) continue
-      
+
       if (!isEqual(this.originalCampaign[key], this.editingCampaign[key])) {
         changes[key] = this.editingCampaign[key]
       }
     }
-    
+
     console.log("📝 Changed fields:", Object.keys(changes))
     return changes as Partial<Campaign>
   }
@@ -240,16 +240,16 @@ class CampaignEditorStore {
    */
   markSaved() {
     if (!this.editingCampaign) return
-    
+
     console.log("✅ Marking as saved, updating original data")
-    
+
     // 临时销毁监听器
     this.destroyListener()
-    
+
     // 深拷贝当前编辑数据作为新的原始数据
     this.originalCampaign = cloneDeep(this.editingCampaign)
     this.hasUnsavedChanges = false
-    
+
     // 重新注册监听器
     this.registerListener()
   }

@@ -12,7 +12,7 @@
     "devShop": "Boutique de développement",
     "name": "Nom de la boutique",
     "domain": "Domaine",
-    "email": "E-mail",
+    "order": "E-mail",
     "plan": "Plan",
     "currency": "Devise",
     "timezone": "Fuseau horaire"
@@ -25,7 +25,7 @@
     "shopInfo": "Informations sur la boutique",
     "shopName": "Nom de la boutique",
     "domain": "Domaine",
-    "email": "E-mail",
+    "order": "E-mail",
     "plan": "Plan",
     "geography": "Géographie",
     "country": "Pays",

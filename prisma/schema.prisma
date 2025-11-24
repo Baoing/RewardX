@@ -30,7 +30,7 @@ model Campaign {
   gameType            String         @default("ninebox")
   minOrderAmount      Float?
   allowedOrderStatus  String         @default("paid")
-  requireEmail        Boolean        @default(true)
+  requireOrder        Boolean        @default(true)
   requireName         Boolean        @default(false)
   requirePhone        Boolean        @default(false)
   maxPlaysPerCustomer Int?           @default(1)
@@ -87,7 +87,7 @@ model LotteryEntry {
   orderId         String?   @unique
   orderNumber     String?
   orderAmount     Float?
-  email           String?
+  order           String?
   customerName    String?
   phone           String?
   customerId      String?
@@ -114,7 +114,7 @@ model LotteryEntry {
   @@index([campaignId, createdAt])
   @@index([campaignType])
   @@index([customerId])
-  @@index([email])
+  @@index([order])
   @@index([isWinner])
   @@index([orderId])
   @@index([status])
@@ -182,11 +182,11 @@ model Session {
   userId        BigInt?
   firstName     String?
   lastName      String?
-  email         String?
+  order         String?
   accountOwner  Boolean   @default(false)
   locale        String?
   collaborator  Boolean?  @default(false)
-  emailVerified Boolean?  @default(false)
+  orderVerified Boolean?  @default(false)
 }
 
 model SetupGuide {
@@ -267,7 +267,7 @@ model User {
   id              String         @id
   shop            String         @unique
   shopId          String?
-  email           String?
+  order           String?
   shopName        String?
   domain          String?
   myshopifyDomain String?

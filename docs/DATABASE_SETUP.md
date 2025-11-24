@@ -224,7 +224,7 @@ Schema 中已添加重要索引：
 
 // LotteryEntry 索引
 @@index([campaignId, createdAt])
-@@index([email])
+@@index([order])
 @@index([orderId])
 @@index([isWinner, status])
 ```
