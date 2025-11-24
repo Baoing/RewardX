@@ -74,7 +74,7 @@ export const LotteryModal = ({
   // 验证订单号
   const handleVerify = async () => {
     if (!orderNumber.trim()) {
-      setError(content.inputEmptyError || content.inputTitle || "请输入您的订单号")
+      setError(content.inputEmptyError || content.inputTitle || "Please enter your order number")
       return
     }
 
@@ -82,16 +82,57 @@ export const LotteryModal = ({
     setError("")
 
     try {
-      // TODO: 调用后端 API 验证订单号
-      // const response = await fetch(`/api/lottery/verify-order/${orderNumber}`)
-      // const data = await response.json()
-      
-      // 模拟验证
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
+      // 调用后端 API 验证订单号
+      const response = await fetch("/api/lottery/verify-order-number", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          orderNumber: orderNumber.trim(),
+          campaignId: campaign.id
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.success) {
+        // 处理错误响应
+        const errorMessage = data.error || data.reason || content.errorMessage || "Order verification failed. Please check if the order number is correct."
+        setError(errorMessage)
+        return
+      }
+
+      // 检查是否可以抽奖
+      if (!data.canPlay) {
+        if (data.hasPlayed) {
+          // 已经抽过奖，显示之前的结果
+          setError(
+            data.previousEntry?.isWinner
+              ? `You have already played. You won: ${data.previousEntry.prizeName}${data.previousEntry.discountCode ? ` (Code: ${data.previousEntry.discountCode})` : ""}`
+              : "You have already played this lottery."
+          )
+        } else {
+          // 其他原因不能抽奖
+          setError(data.reason || "This order cannot be used for lottery")
+        }
+        return
+      }
+
+      // 验证成功，可以抽奖
       setVerified(true)
+      
+      // 可选：存储订单信息供后续使用
+      if (data.order) {
+        console.log("✅ Order verified:", data.order)
+      }
     } catch (err) {
-      setError(content.errorMessage || "订单验证失败，请检查订单号是否正确")
+      console.error("❌ Error verifying order:", err)
+      setError(
+        err instanceof Error 
+          ? err.message 
+          : content.errorMessage || "Order verification failed. Please check if the order number is correct."
+      )
     } finally {
       setLoading(false)
     }
