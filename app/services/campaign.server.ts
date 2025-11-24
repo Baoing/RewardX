@@ -33,6 +33,7 @@ interface CreateCampaignData {
     displayOrder: number
     color?: string
     icon?: string
+    image?: string
   }>
   [key: string]: unknown
 }
@@ -59,6 +60,7 @@ interface UpdateCampaignData {
     displayOrder: number
     color?: string
     icon?: string
+    image?: string
   }>
   [key: string]: unknown
 }
@@ -196,6 +198,7 @@ export const createCampaign = async (
           displayOrder: prize.displayOrder,
           color: prize.color || "#FF6B6B",
           icon: prize.icon,
+          image: prize.image ?? null,
           isActive: true
         }))
       } : undefined
@@ -267,6 +270,7 @@ export const updateCampaign = async (
             displayOrder: prize.displayOrder ?? 0,
             color: prize.color || "#FF6B6B",
             icon: prize.icon ?? null,
+            image: prize.image ?? null,
             isActive: true
           }))
       }
