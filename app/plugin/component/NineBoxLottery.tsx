@@ -50,7 +50,7 @@ export const NineBoxLottery = ({
       y,
       fonts: [
         {
-          text: prize.label,
+          text: prize.name,
           top: prize.image ? "70%" : "50%",
           fontSize: "12px",
           fontColor: campaignStyles.moduleTextColor || "#000"

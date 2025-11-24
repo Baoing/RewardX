@@ -96,7 +96,7 @@ export const PreviewGame = observer(({ isAdmin = false }: PreviewGameProps) => {
   const handleComplete = (prize: Prize) => {
     console.log("🎉 中奖:", prize)
     if (prize.type !== "no_prize") {
-      setRecentWinner(`${prize.label}`)
+      setRecentWinner(`${prize.name}`)
     }
   }
 

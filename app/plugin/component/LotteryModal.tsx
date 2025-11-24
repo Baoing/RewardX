@@ -105,7 +105,7 @@ export const LotteryModal = ({
 
     // 显示中奖信息（可以显示在顶部条）
     if (prize.type !== "no_prize") {
-      setRecentWinner(`${prize.label}`)
+      setRecentWinner(`${prize.name}`)
     }
   }
 

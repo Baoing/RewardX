@@ -6,7 +6,7 @@
 
 export interface Prize {
   id?: string
-  label: string // 奖品标签/名称
+  name: string // 奖品名称（与数据库字段一致）
   type: "discount_percentage" | "discount_fixed" | "free_shipping" | "free_gift" | "no_prize"
   discountValue?: number // 折扣值
   giftProductId?: string // 赠品产品 ID

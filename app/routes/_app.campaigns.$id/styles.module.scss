@@ -304,6 +304,56 @@
   }
 }
 
+// 奖品项样式
+.prizeItem {
+  margin-bottom: var(--p-space-300);
+  border: 1px solid var(--p-color-border-subdued, #e1e3e5);
+  border-radius: var(--p-border-radius-200, 8px);
+  background: var(--p-color-bg-surface, #fff);
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--p-color-border, #c9cccf);
+  }
+
+  &Error {
+    border-color: var(--p-color-border-critical, #d72c0d);
+    background: var(--p-color-bg-surface-critical-subdued, #fef2f2);
+  }
+}
+
+.prizeItemBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--p-space-300, 12px) var(--p-space-400, 16px);
+  border-bottom: 1px solid var(--p-color-border-subdued, #e1e3e5);
+}
+
+.prizeItemTitle {
+  font-weight: var(--p-font-weight-semibold, 600);
+  font-size: var(--p-font-size-200, 14px);
+  color: var(--p-color-text, #202223);
+}
+
+.prizeItemFlexBar {
+  display: flex;
+  align-items: center;
+  gap: var(--p-space-300, 12px);
+  flex: 1;
+}
+
+.prizeItemLabel {
+  font-weight: var(--p-font-weight-semibold, 600);
+  font-size: var(--p-font-size-200, 14px);
+  color: var(--p-color-text, #202223);
+  margin-bottom: var(--p-space-050, 4px);
+}
+
+.prizeItemContent {
+  padding: var(--p-space-400, 16px);
+}
+
 // 响应式：移动端
 @media (max-width: 1023px) {
   .campaignEditor {

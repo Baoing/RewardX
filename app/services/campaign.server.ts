@@ -234,39 +234,48 @@ export const updateCampaign = async (
       })
     }
 
+    // 构建更新数据，过滤掉 undefined 字段
+    const updateData: any = {}
+    
+    if (data.name !== undefined) updateData.name = data.name
+    if (data.description !== undefined) updateData.description = data.description
+    if (data.type !== undefined) updateData.type = data.type
+    if (data.gameType !== undefined) updateData.gameType = data.gameType
+    if (data.minOrderAmount !== undefined) updateData.minOrderAmount = data.minOrderAmount
+    if (data.maxPlaysPerCustomer !== undefined) updateData.maxPlaysPerCustomer = data.maxPlaysPerCustomer
+    if (data.requireEmail !== undefined) updateData.requireEmail = data.requireEmail
+    if (data.requireName !== undefined) updateData.requireName = data.requireName
+    if (data.requirePhone !== undefined) updateData.requirePhone = data.requirePhone
+    if (data.startAt !== undefined) updateData.startAt = data.startAt ? new Date(data.startAt) : null
+    if (data.endAt !== undefined) updateData.endAt = data.endAt ? new Date(data.endAt) : null
+    if (data.isActive !== undefined) updateData.isActive = data.isActive
+    
+    // 处理奖品（如果提供了）
+    if (data.prizes) {
+      updateData.prizes = {
+        create: data.prizes
+          .filter((prize: any) => prize.name && prize.name.trim() !== "") // 过滤掉名称为空的奖品
+          .map((prize: any) => ({
+            name: prize.name, // name 是必填字段
+            type: prize.type,
+            discountValue: prize.discountValue ?? null,
+            discountCode: prize.discountCode ?? null,
+            giftProductId: prize.giftProductId ?? null,
+            giftVariantId: prize.giftVariantId ?? null,
+            chancePercentage: prize.chancePercentage ?? 0,
+            totalStock: prize.totalStock ?? null,
+            displayOrder: prize.displayOrder ?? 0,
+            color: prize.color || "#FF6B6B",
+            icon: prize.icon ?? null,
+            isActive: true
+          }))
+      }
+    }
+
     // 更新活动
     return tx.campaign.update({
       where: { id: campaignId },
-      data: {
-        name: data.name,
-        description: data.description,
-        type: data.type,
-        gameType: data.gameType,
-        minOrderAmount: data.minOrderAmount,
-        maxPlaysPerCustomer: data.maxPlaysPerCustomer,
-        requireEmail: data.requireEmail,
-        requireName: data.requireName,
-        requirePhone: data.requirePhone,
-        startAt: data.startAt ? new Date(data.startAt) : undefined,
-        endAt: data.endAt ? new Date(data.endAt) : undefined,
-        isActive: data.isActive,  // ✅ 只使用 isActive
-        prizes: data.prizes ? {
-          create: data.prizes.map((prize: any) => ({
-            name: prize.name,
-            type: prize.type,
-            discountValue: prize.discountValue,
-            discountCode: prize.discountCode,
-            giftProductId: prize.giftProductId,
-            giftVariantId: prize.giftVariantId,
-            chancePercentage: prize.chancePercentage,
-            totalStock: prize.totalStock,
-            displayOrder: prize.displayOrder,
-            color: prize.color || "#FF6B6B",
-            icon: prize.icon,
-            isActive: true
-          }))
-        } : undefined
-      },
+      data: updateData,
       include: {
         prizes: {
           orderBy: { displayOrder: "asc" }

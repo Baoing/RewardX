@@ -11,6 +11,8 @@ import {
 import { useCampaignEditorStore, useCampaignStore } from "@/stores"
 import { useParams } from "react-router"
 import { showToast } from "@/utils/toast"
+import PrizeItem from "./PrizeItem"
+import type { Prize } from "@/types/campaign"
 import styles from "../styles.module.scss"
 
 const RulesTab = observer(() => {
@@ -130,41 +132,92 @@ const RulesTab = observer(() => {
 
         {/* Prize List */}
         <div className={styles.section}>
-          <Text as="h3" variant="headingSm">
-            Prizes (Max 9)
-          </Text>
-          <Text as="p" tone="subdued">
-            Total Prizes: {campaign.prizes?.length || 0} / 9
-          </Text>
-          <Button onClick={() => { /* TODO: Add prize modal */ }}>
-            Add Prize
-          </Button>
-          
-          {/* Prize List */}
-          {campaign.prizes && campaign.prizes.length > 0 && (
-            <BlockStack gap="200">
-              {campaign.prizes.map((prize, index) => (
-                <div 
-                  key={prize.id || index} 
-                  style={{ 
+          <BlockStack gap="200">
+            <div>
+              <Text as="h3" variant="headingSm">
+                Prizes (Max 9)
+              </Text>
+              <Text as="p" tone="subdued">
+                Total Prizes: {campaign.prizes?.length || 0} / 9
+              </Text>
+            </div>
+            
+            <Button
+              onClick={() => {
+                const prizes = [...(campaign.prizes || [])]
+                if (prizes.length >= 9) {
+                  showToast({ content: "Maximum 9 prizes allowed", error: true })
+                  return
+                }
+                
+                const newPrize: Prize = {
+                  name: "",
+                  type: "no_prize",
+                  chancePercentage: 0,
+                  displayOrder: prizes.length
+                }
+                
+                editorStore.updateField("prizes", [...prizes, newPrize])
+                showToast({ content: "Prize added" })
+              }}
+              disabled={!campaign.prizes || campaign.prizes.length >= 9}
+            >
+              Add Prize
+            </Button>
+            
+            {/* Prize List */}
+            {campaign.prizes && campaign.prizes.length > 0 && (
+              <BlockStack gap="200">
+                {campaign.prizes.map((prize, index) => (
+                  <PrizeItem
+                    key={prize.id || `prize-${index}`}
+                    prize={prize}
+                    index={index}
+                    onDelete={(deleteIndex) => {
+                      const prizes = [...(campaign.prizes || [])]
+                      prizes.splice(deleteIndex, 1)
+                      editorStore.updateField("prizes", prizes)
+                      showToast({ content: "Prize deleted" })
+                    }}
+                  />
+                ))}
+              </BlockStack>
+            )}
+
+            {/* Total Chance Warning */}
+            {campaign.prizes && campaign.prizes.length > 0 && (() => {
+              const totalChance = campaign.prizes.reduce(
+                (sum, p) => sum + (p.chancePercentage || 0),
+                0
+              )
+              if (totalChance !== 100) {
+                return (
+                  <div style={{ 
                     padding: "12px", 
-                    border: "1px solid #e1e3e5", 
-                    borderRadius: "8px" 
-                  }}
-                >
-                  <Text as="p" fontWeight="semibold">{prize.label || "Untitled Prize"}</Text>
-                  <Text as="p" tone="subdued">
-                    {prize.type} - {prize.chancePercentage}% chance
-                  </Text>
-                  {prize.totalStock && (
-                    <Text as="p" tone="subdued" variant="bodySm">
-                      Stock: {prize.usedStock || 0} / {prize.totalStock}
+                    background: totalChance > 100 
+                      ? "var(--p-color-bg-surface-critical-subdued, #fef2f2)" 
+                      : "var(--p-color-bg-surface-warning-subdued, #fff4e5)",
+                    border: `1px solid ${totalChance > 100 
+                      ? "var(--p-color-border-critical, #d72c0d)" 
+                      : "var(--p-color-border-warning, #f59e0b)"}`,
+                    borderRadius: "8px"
+                  }}>
+                    <Text 
+                      as="p" 
+                      variant="bodySm"
+                      tone={totalChance > 100 ? "critical" : "subdued"}
+                    >
+                      {totalChance > 100 
+                        ? `⚠️ Total chance exceeds 100% (${totalChance.toFixed(2)}%)`
+                        : `ℹ️ Total chance is ${totalChance.toFixed(2)}% (should be 100%)`
+                      }
                     </Text>
-                  )}
-                </div>
-              ))}
-            </BlockStack>
-          )}
+                  </div>
+                )
+              }
+              return null
+            })()}
+          </BlockStack>
         </div>
 
         <Divider />
