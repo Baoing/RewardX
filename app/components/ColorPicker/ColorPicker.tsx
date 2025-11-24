@@ -131,10 +131,11 @@ export const ColorPicker = ({
     setPickerColor(HSBA)
     const hex = hsbToHex(HSBA)
 
-    const prefHex = hex.toLocaleUpperCase().replace("#", "")
+    const UpperCaseHex =  hex.toLocaleUpperCase()
+    const prefHex = UpperCaseHex.replace("#", "")
 
     setHexColor(prefHex)
-    onChange(prefHex, id)
+    onChange(UpperCaseHex, id)
   }
 
   const handleColorInputChange = (value: string) => {
