@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto"
 import prisma from "../db.server"
 import type { ShopInfo } from "./shop.server"
 
@@ -96,6 +97,7 @@ export async function upsertUser(shop: string, shopInfo?: ShopInfo | null, partn
       // 注意：不更新 appLanguage，保持用户的选择
     },
     create: {
+      id: randomUUID(), // 生成 UUID
       shop,
       
       // 店铺基本信息
@@ -120,6 +122,9 @@ export async function upsertUser(shop: string, shopInfo?: ShopInfo | null, partn
       
       // 设置 language 为店铺的 storefront 默认语言
       language: shopInfo?.primaryLocale || "en",
+      
+      // 时间戳
+      updatedAt: new Date(),
       
       // appLanguage 不设置，保持为 null
       // 只有用户手动切换语言时才会保存

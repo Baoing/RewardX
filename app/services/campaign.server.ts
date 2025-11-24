@@ -3,6 +3,7 @@
  * 封装 Campaign 相关的业务逻辑
  */
 
+import { randomUUID } from "crypto"
 import type { Campaign, Prize, User } from "@prisma/client"
 import prisma from "@/db.server"
 import { validateCampaignData } from "@/utils/validation.server"
@@ -66,10 +67,10 @@ interface UpdateCampaignData {
 }
 
 type CampaignWithPrizes = Campaign & {
-  prizes?: Prize[]
+  Prize?: Prize[]
   _count?: {
-    prizes: number
-    lotteryEntries: number
+    Prize: number
+    LotteryEntry: number
   }
 }
 
@@ -92,20 +93,31 @@ export const getCampaignsByUserId = async (
   if (filters?.type) where.type = filters.type
   if (filters?.gameType) where.gameType = filters.gameType
 
-  return prisma.campaign.findMany({
+  const campaigns = await prisma.campaign.findMany({
     where,
     include: {
+      Prize: true,
       _count: {
         select: {
-          prizes: true,
-          lotteryEntries: true
-        }
+          Prize: true,
+          LotteryEntry: true
+        } as any
       }
-    },
+    } as any,
     orderBy: {
       createdAt: "desc"
     }
-  })
+  }) as any[]
+  
+  // 转换字段名以保持前端代码一致性
+  return campaigns.map(c => ({
+    ...c,
+    prizes: c.Prize || [],
+    _count: c._count ? {
+      prizes: c._count.Prize || 0,
+      lotteryEntries: c._count.LotteryEntry || 0
+    } : undefined
+  })) as CampaignWithPrizes[]
 }
 
 /**
@@ -115,24 +127,38 @@ export const getCampaignById = async (
   campaignId: string,
   userId: string
 ): Promise<CampaignWithPrizes | null> => {
-  return prisma.campaign.findFirst({
+  const campaign = await prisma.campaign.findFirst({
     where: {
       id: campaignId,
       userId
     },
     include: {
-      prizes: {
+      Prize: {
         where: { isActive: true },
         orderBy: { displayOrder: "asc" }
       },
       _count: {
         select: { 
-          prizes: true,
-          lotteryEntries: true 
-        }
+          Prize: true,
+          LotteryEntry: true 
+        } as any
       }
-    }
-  }) as Promise<CampaignWithPrizes | null>
+    } as any
+  }) as any
+  
+  if (!campaign) {
+    return null
+  }
+  
+  // 转换字段名以保持前端代码一致性
+  return {
+    ...campaign,
+    prizes: campaign.Prize || [],
+    _count: campaign._count ? {
+      prizes: campaign._count.Prize || 0,
+      lotteryEntries: campaign._count.LotteryEntry || 0
+    } : undefined
+  } as CampaignWithPrizes
 }
 
 /**
@@ -171,6 +197,7 @@ export const createCampaign = async (
   // 创建活动
   const campaign = await prisma.campaign.create({
     data: {
+      id: randomUUID(), // 生成 UUID
       userId,
       name: data.name,
       description: data.description,
@@ -185,33 +212,45 @@ export const createCampaign = async (
       startAt: data.startAt ? new Date(data.startAt) : null,
       endAt: data.endAt ? new Date(data.endAt) : null,
       isActive: false,  // ✅ 新创建的活动默认为未发布
-      prizes: data.prizes ? {
+      updatedAt: new Date(), // 设置更新时间
+      Prize: data.prizes ? {
         create: data.prizes.map(prize => ({
+          id: randomUUID(), // 生成 UUID
           name: prize.name,
           type: prize.type,
-          discountValue: prize.discountValue,
-          discountCode: prize.discountCode,
-          giftProductId: prize.giftProductId,
-          giftVariantId: prize.giftVariantId,
+          discountValue: prize.discountValue ?? null,
+          discountCode: prize.discountCode ?? null,
+          giftProductId: prize.giftProductId ?? null,
+          giftVariantId: prize.giftVariantId ?? null,
           chancePercentage: prize.chancePercentage,
-          totalStock: prize.totalStock,
+          totalStock: prize.totalStock ?? null,
           displayOrder: prize.displayOrder,
           color: prize.color || "#FF6B6B",
-          icon: prize.icon,
+          icon: prize.icon ?? null,
           image: prize.image ?? null,
-          isActive: true
+          isActive: true,
+          updatedAt: new Date() // 设置更新时间
         }))
-      } : undefined
-    },
+      } as any : undefined
+    } as any,
     include: {
-      prizes: {
+      Prize: {
         orderBy: { displayOrder: "asc" }
-      }
-    }
-  })
+      } as any
+    } as any
+  }) as any
 
   console.log("✅ Campaign created:", campaign.id)
-  return campaign
+  
+  // 转换字段名以保持前端代码一致性
+  return {
+    ...campaign,
+    prizes: campaign.Prize || [],
+    _count: campaign._count ? {
+      prizes: campaign._count.Prize || 0,
+      lotteryEntries: campaign._count.LotteryEntry || 0
+    } : undefined
+  } as CampaignWithPrizes
 }
 
 /**
@@ -255,10 +294,11 @@ export const updateCampaign = async (
     
     // 处理奖品（如果提供了）
     if (data.prizes) {
-      updateData.prizes = {
+      updateData.Prize = {
         create: data.prizes
           .filter((prize: any) => prize.name && prize.name.trim() !== "") // 过滤掉名称为空的奖品
           .map((prize: any) => ({
+            id: randomUUID(), // 生成 UUID
             name: prize.name, // name 是必填字段
             type: prize.type,
             discountValue: prize.discountValue ?? null,
@@ -271,21 +311,32 @@ export const updateCampaign = async (
             color: prize.color || "#FF6B6B",
             icon: prize.icon ?? null,
             image: prize.image ?? null,
-            isActive: true
+            isActive: true,
+            updatedAt: new Date() // 设置更新时间
           }))
-      }
+      } as any
     }
 
     // 更新活动
-    return tx.campaign.update({
+    const updated = await tx.campaign.update({
       where: { id: campaignId },
       data: updateData,
       include: {
-        prizes: {
+        Prize: {
           orderBy: { displayOrder: "asc" }
-        }
-      }
-    })
+        } as any
+      } as any
+    }) as any
+    
+    // 转换字段名以保持前端代码一致性
+    return {
+      ...updated,
+      prizes: updated.Prize || [],
+      _count: updated._count ? {
+        prizes: updated._count.Prize || 0,
+        lotteryEntries: updated._count.LotteryEntry || 0
+      } : undefined
+    } as CampaignWithPrizes
   })
 
   console.log("✅ Campaign updated:", campaignId)
@@ -327,4 +378,5 @@ export const getCampaignStats = (campaign: Campaign) => {
     winRate: Math.round(winRate * 100) / 100
   }
 }
+
 

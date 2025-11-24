@@ -37,7 +37,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
       ...campaign,
       stats: {
         ...stats,
-        totalEntries: campaign._count?.lotteryEntries || 0
+        totalEntries: campaign._count?.LotteryEntry || 0
       }
     }
   })

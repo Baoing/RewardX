@@ -30,8 +30,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       totalPlays: c.totalPlays,
       totalWins: c.totalWins,
       totalOrders: c.totalOrders,
-      prizesCount: c._count?.prizes || 0,
-      entriesCount: c._count?.lotteryEntries || 0,
+      prizesCount: c._count?.Prize || 0,
+      entriesCount: c._count?.LotteryEntry || 0,
       createdAt: c.createdAt,
       updatedAt: c.updatedAt
     }))

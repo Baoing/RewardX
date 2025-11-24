@@ -45,7 +45,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
       campaignId
     }
     
-    if (status) {
+    if (status && status !== "undefined") {
       where.status = status
     }
     
@@ -60,14 +60,14 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     const entries = await prisma.lotteryEntry.findMany({
       where,
       include: {
-        prize: {
+        Prize: {
           select: {
             id: true,
             name: true,
             type: true
           }
         }
-      },
+      } as any,
       orderBy: {
         createdAt: "desc"
       },

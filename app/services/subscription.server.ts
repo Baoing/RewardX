@@ -213,7 +213,7 @@ export async function getCurrentSubscription(userId: string) {
       }
     },
     include: {
-      discount: true
+      Discount: true
     },
     orderBy: {
       createdAt: "desc"
