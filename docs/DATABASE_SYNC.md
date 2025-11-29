@@ -166,6 +166,8 @@ npx prisma generate
 
 A: 使用以下命令一键修复：
 ```bash
+npm run db:fix
+# 或
 npx prisma db push --accept-data-loss && npx prisma generate
 ```
 
@@ -173,7 +175,24 @@ npx prisma db push --accept-data-loss && npx prisma generate
 - ✅ 检查 schema 和数据库的差异
 - ✅ 自动添加缺失的列
 - ✅ 自动修改类型不匹配的列
+- ✅ 自动删除 schema 中不存在的旧列
 - ✅ 重新生成 Prisma Client
+
+### Q: 看到 "You are about to drop the column" 警告怎么办？
+
+A: 这是正常的！这些警告表示：
+- ✅ 数据库中有一些旧列（如 `requireEmail`, `emailVerified`, `email`）
+- ✅ 这些列在新版本的 schema 中已经不存在了
+- ✅ `db push` 会自动删除这些旧列，使数据库与 schema 同步
+
+**这是正常的清理过程，可以安全地继续。**
+
+### Q: 如何避免每次都要修复？
+
+A: 在新电脑上设置时：
+1. ✅ 先运行 `npm run db:sync` 应用所有迁移
+2. ✅ 如果还有问题，运行 `npm run db:fix` 强制同步
+3. ✅ 确保所有迁移文件都在 Git 中
 
 ### Q: 如何查看数据库当前状态？
 

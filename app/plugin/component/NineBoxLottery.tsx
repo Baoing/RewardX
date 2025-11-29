@@ -220,8 +220,8 @@ export const NineBoxLottery = ({
   }
 
   // 计算画布尺寸
-  const canvasWidth = is6Prizes ? "450px" : "500px"
-  const canvasHeight = is6Prizes ? "300px" : "500px"
+  const canvasWidth = "500px"
+  const canvasHeight = is6Prizes ? "500px" : "500px"
 
   // 渲染抽奖画布（仅在已验证或非订单抽奖时显示）
   const renderCanvas = () => {
@@ -316,7 +316,8 @@ export const NineBoxLottery = ({
                     fontSize: "14px",
                     backgroundColor: campaignStyles.mainBackgroundColor || "#fff",
                     color: campaignStyles.mainTextColor || "#000",
-                    minWidth: "200px"
+                    minWidth: "200px",
+                    height: "51px"
                   }}
                 />
               )}

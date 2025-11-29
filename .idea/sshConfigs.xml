@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig authType="PASSWORD" connectionConfig="{&quot;serverAliveInterval&quot;:300}" host="sgp1011.siteground.asia" id="31b37cbf-80cf-4f0c-b8c5-8e306f92aa27" port="22" customName="baoea@wholesale.emojobike.com" nameFormat="CUSTOM" username="baoea@wholesale.emojobike.com" useOpenSSHConfig="true">
+        <option name="customName" value="baoea@wholesale.emojobike.com" />
+      </sshConfig>
+    </configs>
+  </component>
+</project>

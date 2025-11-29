@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="0a4a0ebf-9c2f-42dc-b032-4fc8d4588991" name="baoea@wholesale.emojobike.com" url=" sgp1011.siteground.asia">
+        <fileTransfer accessType="SFTP" host="sgp1011.siteground.asia" port="22" sshConfigId="31b37cbf-80cf-4f0c-b8c5-8e306f92aa27" sshConfig="baoea@wholesale.emojobike.com">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
