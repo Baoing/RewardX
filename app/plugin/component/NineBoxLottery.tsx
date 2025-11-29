@@ -54,37 +54,35 @@ export const NineBoxLottery = ({
   // 确定布局：6个奖品用2x3，8个奖品用3x3
   const prizeCount = Math.min(prizes.length, 8)
   const is6Prizes = prizeCount === 6
-  const gridSize = is6Prizes ? 3 : 3 // 2x3 或 3x3
-  const cols = is6Prizes ? 3 : 3
+  const cols = 3
   const rows = is6Prizes ? 2 : 3
 
   // 转换奖品数据为 LuckyGrid 格式
-  const blocks = [
-    {
-      padding: "10px",
-      background: campaignStyles.moduleBorderColor || "#ff841f"
-    }
-  ]
+  // blocks 配置：按行定义，只需要 rows 个元素（参考代码示例）
+  const blocks = Array.from({ length: rows }, (_, rowIndex) => ({
+    padding: "10px",
+    background: campaignStyles.moduleBorderColor || "#ff841f"
+  }))
 
   // 构建奖品数据
+  // 根据参考代码，需要为每个格子创建数据，包含明确的 x, y 坐标
   const prizes_data = prizes.slice(0, prizeCount).map((prize, index) => {
-    const x = is6Prizes ? (index % 3) : (index % 3)
-    const y = is6Prizes ? Math.floor(index / 3) : Math.floor(index / 3)
+    // 计算坐标：确保每个奖品都有唯一的 (x, y) 位置
+    const x = index % cols
+    const y = Math.floor(index / cols)
 
-    if(prize.image){
+    if (prize.image) {
       return {
         x,
         y,
         background: campaignStyles.moduleBackgroundColor || "#ffcfa7",
-        imgs: prize.image
-          ? [
-            {
-              src: prize.image,
-              width: "100%",
-              top: "0%",
-            }
-          ]
-          : []
+        imgs: [
+          {
+            src: prize.image,
+            width: "100%",
+            top: "0%",
+          }
+        ]
       }
     }
 
@@ -220,8 +218,12 @@ export const NineBoxLottery = ({
   }
 
   // 计算画布尺寸
+  // 宽度固定为 500px
+  // 高度根据行数动态调整：
+  // - 2行（6个奖品）：500px * (2/3) ≈ 333px
+  // - 3行（9个奖品）：500px
   const canvasWidth = "500px"
-  const canvasHeight = is6Prizes ? "500px" : "500px"
+  const canvasHeight = is6Prizes ? `${Math.round(500 * (rows / 3)) + 10}px` : "500px" // 加10为添加间距
 
   // 渲染抽奖画布（仅在已验证或非订单抽奖时显示）
   const renderCanvas = () => {
@@ -231,6 +233,8 @@ export const NineBoxLottery = ({
           ref={luckyGridRef}
           width={canvasWidth}
           height={canvasHeight}
+          rows={rows}
+          cols={cols}
           blocks={blocks}
           prizes={prizes_data}
           buttons={[]}

@@ -8,6 +8,8 @@ declare module "@lucky-canvas/react" {
   export interface LuckyGridProps {
     width?: string
     height?: string
+    rows?: number
+    cols?: number
     blocks?: Array<Record<string, any>>
     prizes?: Array<Record<string, any>>
     buttons?: Array<Record<string, any>>
