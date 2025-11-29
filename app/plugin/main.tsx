@@ -17,6 +17,7 @@ import { LotteryModal } from "./component/LotteryModal"
 export interface Prize {
   id?: string
   name: string // 奖品名称（与数据库字段一致）
+  description?: string // 奖品描述
   type: "discount_percentage" | "discount_fixed" | "free_shipping" | "free_gift" | "no_prize"
   discountValue?: number
   giftProductId?: string

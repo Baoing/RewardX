@@ -2,6 +2,7 @@ import { useRef, useState, useMemo, useCallback } from "react"
 import { LuckyGrid } from "@lucky-canvas/react"
 import type { Prize, CampaignStyles, CampaignContent } from "@plugin/main"
 import { getComponentClassName } from "@/utils/className"
+import { WinnerModal } from "./WinnerModal"
 
 const cn = (name: string) => getComponentClassName("block", name)
 
@@ -62,6 +63,8 @@ export const NineBoxLottery = ({
   const [isPlaying, setIsPlaying] = useState(false)
   const [inputError, setInputError] = useState("") // 内部管理错误信息
   const [inputLoading, setInputLoading] = useState(false) // 内部管理加载状态
+  const [wonPrize, setWonPrize] = useState<(Prize & { discountCode?: string | null; expiresAt?: string | null }) | null>(null) // 中奖奖品信息
+  const [showWinnerModal, setShowWinnerModal] = useState(false) // 控制中奖弹窗显示
 
   // 确定布局：6个奖品用2x3，8个奖品用3x3
   const prizeCount = useMemo(() => Math.min(prizes.length, MAX_PRIZES), [prizes.length])
@@ -194,6 +197,19 @@ export const NineBoxLottery = ({
               ? `You have already played. You won: ${data.previousEntry.prizeName}${data.previousEntry.discountCode ? ` (Code: ${data.previousEntry.discountCode})` : ""}`
               : "You have already played this lottery."
           )
+          
+          // 如果之前中奖了，保存中奖信息以便显示弹窗
+          if (data.previousEntry?.isWinner) {
+            const previousPrize = prizes.find(p => p.id === data.prizeId)
+            if (previousPrize) {
+              setWonPrize({
+                ...previousPrize,
+                discountCode: data.previousEntry.discountCode || null,
+                expiresAt: null
+              })
+            }
+          }
+          
           // 根据奖品 ID 查找索引
           const prizeIndex = prizes.findIndex(p => p.id === data.prizeId)
           if (prizeIndex >= 0) {
@@ -243,6 +259,46 @@ export const NineBoxLottery = ({
         return
       }
 
+      // 保存中奖信息（如果中奖）
+      if (data.entry?.isWinner && data.entry?.prize) {
+        // 从本地奖品数组中查找完整的奖品信息（包含图片）
+        const fullPrize = prizes.find(p => p.id === data.entry.prize.id)
+        if (fullPrize) {
+          const wonPrizeData = {
+            ...fullPrize,
+            discountCode: data.entry.prize.discountCode || null,
+            expiresAt: data.entry.prize.expiresAt || null
+          }
+          setWonPrize(wonPrizeData)
+          console.log("✅ 保存中奖信息:", {
+            prizeId: wonPrizeData.id,
+            prizeName: wonPrizeData.name,
+            discountCode: wonPrizeData.discountCode,
+            type: wonPrizeData.type
+          })
+        } else {
+          // 如果找不到，使用 API 返回的数据
+          const wonPrizeData = {
+            id: data.entry.prize.id,
+            name: data.entry.prize.name,
+            type: data.entry.prize.type,
+            discountValue: data.entry.prize.discountValue,
+            chancePercentage: 0,
+            discountCode: data.entry.prize.discountCode || null,
+            expiresAt: data.entry.prize.expiresAt || null
+          }
+          setWonPrize(wonPrizeData)
+          console.log("✅ 保存中奖信息（使用 API 数据）:", {
+            prizeId: wonPrizeData.id,
+            prizeName: wonPrizeData.name,
+            discountCode: wonPrizeData.discountCode
+          })
+        }
+      } else {
+        console.log("ℹ️ 未中奖或没有奖品信息")
+        setWonPrize(null)
+      }
+
       // 开始抽奖动画
       luckyGridRef.current.play()
 
@@ -265,6 +321,52 @@ export const NineBoxLottery = ({
       setInputLoading(false)
     }
   }, [disabled, isPlaying, inputLoading, campaignType, orderNumber, order, name, phone, campaignId, campaignContent, onVerified, prizes])
+
+  // 抽奖结束回调
+  const handleEnd = useCallback((prizeIndex: number) => {
+    setIsPlaying(false)
+    
+    // 获取中奖的奖品
+    const finalPrize = prizes[prizeIndex]
+    if (finalPrize) {
+      console.log("🎯 抽奖结束:", {
+        prizeIndex,
+        finalPrizeId: finalPrize.id,
+        finalPrizeName: finalPrize.name,
+        finalPrizeType: finalPrize.type,
+        wonPrizeId: wonPrize?.id,
+        wonPrizeType: wonPrize?.type
+      })
+      
+      // 检查是否中奖（不是 "no_prize" 类型）
+      if (finalPrize.type !== "no_prize") {
+        // 如果之前保存了中奖信息（包含折扣码），使用保存的信息
+        if (wonPrize && wonPrize.id === finalPrize.id) {
+          // 使用保存的中奖信息（包含折扣码）
+          console.log("✅ 显示中奖弹窗（使用保存的信息）:", {
+            prizeName: wonPrize.name,
+            discountCode: wonPrize.discountCode
+          })
+          setShowWinnerModal(true)
+        } else {
+          // 如果没有保存的信息，使用当前奖品信息（可能没有折扣码）
+          // 这种情况不应该发生，因为 handleStart 中已经保存了中奖信息
+          console.warn("⚠️ 未找到保存的中奖信息，使用当前奖品信息")
+          setWonPrize({
+            ...finalPrize,
+            discountCode: null,
+            expiresAt: null
+          })
+          setShowWinnerModal(true)
+        }
+      } else {
+        console.log("ℹ️ 未中奖（no_prize 类型）")
+      }
+      
+      // 调用外部回调
+      onComplete?.(finalPrize)
+    }
+  }, [prizes, wonPrize, onComplete])
 
   // 计算画布尺寸
   const canvasWidth = CANVAS_WIDTH
@@ -453,6 +555,7 @@ export const NineBoxLottery = ({
           }}
           defaultStyle={defaultStyle}
           defaultConfig={defaultConfig}
+          onEnd={handleEnd}
         />
 
         {disabled && (
@@ -465,6 +568,15 @@ export const NineBoxLottery = ({
       <div className={cn("input-wrapper")}>
         {renderInput()}
       </div>
+
+      {/* 中奖弹窗 */}
+      {wonPrize && (
+        <WinnerModal
+          open={showWinnerModal}
+          onClose={() => setShowWinnerModal(false)}
+          prize={wonPrize}
+        />
+      )}
     </div>
   )
 }

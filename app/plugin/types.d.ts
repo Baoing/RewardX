@@ -14,6 +14,7 @@ declare module "@lucky-canvas/react" {
     prizes?: Array<Record<string, any>>
     buttons?: Array<Record<string, any>>
     defaultStyle?: Record<string, any>
+    activeStyle?: Record<string, any>
     defaultConfig?: Record<string, any>
     onStart?: () => void
     onEnd?: (prize: any) => void

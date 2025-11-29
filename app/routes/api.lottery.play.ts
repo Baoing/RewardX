@@ -3,6 +3,9 @@ import { randomUUID } from "crypto"
 import { authenticate } from "@/shopify.server"
 import prisma from "@/db.server"
 import { selectPrize, generateDiscountCode, isCampaignValid, calculateExpiresAt } from "@/utils/lottery.server"
+import { createShopifyDiscount } from "@/utils/shopify-discount.server"
+// Draft Order 功能保留在 webhook 中，供将来需要时使用
+// import { createDraftOrder } from "@/utils/shopify-draft-order.server"
 
 interface PlayLotteryRequest {
   campaignId: string
@@ -14,6 +17,18 @@ interface PlayLotteryRequest {
   email?: string
   name?: string
   phone?: string
+  // 收件信息（保留字段，供将来 Draft Order 功能使用）
+  // shippingAddress?: {
+  //   firstName?: string
+  //   lastName?: string
+  //   address1?: string
+  //   address2?: string
+  //   city?: string
+  //   province?: string
+  //   country?: string
+  //   zip?: string
+  //   phone?: string
+  // }
 }
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -63,7 +78,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     if (type === "order") {
       return await handleOrderLottery(admin, campaign, data, user.id)
     } else if (type === "email_form") {
-      return await handleEmailFormLottery(campaign, data, user.id)
+      return await handleEmailFormLottery(admin, campaign, data, user.id)
     } else {
       return Response.json({ success: false, error: "Invalid lottery type" }, { status: 400 })
     }
@@ -291,7 +306,7 @@ async function handleOrderLottery(admin: any, campaign: any, data: PlayLotteryRe
   const orderAmount = parseFloat(order.totalPriceSet.shopMoney.amount)
 
   // 执行抽奖并返回索引
-  return await performLottery(campaign, {
+  return await performLottery(admin, campaign, {
     campaignType: "order",
     orderId: finalOrderId,
     orderNumber: order.name,
@@ -299,12 +314,14 @@ async function handleOrderLottery(admin: any, campaign: any, data: PlayLotteryRe
     customerName: order.customer?.displayName,
     customerId: order.customer?.id,
     phone: order.customer?.phone,
+    email: order.customer?.email || undefined,
     userId
+    // shippingAddress: data.shippingAddress // 保留字段，供将来使用
   })
 }
 
 // 邮件表单抽奖
-async function handleEmailFormLottery(campaign: any, data: PlayLotteryRequest, userId: string) {
+async function handleEmailFormLottery(admin: any, campaign: any, data: PlayLotteryRequest, userId: string) {
   const { email, name, phone } = data
 
   // 验证必填字段
@@ -338,17 +355,19 @@ async function handleEmailFormLottery(campaign: any, data: PlayLotteryRequest, u
   }
 
   // 执行抽奖
-  return await performLottery(campaign, {
+  return await performLottery(admin, campaign, {
     campaignType: "email_subscribe",
     order: email, // 将 email 存储到 order 字段
     customerName: name,
     phone,
+    email: email,
     userId
+    // shippingAddress: data.shippingAddress // 保留字段，供将来使用
   })
 }
 
 // 执行抽奖核心逻辑
-async function performLottery(campaign: any, entryData: any) {
+async function performLottery(admin: any, campaign: any, entryData: any) {
   // 1. 抽奖算法选择奖品
   const selectedPrize = selectPrize(campaign.Prize)
 
@@ -362,10 +381,55 @@ async function performLottery(campaign: any, entryData: any) {
   let discountCode = null
   let discountCodeId = null
 
-  if (isWinner && selectedPrize.type.includes("discount")) {
-    discountCode = selectedPrize.discountCode || generateDiscountCode()
-    // TODO: 调用 Shopify API 创建折扣码
-    // discountCodeId = await createShopifyDiscount(...)
+  if (isWinner) {
+    // 所有中奖类型都创建折扣码（discount_percentage, discount_fixed, free_shipping, free_gift）
+    discountCode = selectedPrize.discountCode || generateDiscountCode("LOTTERY")
+    
+    // 调用 Shopify API 创建折扣码
+    try {
+      const expiresAt = calculateExpiresAt(30) // 默认 30 天后过期
+      
+      // 根据奖品类型设置折扣码参数
+      let discountType: "discount_percentage" | "discount_fixed" | "free_shipping" | "free_gift"
+      if (selectedPrize.type === "discount_percentage") {
+        discountType = "discount_percentage"
+      } else if (selectedPrize.type === "discount_fixed") {
+        discountType = "discount_fixed"
+      } else if (selectedPrize.type === "free_shipping") {
+        discountType = "free_shipping"
+      } else if (selectedPrize.type === "free_gift") {
+        discountType = "free_gift"
+      } else {
+        // 默认使用百分比折扣
+        discountType = "discount_percentage"
+      }
+      
+      const shopifyDiscount = await createShopifyDiscount(admin, {
+        code: discountCode,
+        type: discountType,
+        value: selectedPrize.discountValue || 0,
+        title: `Lottery Prize: ${selectedPrize.name}`,
+        endsAt: expiresAt,
+        usageLimit: 1, // 每个客户只能使用一次
+        minimumRequirement: {
+          type: "none" // 可以根据活动配置设置最低购买金额
+        },
+        // 免费赠品需要指定产品 ID
+        giftProductId: selectedPrize.giftProductId || undefined,
+        giftVariantId: selectedPrize.giftVariantId || undefined
+      })
+
+      discountCodeId = shopifyDiscount.discountCodeId
+      console.log("✅ Shopify 折扣码创建成功:", {
+        code: discountCode,
+        discountCodeId,
+        type: discountType
+      })
+    } catch (error) {
+      console.error("❌ 创建 Shopify 折扣码失败:", error)
+      // 即使 Shopify 折扣码创建失败，也继续流程，但记录错误
+      // discountCodeId 保持为 null，前端仍会显示折扣码，但可能无法在 Shopify 中使用
+    }
   }
 
   // 3. 使用事务创建抽奖记录并更新统计
@@ -422,6 +486,8 @@ async function performLottery(campaign: any, entryData: any) {
   console.log(`✅ Lottery completed: ${result.id}, Winner: ${isWinner}, Prize: ${selectedPrize.name}`)
 
   // 4. 返回结果（包含奖品 ID，前端根据 ID 查找索引）
+  // 注意：所有奖品类型（包括 free_gift）都通过折扣码方式发放，不自动创建 Draft Order
+  // Draft Order 功能保留在 webhook 中，供将来需要时使用
   return Response.json({
     success: true,
     prizeId: selectedPrize.id, // 返回奖品 ID，让前端根据 ID 查找索引
