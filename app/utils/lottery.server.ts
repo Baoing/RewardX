@@ -11,20 +11,20 @@ export function selectPrize(prizes: Prize[]): Prize | null {
   if (prizes.length === 0) {
     return null
   }
-  
+
   // 1. 过滤掉库存不足的奖品
   const availablePrizes = prizes.filter(prize => {
     if (!prize.totalStock) return true // 无限库存
     return prize.usedStock < prize.totalStock
   })
-  
+
   if (availablePrizes.length === 0) {
     return null
   }
-  
+
   // 2. 生成 0-100 的随机数
   const random = Math.random() * 100
-  
+
   // 3. 累加概率，找到中奖奖品
   let cumulative = 0
   for (const prize of availablePrizes) {
@@ -33,7 +33,7 @@ export function selectPrize(prizes: Prize[]): Prize | null {
       return prize
     }
   }
-  
+
   // 4. 如果没有中奖，返回"未中奖"奖品
   return availablePrizes.find(p => p.type === "no_prize") || availablePrizes[availablePrizes.length - 1]
 }
@@ -57,20 +57,20 @@ export function isCampaignValid(campaign: {
   endAt: Date | null
 }): { valid: boolean; reason?: string } {
   // 检查状态
-  if (!campaign.isActive || campaign.status !== "active") {
+  if (!campaign.isActive) {
     return { valid: false, reason: "Campaign is not active" }
   }
-  
+
   // 检查时间范围
   const now = new Date()
   if (campaign.startAt && now < campaign.startAt) {
     return { valid: false, reason: "Campaign has not started yet" }
   }
-  
+
   if (campaign.endAt && now > campaign.endAt) {
     return { valid: false, reason: "Campaign has ended" }
   }
-  
+
   return { valid: true }
 }
 

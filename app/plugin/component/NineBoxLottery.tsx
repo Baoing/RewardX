@@ -1,8 +1,19 @@
-import { useRef, useState } from "react"
+import { useRef, useState, useMemo, useCallback } from "react"
 import { LuckyGrid } from "@lucky-canvas/react"
 import type { Prize, CampaignStyles, CampaignContent } from "@plugin/main"
-import {getComponentClassName} from "@/utils/className";
+import { getComponentClassName } from "@/utils/className"
+
 const cn = (name: string) => getComponentClassName("block", name)
+
+// 常量定义
+const CANVAS_WIDTH = "500px"
+const CANVAS_HEIGHT_3_ROWS = "500px"
+const MAX_PRIZES = 8
+const GRID_COLS = 3
+const GRID_ROWS_6_PRIZES = 2
+const GRID_ROWS_9_PRIZES = 3
+const ANIMATION_MIN_TIME = 2000
+const ANIMATION_MAX_TIME = 3000
 
 interface NineBoxLotteryProps {
   prizes: Prize[]
@@ -52,68 +63,85 @@ export const NineBoxLottery = ({
   const [inputLoading, setInputLoading] = useState(false) // 内部管理加载状态
 
   // 确定布局：6个奖品用2x3，8个奖品用3x3
-  const prizeCount = Math.min(prizes.length, 8)
-  const is6Prizes = prizeCount === 6
-  const cols = 3
-  const rows = is6Prizes ? 2 : 3
+  const prizeCount = useMemo(() => Math.min(prizes.length, MAX_PRIZES), [prizes.length])
+  const is6Prizes = useMemo(() => prizeCount === 6, [prizeCount])
+  const cols = GRID_COLS
+  const rows = useMemo(() => is6Prizes ? GRID_ROWS_6_PRIZES : GRID_ROWS_9_PRIZES, [is6Prizes])
+
+  // 样式常量
+  const borderColor = campaignStyles.moduleBorderColor || "#1a0202"
+  const backgroundColor = campaignStyles.moduleBackgroundColor || "#ffcfa7"
+  const textColor = campaignStyles.moduleTextColor || "#000"
+  const buttonColor = campaignStyles.moduleButtonColor || campaignStyles.buttonColor || "#8B4513"
+  const mainBackgroundColor = campaignStyles.mainBackgroundColor || "#fff"
+  const mainTextColor = campaignStyles.mainTextColor || "#000"
 
   // 转换奖品数据为 LuckyGrid 格式
   // blocks 配置：按行定义，只需要 rows 个元素（参考代码示例）
-  const blocks = Array.from({ length: rows }, (_, rowIndex) => ({
-    padding: "4px",
-    background: campaignStyles.moduleBorderColor || "#1a0202"
-  }))
+  const blocks = useMemo(() => 
+    Array.from({ length: rows }, () => ({
+      padding: "4px",
+      background: borderColor
+    })), 
+    [rows, borderColor]
+  )
 
   // 构建奖品数据
-  // 根据参考代码，需要为每个格子创建数据，包含明确的 x, y 坐标
-  const prizes_data = prizes.slice(0, prizeCount).map((prize, index) => {
-    // 计算坐标：确保每个奖品都有唯一的 (x, y) 位置
-    const x = index % cols
-    const y = Math.floor(index / cols)
+  const prizes_data = useMemo(() => 
+    prizes.slice(0, prizeCount).map((prize, index) => {
+      const x = index % cols
+      const y = Math.floor(index / cols)
 
-    if (prize.image) {
-      return {
-        x,
-        y,
-        background: campaignStyles.moduleBackgroundColor || "#ffcfa7",
-        imgs: [
-          {
+      if (prize.image) {
+        return {
+          x,
+          y,
+          background: backgroundColor,
+          imgs: [{
             src: prize.image,
             width: "100%",
             top: "0%",
-          }
-        ]
-      }
-    }
-
-    return {
-      x,
-      y,
-      fonts: [
-        {
-          text: prize.name,
-          top: prize.image ? "70%" : "50%",
-          fontSize: "12px",
-          fontColor: campaignStyles.moduleTextColor || "#000"
+          }]
         }
-      ],
-      background: campaignStyles.moduleBackgroundColor || "#ffcfa7",
-    }
-  })
+      }
 
-  const defaultStyle = {
-    fontColor: campaignStyles.moduleTextColor || "#000",
+      return {
+        x,
+        y,
+        fonts: [{
+          text: prize.name,
+          top: "50%",
+          fontSize: "12px",
+          fontColor: textColor
+        }],
+        background: backgroundColor,
+      }
+    }), 
+    [prizes, prizeCount, cols, backgroundColor, textColor]
+  )
+
+  const defaultStyle = useMemo(() => ({
+    fontColor: textColor,
     fontSize: "14px"
-  }
+  }), [textColor])
 
-  const defaultConfig = {
+  const defaultConfig = useMemo(() => ({
     speed: 20,
     accelerationTime: 2500,
     decelerationTime: 2500
-  }
+  }), [])
+
+  // 输入框基础样式
+  const inputBaseStyle = useMemo(() => ({
+    padding: "10px 12px",
+    borderRadius: "4px",
+    fontSize: "14px",
+    backgroundColor: mainBackgroundColor,
+    color: mainTextColor,
+  }), [mainBackgroundColor, mainTextColor])
 
   // 验证订单号（内部处理）
-  const handleVerify = async () => {
+  const handleVerify = useCallback(async () => {
     if (!orderNumber.trim()) {
       setInputError(campaignContent.inputEmptyError || campaignContent.inputTitle || "Please enter your order number")
       return
@@ -177,10 +205,10 @@ export const NineBoxLottery = ({
     } finally {
       setInputLoading(false)
     }
-  }
+  }, [orderNumber, campaignId, campaignContent, onVerified])
 
   // 开始抽奖
-  const handleStart = () => {
+  const handleStart = useCallback(() => {
     if (disabled || isPlaying) {
       return
     }
@@ -202,85 +230,91 @@ export const NineBoxLottery = ({
     luckyGridRef.current?.play()
 
     // 2-3 秒后停止在中奖位置
+    const animationTime = ANIMATION_MIN_TIME + Math.random() * (ANIMATION_MAX_TIME - ANIMATION_MIN_TIME)
     setTimeout(() => {
       luckyGridRef.current?.stop(randomIndex)
-    }, 2000 + Math.random() * 1000)
-  }
+    }, animationTime)
+  }, [disabled, isPlaying, campaignType, verified, handleVerify, prizeCount, prizes])
 
   // 抽奖结束
-  const handleEnd = (prizeIndex: any) => {
+  const handleEnd = useCallback((prizeIndex: number) => {
     setIsPlaying(false)
     const wonPrize = prizes[prizeIndex]
-
-    if (onComplete && wonPrize) {
-      onComplete(wonPrize)
-    }
-  }
+    onComplete?.(wonPrize)
+  }, [prizes, onComplete])
 
   // 计算画布尺寸
-  // 宽度固定为 500px
-  // 高度根据行数动态调整：
-  // - 2行（6个奖品）：500px * (2/3) ≈ 333px
-  // - 3行（9个奖品）：500px
-  const canvasWidth = "500px"
-  const canvasHeight = is6Prizes ? `${Math.round(500 * (rows / 3)) + 4}px` : "500px" // 加10为添加间距
+  const canvasWidth = CANVAS_WIDTH
+  const canvasHeight = useMemo(() => {
+    if (is6Prizes) {
+      const baseHeight = Math.round(500 * (rows / 3))
+      return `${baseHeight + 4}px` // 添加间距
+    }
+    return CANVAS_HEIGHT_3_ROWS
+  }, [is6Prizes, rows])
 
-  // 渲染抽奖画布（仅在已验证或非订单抽奖时显示）
-  const renderCanvas = () => {
-    return (
-      <div style={{ position: "relative", display: "inline-block" }}>
-        <LuckyGrid
-          ref={luckyGridRef}
-          width={canvasWidth}
-          height={canvasHeight}
-          rows={rows}
-          cols={cols}
-          blocks={blocks}
-          prizes={prizes_data}
-          buttons={[]}
-          defaultStyle={defaultStyle}
-          defaultConfig={defaultConfig}
-          onStart={handleStart}
-          onEnd={handleEnd}
-        />
+  // 按钮文案
+  const buttonText = useMemo(() => {
+    if (inputLoading || isPlaying) return "Loading..."
+    if (campaignType === "order" && !verified) {
+      return campaignContent.buttonText || "Join"
+    }
+    return campaignContent.buttonText || "Start"
+  }, [inputLoading, isPlaying, campaignType, verified, campaignContent.buttonText])
 
-        {disabled && (
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: "rgba(0, 0, 0, 0.7)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: "8px",
-              color: "#fff",
-              fontSize: "16px",
-              textAlign: "center",
-              padding: "20px"
-            }}
-          >
-            <p>抽奖活动暂未开始或已结束</p>
-          </div>
-        )}
-      </div>
-    )
-  }
+  // 按钮禁用状态
+  const isButtonDisabled = useMemo(() => 
+    disabled || isPlaying || inputLoading || (campaignType === "order" && !verified && !orderNumber.trim()),
+    [disabled, isPlaying, inputLoading, campaignType, verified, orderNumber]
+  )
+
+  // 禁用遮罩样式
+  const disabledOverlayStyle = useMemo(() => ({
+    position: "absolute" as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: "rgba(0, 0, 0, 0.7)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: "8px",
+    color: "#fff",
+    fontSize: "16px",
+    textAlign: "center" as const,
+    padding: "20px"
+  }), [])
+
+  // 输入框容器样式
+  const inputContainerStyle = useMemo(() => ({
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "8px",
+    width: "100%",
+    alignItems: "center" as const
+  }), [])
+
+  // 输入框行样式
+  const inputRowStyle = useMemo(() => ({
+    display: "flex",
+    gap: "8px",
+    alignItems: "flex-start" as const,
+    width: "100%"
+  }), [])
+
+  // 错误提示样式
+  const errorTextStyle = useMemo(() => ({
+    color: "#e74c3c",
+    fontSize: "12px",
+    width: "100%",
+    textAlign: "left" as const
+  }), [])
 
   // 渲染输入框和按钮
   const renderInput = () => {
     return (
-      <div style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "8px",
-        width: "100%",
-        maxWidth: canvasWidth,
-        alignItems: "center"
-      }}>
+      <div style={inputContainerStyle}>
         {/* 输入框标题（仅 order 类型，未验证时显示） */}
         {campaignType === "order" && !verified && campaignContent.inputTitle && (
           <label className={cn("inputLabel")}>
@@ -289,12 +323,7 @@ export const NineBoxLottery = ({
         )}
 
         {/* 输入框和按钮行 */}
-        <div style={{
-          display: "flex",
-          gap: "8px",
-          alignItems: "flex-start",
-          width: "100%"
-        }}>
+        <div style={inputRowStyle}>
 
           {/* 输入框（订单号或邮件订阅） */}
           {campaignType === "order" || campaignType === "email_subscribe" ? (
@@ -313,13 +342,9 @@ export const NineBoxLottery = ({
                     }
                   }}
                   style={{
+                    ...inputBaseStyle,
                     flex: 1,
-                    padding: "10px 12px",
                     border: inputError ? "1px solid #e74c3c" : "1px solid #ddd",
-                    borderRadius: "4px",
-                    fontSize: "14px",
-                    backgroundColor: campaignStyles.mainBackgroundColor || "#fff",
-                    color: campaignStyles.mainTextColor || "#000",
                     minWidth: "200px",
                     height: "51px"
                   }}
@@ -336,12 +361,8 @@ export const NineBoxLottery = ({
                     placeholder={campaignContent.inputPlaceholder || "Enter your email"}
                     disabled={inputLoading || disabled || isPlaying}
                     style={{
-                      padding: "10px 12px",
-                      border: inputError ? "1px solid #e74c3c" : "1px solid #ddd",
-                      borderRadius: "4px",
-                      fontSize: "14px",
-                      backgroundColor: campaignStyles.mainBackgroundColor || "#fff",
-                      color: campaignStyles.mainTextColor || "#000"
+                      ...inputBaseStyle,
+                      border: inputError ? "1px solid #e74c3c" : "1px solid #ddd"
                     }}
                   />
                   {name !== undefined && (
@@ -352,12 +373,8 @@ export const NineBoxLottery = ({
                       placeholder="Enter your name (optional)"
                       disabled={inputLoading || disabled || isPlaying}
                       style={{
-                        padding: "10px 12px",
-                        border: "1px solid #ddd",
-                        borderRadius: "4px",
-                        fontSize: "14px",
-                        backgroundColor: campaignStyles.mainBackgroundColor || "#fff",
-                        color: campaignStyles.mainTextColor || "#000"
+                        ...inputBaseStyle,
+                        border: "1px solid #ddd"
                       }}
                     />
                   )}
@@ -369,40 +386,28 @@ export const NineBoxLottery = ({
           {/* 抽奖按钮 */}
           <button
             onClick={handleStart}
-            disabled={disabled || isPlaying || inputLoading || (campaignType === "order" && !verified && !orderNumber.trim())}
+            disabled={isButtonDisabled}
             style={{
-              backgroundColor: campaignStyles.moduleButtonColor || campaignStyles.buttonColor || "#8B4513",
+              backgroundColor: buttonColor,
               color: "#fff",
               border: "none",
               padding: "12px 48px",
               borderRadius: "4px",
               fontSize: "18px",
               fontWeight: 500,
-              cursor: (disabled || isPlaying || inputLoading) ? "not-allowed" : "pointer",
-              opacity: (disabled || isPlaying || inputLoading) ? 0.6 : 1,
+              cursor: isButtonDisabled ? "not-allowed" : "pointer",
+              opacity: isButtonDisabled ? 0.6 : 1,
               transition: "opacity 0.2s",
               whiteSpace: "nowrap"
             }}
           >
-            {inputLoading
-              ? "验证中..."
-              : campaignType === "order" && !verified
-              ? (campaignContent.buttonText || "Join")
-              : isPlaying
-              ? "抽奖中..."
-              : (campaignContent.buttonText || "Start")
-            }
+            {buttonText}
           </button>
         </div>
 
         {/* 错误提示 */}
         {inputError && (
-          <div style={{
-            color: "#e74c3c",
-            fontSize: "12px",
-            width: "100%",
-            textAlign: "left"
-          }}>
+          <div style={errorTextStyle}>
             {inputError}
           </div>
         )}
@@ -411,16 +416,31 @@ export const NineBoxLottery = ({
   }
 
   return (
-    <div style={{
-      position: "relative",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      gap: "20px",
-      background: campaignStyles.moduleBorderColor || "#1a0202"
-    }}>
-      {renderCanvas()}
-      <div style={{background: "#ffcfa7", width: "100%", padding: "20px"}}>
+    <div className={cn("contain")}>
+      <div style={{ position: "relative", display: "inline-block" }}>
+        <LuckyGrid
+          ref={luckyGridRef}
+          width={canvasWidth}
+          height={canvasHeight}
+          rows={rows}
+          cols={cols}
+          blocks={blocks}
+          prizes={prizes_data}
+          buttons={[]}
+          defaultStyle={defaultStyle}
+          defaultConfig={defaultConfig}
+          onStart={handleStart}
+          onEnd={handleEnd}
+        />
+
+        {disabled && (
+          <div style={disabledOverlayStyle}>
+            <p>抽奖活动暂未开始或已结束</p>
+          </div>
+        )}
+      </div>
+
+      <div className={cn("input-wrapper")}>
         {renderInput()}
       </div>
     </div>

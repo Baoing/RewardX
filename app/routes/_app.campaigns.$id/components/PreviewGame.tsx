@@ -147,11 +147,9 @@ export const PreviewGame = observer(({ isAdmin = false }: PreviewGameProps) => {
 
       <div className={cn("wrapper")}>
         {/* 顶部条 - 显示中奖信息 */}
-        {recentWinner && (
-          <div className={cn("topBar")}>
-            {recentWinner} 赢得了"{recentWinner}"奖。
-          </div>
-        )}
+        {/*<div className={cn("topBar")}>*/}
+        {/*  {recentWinner} 赢得了"{recentWinner}"奖。*/}
+        {/*</div>*/}
 
         {/* 主内容区 */}
         <div className={cn("main")}>
