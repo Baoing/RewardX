@@ -60,8 +60,8 @@ export const NineBoxLottery = ({
   // 转换奖品数据为 LuckyGrid 格式
   // blocks 配置：按行定义，只需要 rows 个元素（参考代码示例）
   const blocks = Array.from({ length: rows }, (_, rowIndex) => ({
-    padding: "10px",
-    background: campaignStyles.moduleBorderColor || "#ff841f"
+    padding: "4px",
+    background: campaignStyles.moduleBorderColor || "#1a0202"
   }))
 
   // 构建奖品数据
@@ -223,7 +223,7 @@ export const NineBoxLottery = ({
   // - 2行（6个奖品）：500px * (2/3) ≈ 333px
   // - 3行（9个奖品）：500px
   const canvasWidth = "500px"
-  const canvasHeight = is6Prizes ? `${Math.round(500 * (rows / 3)) + 10}px` : "500px" // 加10为添加间距
+  const canvasHeight = is6Prizes ? `${Math.round(500 * (rows / 3)) + 4}px` : "500px" // 加10为添加间距
 
   // 渲染抽奖画布（仅在已验证或非订单抽奖时显示）
   const renderCanvas = () => {
@@ -416,10 +416,13 @@ export const NineBoxLottery = ({
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
-      gap: "20px"
+      gap: "20px",
+      background: campaignStyles.moduleBorderColor || "#1a0202"
     }}>
       {renderCanvas()}
-      {renderInput()}
+      <div style={{background: "#ffcfa7", width: "100%", padding: "20px"}}>
+        {renderInput()}
+      </div>
     </div>
   )
 }

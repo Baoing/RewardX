@@ -58,9 +58,19 @@ export const PreviewGame = observer(({ isAdmin = false }: PreviewGameProps) => {
 
   // 动态样式（通过 CSS 变量传递）
   const dynamicStyles = {
+    // 整体背景色
+    "--bg": campaignStyles.mainBackgroundColor || "#fff",
+
+    // 顶部条颜色
     "--topBar-bg": campaignStyles.topBarBackgroundColor || "#ff841f",
     "--topBar-color": campaignStyles.topBarTextColor || "#000000",
-    "--main-bg": campaignStyles.mainBackgroundColor || "#fff",
+
+    // 抽奖wrapper颜色
+    "--wrapper-bg": "#ffcfa7",
+
+    // 抽奖box颜色
+    "--main-bg": "#ff841f",
+
     "--main-color": campaignStyles.mainTextColor || "#000",
     "--button-bg": campaignStyles.moduleButtonColor || "#8B4513",
     "--footer-bg": "#8B4513",
@@ -119,6 +129,22 @@ export const PreviewGame = observer(({ isAdmin = false }: PreviewGameProps) => {
       {/* 自定义 CSS */}
       {campaignStyles.customCSS && <style>{campaignStyles.customCSS}</style>}
 
+      <div className={cn("title-module")}>
+        {/* 标题 */}
+        {content.title && (
+          <h2 className={cn("title")}>
+            {content.title}
+          </h2>
+        )}
+
+        {/* 描述 */}
+        {content.description && (
+          <p className={cn("description")}>
+            {content.description}
+          </p>
+        )}
+      </div>
+
       <div className={cn("wrapper")}>
         {/* 顶部条 - 显示中奖信息 */}
         {recentWinner && (
@@ -129,20 +155,6 @@ export const PreviewGame = observer(({ isAdmin = false }: PreviewGameProps) => {
 
         {/* 主内容区 */}
         <div className={cn("main")}>
-          {/* 标题 */}
-          {content.title && (
-            <h2 className={cn("title")}>
-              {content.title}
-            </h2>
-          )}
-
-          {/* 描述 */}
-          {content.description && (
-            <p className={cn("description")}>
-              {content.description}
-            </p>
-          )}
-
           {/* 输入框和按钮（在 lotterySection 外面，主内容区中） */}
           <NineBoxLottery
             prizes={prizes}
