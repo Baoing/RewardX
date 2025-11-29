@@ -30,10 +30,10 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
         status: "active"
       },
       include: {
-        prizes: {
+        Prize: {
           where: { isActive: true }
         }
-      }
+      } as any
     })
 
     if (!campaign) {
@@ -90,11 +90,9 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
           }
           displayFinancialStatus
           displayFulfillmentStatus
-          order
           customer {
             id
             displayName
-            order
             phone
           }
         }
@@ -115,8 +113,11 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
       })
     }
 
-    // 检查订单状态
-    if (order.displayFinancialStatus !== campaign.allowedOrderStatus) {
+    // 检查订单状态（统一转换为小写比较，避免大小写不匹配）
+    const orderStatus = order.displayFinancialStatus?.toLowerCase() || ""
+    const allowedStatus = campaign.allowedOrderStatus?.toLowerCase() || ""
+    
+    if (orderStatus !== allowedStatus) {
       return Response.json({
         success: true,
         canPlay: false,
@@ -161,7 +162,6 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
         number: order.name,
         amount: orderAmount,
         currency: order.totalPriceSet.shopMoney.currencyCode,
-        order: order.order || order.customer?.order,
         customerName: order.customer?.displayName,
         customerId: order.customer?.id,
         phone: order.customer?.phone

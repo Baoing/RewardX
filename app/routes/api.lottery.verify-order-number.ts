@@ -51,7 +51,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         Prize: {
           where: { isActive: true }
         }
-      }
+      } as any
     })
 
     if (!campaign) {
@@ -70,56 +70,154 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       }, { status: 400 })
     }
 
-    // 通过订单号查找订单（去掉 # 号）
-    const cleanOrderNumber = orderNumber.replace(/^#/, "").trim()
+    // 处理订单号：保留原始格式和清理后的格式
+    const trimmedOrderNumber = orderNumber.trim()
+    const cleanOrderNumber = trimmedOrderNumber.replace(/^#/, "")
+    
+    // 确保订单号格式正确（Shopify 订单号通常是数字）
+    if (!/^\d+$/.test(cleanOrderNumber)) {
+      return Response.json({
+        success: false,
+        error: "Invalid order number format"
+      }, { status: 400 })
+    }
+
+    console.log("🔍 查询订单号:", {
+      original: orderNumber,
+      cleaned: cleanOrderNumber
+    })
 
     // 使用 GraphQL 查询订单（通过订单号）
-    const orderResponse = await admin.graphql(
-      `#graphql
-      query getOrderByNumber($query: String!) {
-        orders(first: 1, query: $query) {
-          edges {
-            node {
-              id
-              name
-              totalPriceSet {
-                shopMoney {
-                  amount
-                  currencyCode
-                }
-              }
-              displayFinancialStatus
-              displayFulfillmentStatus
-              order
-              customer {
+    // 注意：需要 read_orders 权限（已在 shopify.app.toml 中配置）
+    // 先查询订单基本信息（不包含客户信息），避免受保护数据权限问题
+    const query = `name:"#${cleanOrderNumber}"`
+    console.log("🔍 查询订单号:", query)
+    
+    let order: any = null
+    let orderId: string | null = null
+
+    try {
+      // 先查询订单基本信息（不包含客户信息，避免受保护数据权限问题）
+      const orderResponse = await admin.graphql(
+        `#graphql
+        query getOrderByNumber($query: String!) {
+          orders(first: 1, query: $query) {
+            edges {
+              node {
                 id
-                displayName
-                order
-                phone
+                name
+                totalPriceSet {
+                  shopMoney {
+                    amount
+                    currencyCode
+                  }
+                }
+                displayFinancialStatus
+                displayFulfillmentStatus
               }
             }
           }
+        }`,
+        {
+          variables: {
+            query: query
+          }
         }
-      }`,
-      {
-        variables: {
-          query: `name:${cleanOrderNumber}`
+      )
+
+      const orderData: any = await orderResponse.json()
+
+      // 检查 GraphQL 错误
+      if (orderData.errors) {
+        console.error("❌ GraphQL 错误:", orderData.errors)
+        const errorMessage = orderData.errors[0]?.message || "Failed to query orders"
+        
+        // 检查是否是受保护数据权限错误
+        if (errorMessage.includes("not approved to access") || errorMessage.includes("protected-customer-data")) {
+          return Response.json({
+            success: false,
+            error: "This app is not approved to access the Order object. Please apply for Protected Customer Data access in the Shopify Partner Dashboard. See https://shopify.dev/docs/apps/launch/protected-customer-data for more details."
+          }, { status: 403 })
         }
+        
+        // 如果是权限错误，提供更清晰的提示
+        if (errorMessage.includes("Access denied") || errorMessage.includes("permission")) {
+          return Response.json({
+            success: false,
+            error: "Access denied. Please ensure the app has 'read_orders' permission. You may need to reinstall the app or update permissions in the Shopify Partner Dashboard."
+          }, { status: 403 })
+        }
+        
+        return Response.json({
+          success: false,
+          error: errorMessage
+        }, { status: 400 })
       }
-    )
 
-    const orderData = await orderResponse.json()
-    const orders = orderData.data?.orders?.edges || []
+      const orders = orderData.data?.orders?.edges || []
+      if (orders.length === 0) {
+        return Response.json({
+          success: false,
+          error: `Order not found: ${trimmedOrderNumber}`
+        }, { status: 404 })
+      }
 
-    if (orders.length === 0) {
+      order = orders[0].node
+      orderId = order.id
+      console.log("✅ 找到订单:", order.name)
+
+      // 尝试获取客户信息（如果应用有权限）
+      try {
+        const customerResponse = await admin.graphql(
+          `#graphql
+          query getOrderCustomer($id: ID!) {
+            order(id: $id) {
+              customer {
+                id
+                displayName
+                phone
+              }
+            }
+          }`,
+          {
+            variables: { id: orderId }
+          }
+        )
+        
+        const customerData: any = await customerResponse.json()
+        if (!customerData.errors && customerData.data?.order?.customer) {
+          order.customer = customerData.data.order.customer
+        } else {
+          order.customer = null
+        }
+      } catch (customerError) {
+        console.warn("⚠️ 无法获取客户信息（可能需要受保护数据权限）")
+        order.customer = null
+      }
+    } catch (error: any) {
+      console.error("❌ 查询失败:", error)
+      const errorMessage = error?.message || String(error)
+      
+      if (errorMessage.includes("not approved to access") || errorMessage.includes("protected-customer-data")) {
+        return Response.json({
+          success: false,
+          error: "This app is not approved to access the Order object. Please apply for Protected Customer Data access in the Shopify Partner Dashboard. See https://shopify.dev/docs/apps/launch/protected-customer-data for more details."
+        }, { status: 403 })
+      }
+      
       return Response.json({
         success: false,
-        error: "Order not found"
-      }, { status: 404 })
+        error: `Failed to query order: ${errorMessage}`
+      }, { status: 500 })
     }
 
-    const order = orders[0].node
-    const orderId = order.id
+    // 检查是否找到订单
+    if (!order || !orderId) {
+      return Response.json({
+        success: false,
+        error: `Order not found: ${trimmedOrderNumber}`
+      }, { status: 404 })
+    }
 
     // 检查订单是否已经抽过奖
     const existingEntry = await prisma.lotteryEntry.findUnique({
@@ -131,19 +229,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         success: true,
         canPlay: false,
         reason: "Order has already been used for lottery",
-        hasPlayed: true,
-        previousEntry: {
-          id: existingEntry.id,
-          isWinner: existingEntry.isWinner,
-          prizeName: existingEntry.prizeName,
-          discountCode: existingEntry.discountCode,
-          createdAt: existingEntry.createdAt
-        }
+        discountCode: existingEntry.discountCode,
+        createdAt: existingEntry.createdAt
       })
     }
 
-    // 检查订单状态
-    if (order.displayFinancialStatus !== campaign.allowedOrderStatus) {
+    // 检查订单状态（统一转换为小写比较，避免大小写不匹配）
+    const orderStatus = order.displayFinancialStatus?.toLowerCase() || ""
+    const allowedStatus = campaign.allowedOrderStatus?.toLowerCase() || ""
+    
+    if (orderStatus !== allowedStatus) {
       return Response.json({
         success: false,
         error: `Order status must be '${campaign.allowedOrderStatus}', current: '${order.displayFinancialStatus}'`
@@ -184,25 +279,19 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         id: order.id,
         number: order.name,
         amount: orderAmount,
-        currency: order.totalPriceSet.shopMoney.currencyCode,
-        order: order.order || order.customer?.order,
-        customerName: order.customer?.displayName,
-        customerId: order.customer?.id,
-        phone: order.customer?.phone
-      },
-      campaign: {
-        id: campaign.id,
-        name: campaign.name,
-        gameType: campaign.gameType
+        status: order.displayFinancialStatus,
+        customer: order.customer ? {
+          id: order.customer.id,
+          name: order.customer.displayName,
+          phone: order.customer.phone
+        } : null
       }
     })
-
   } catch (error) {
-    console.error("❌ Error verifying order number:", error)
+    console.error("❌ 验证订单失败:", error)
     return Response.json({
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error"
+      error: error instanceof Error ? error.message : "Failed to verify order"
     }, { status: 500 })
   }
 }
-

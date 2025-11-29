@@ -40,11 +40,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         userId: user.id
       },
       include: {
-        prizes: {
+        Prize: {
           where: { isActive: true },
           orderBy: { chancePercentage: "desc" }
         }
-      }
+      } as any
     })
 
     if (!campaign) {
@@ -132,7 +132,6 @@ async function handleOrderLottery(admin: any, campaign: any, data: PlayLotteryRe
     orderId: order.id,
     orderNumber: order.name,
     orderAmount,
-    order: order.order,
     customerName: order.customer?.displayName,
     customerId: order.customer?.id,
     phone: order.customer?.phone,
@@ -141,12 +140,12 @@ async function handleOrderLottery(admin: any, campaign: any, data: PlayLotteryRe
 }
 
 // 邮件表单抽奖
-async function handleorderFormLottery(campaign: any, data: PlayLotteryRequest, userId: string) {
-  const { order, name, phone } = data
+async function handleEmailFormLottery(campaign: any, data: PlayLotteryRequest, userId: string) {
+  const { email, name, phone } = data
 
   // 验证必填字段
-  if (campaign.requireOrder && !order) {
-    return Response.json({ success: false, error: "order is required" }, { status: 400 })
+  if (!email) {
+    return Response.json({ success: false, error: "Email is required" }, { status: 400 })
   }
 
   if (campaign.requireName && !name) {
@@ -157,13 +156,13 @@ async function handleorderFormLottery(campaign: any, data: PlayLotteryRequest, u
     return Response.json({ success: false, error: "Phone is required" }, { status: 400 })
   }
 
-  // 检查参与次数限制
-  if (campaign.maxPlaysPerCustomer && order) {
+  // 检查参与次数限制（通过 email 检查，存储在 order 字段中）
+  if (campaign.maxPlaysPerCustomer && email) {
     const existingPlays = await prisma.lotteryEntry.count({
       where: {
         campaignId: campaign.id,
-        order
-      }
+        order: email // 使用 order 字段存储 email
+      } as any
     })
 
     if (existingPlays >= campaign.maxPlaysPerCustomer) {
@@ -176,8 +175,8 @@ async function handleorderFormLottery(campaign: any, data: PlayLotteryRequest, u
 
   // 执行抽奖
   return await performLottery(campaign, {
-    campaignType: "order_form",
-    order,
+    campaignType: "email_subscribe",
+    order: email, // 将 email 存储到 order 字段
     customerName: name,
     phone,
     userId
@@ -187,7 +186,7 @@ async function handleorderFormLottery(campaign: any, data: PlayLotteryRequest, u
 // 执行抽奖核心逻辑
 async function performLottery(campaign: any, entryData: any) {
   // 1. 抽奖算法选择奖品
-  const selectedPrize = selectPrize(campaign.prizes)
+  const selectedPrize = selectPrize(campaign.Prize)
 
   if (!selectedPrize) {
     return Response.json({ success: false, error: "No prizes available" }, { status: 400 })
@@ -216,7 +215,7 @@ async function performLottery(campaign: any, entryData: any) {
         orderId: entryData.orderId,
         orderNumber: entryData.orderNumber,
         orderAmount: entryData.orderAmount,
-        order: entryData.order,
+        order: entryData.order || null, // 使用 order 字段存储 email 或其他数据
         customerName: entryData.customerName,
         customerId: entryData.customerId,
         phone: entryData.phone,
@@ -229,7 +228,7 @@ async function performLottery(campaign: any, entryData: any) {
         discountCode,
         discountCodeId,
         expiresAt: isWinner ? calculateExpiresAt(30) : null
-      }
+      } as any
     })
 
     // 更新活动统计
