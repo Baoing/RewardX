@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import type { LoaderFunctionArgs } from "react-router"
-import { useParams, useNavigate } from "react-router"
+import { useParams, useNavigate, useLocation, Outlet } from "react-router"
 import {
   Button,
   ButtonGroup,
@@ -31,9 +31,14 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 const CampaignDetailPage = observer(() => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const campaignStore = useCampaignStore()
   const editorStore = useCampaignEditorStore()
   const campaign = campaignStore.currentCampaign
+
+  // 判断是否是子路由（entries, analytics 等）
+  const isChildRoute = location.pathname !== `/campaigns/${id}` && 
+    (location.pathname.includes("/entries") || location.pathname.includes("/analytics"))
 
   // 标签状态 (使用索引)
   const [selectedTab, setSelectedTab] = useState(0)
@@ -166,6 +171,11 @@ const CampaignDetailPage = observer(() => {
         </div>
       </div>
     )
+  }
+
+  // 如果是子路由，直接渲染子路由内容
+  if (isChildRoute) {
+    return <Outlet />
   }
 
   if (!campaign) {

@@ -83,16 +83,21 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
         orderId: e.orderId,
         orderNumber: e.orderNumber,
         orderAmount: e.orderAmount,
-        email: e.email,
+        order: e.order, // 用于存储 email（email_subscribe 类型）
         customerName: e.customerName,
         phone: e.phone,
+        customerId: e.customerId,
         isWinner: e.isWinner,
         prizeName: e.prizeName,
         prizeType: e.prizeType,
+        prizeValue: e.prizeValue,
         discountCode: e.discountCode,
+        discountCodeId: e.discountCodeId,
         status: e.status,
         claimedAt: e.claimedAt,
-        createdAt: e.createdAt
+        expiresAt: e.expiresAt,
+        createdAt: e.createdAt,
+        updatedAt: e.updatedAt
       })),
       pagination: {
         total,

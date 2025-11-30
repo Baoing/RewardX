@@ -15,6 +15,7 @@ import { Card } from "@/components/EnhancePolaris"
 import { Switch } from "@/components/Switch"
 import type { Campaign } from "@/types/campaign"
 import styles from "./CampaignItem.module.scss"
+import {useNavigate} from "react-router";
 
 export interface CampaignItemProps {
   campaign: Campaign
@@ -237,6 +238,7 @@ interface MoreActionsProps {
 
 function MoreActions({ campaignId, campaignName, onDelete }: MoreActionsProps) {
   const [popoverActive, setPopoverActive] = useState(false)
+  const navigate = useNavigate()
 
   const togglePopoverActive = useCallback(
     () => setPopoverActive((active) => !active),
@@ -277,10 +279,10 @@ function MoreActions({ campaignId, campaignName, onDelete }: MoreActionsProps) {
           //   content: "View Analytics",
           //   onAction: () => navigate(`/campaigns/${campaignId}/analytics`)
           // },
-          // {
-          //   content: "View Entries",
-          //   onAction: () => navigate(`/campaigns/${campaignId}/entries`)
-          // },
+          {
+            content: "View Entries",
+            onAction: () => navigate(`/campaigns/${campaignId}/entries`)
+          },
           // {
           //   content: "Duplicate",
           //   onAction: () => {

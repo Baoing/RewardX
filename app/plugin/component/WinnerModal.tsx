@@ -19,6 +19,14 @@ export const WinnerModal = ({ open, onClose, prize }: WinnerModalProps) => {
 
   if (!open) return null
 
+  // 调试日志
+  console.log("🎁 WinnerModal 渲染:", {
+    open,
+    prizeName: prize?.name,
+    discountCode: prize?.discountCode,
+    hasDiscountCode: !!prize?.discountCode
+  })
+
   const handleCopyDiscountCode = async () => {
     if (!prize.discountCode) return
 
@@ -145,13 +153,16 @@ export const WinnerModal = ({ open, onClose, prize }: WinnerModalProps) => {
           <div
             style={{
               textAlign: "center",
-              marginBottom: "24px"
+              marginBottom: "24px",
+              marginLeft: "auto",
+              marginRight: "auto"
             }}
           >
             <img
               src={prize.image}
               alt={prize.name}
               style={{
+                margin: "auto",
                 maxWidth: "200px",
                 maxHeight: "200px",
                 width: "auto",
@@ -283,33 +294,6 @@ export const WinnerModal = ({ open, onClose, prize }: WinnerModalProps) => {
             Valid until: {expiresDate}
           </div>
         )}
-
-        {/* 确认按钮 */}
-        <div style={{ textAlign: "center" }}>
-          <button
-            onClick={onClose}
-            style={{
-              padding: "12px 32px",
-              backgroundColor: "#007bff",
-              color: "#ffffff",
-              border: "none",
-              borderRadius: "6px",
-              cursor: "pointer",
-              fontSize: "16px",
-              fontWeight: "500",
-              transition: "background-color 0.2s"
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "#0056b3"
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "#007bff"
-            }}
-          >
-            Got it!
-          </button>
-        </div>
-
         {/* 样式动画 */}
         <style>{`
           @keyframes fadeIn {
