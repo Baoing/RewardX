@@ -20,14 +20,6 @@ export const WinnerModal = ({ open, onClose, prize }: WinnerModalProps) => {
 
   if (!open) return null
 
-  // 调试日志
-  console.log("🎁 WinnerModal 渲染:", {
-    open,
-    prizeName: prize?.name,
-    discountCode: prize?.discountCode,
-    hasDiscountCode: !!prize?.discountCode
-  })
-
   const handleCopyDiscountCode = async () => {
     if (!prize.discountCode) return
 
@@ -36,7 +28,6 @@ export const WinnerModal = ({ open, onClose, prize }: WinnerModalProps) => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (error) {
-      console.error("❌ 复制失败:", error)
       // 降级方案：使用传统方法
       const textArea = document.createElement("textarea")
       textArea.value = prize.discountCode
