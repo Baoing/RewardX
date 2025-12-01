@@ -7,7 +7,7 @@ services:
     container_name: rewardx-postgres
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432"  # 仅本地访问，更安全
     environment:
       POSTGRES_USER: rewardx
       POSTGRES_PASSWORD: rewardx_password
