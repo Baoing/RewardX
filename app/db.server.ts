@@ -5,12 +5,25 @@ declare global {
   var prismaGlobal: PrismaClient | undefined
 }
 
-// 在开发环境中，使用全局实例避免多个 Prisma Client 实例
-// 在生产环境中，每次都创建新实例
+// 在 Serverless 环境（如 Vercel）中，每次请求都可能创建新实例
+// 使用全局变量缓存实例，避免连接池耗尽
 const prisma =
-  process.env.NODE_ENV === "production"
-    ? new PrismaClient()
-    : global.prismaGlobal ?? (global.prismaGlobal = new PrismaClient())
+  global.prismaGlobal ??
+  (global.prismaGlobal = new PrismaClient({
+    log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+    // Serverless 环境优化
+    datasources: {
+      db: {
+        url: process.env.DATABASE_URL
+      }
+    }
+  }))
+
+// 在 Serverless 环境中，确保连接在函数结束时断开
+if (process.env.VERCEL) {
+  // Vercel 环境：使用连接池，但不需要手动断开
+  // Prisma 会自动管理连接
+}
 
 export default prisma
 export { prisma }
