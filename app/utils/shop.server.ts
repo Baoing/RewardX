@@ -28,7 +28,6 @@ export async function getShopInfo(admin: any): Promise<ShopInfo | null> {
         shop {
           id
           name
-          order
           myshopifyDomain
           primaryDomain {
             url
@@ -79,7 +78,7 @@ export async function getShopInfo(admin: any): Promise<ShopInfo | null> {
       return {
         id: shop.id,
         name: shop.name,
-        order: shop.order,
+        order: "", // Shopify Shop API 不提供 order 字段，从数据库获取
         domain: shop.myshopifyDomain,
         myshopifyDomain: shop.myshopifyDomain,
         primaryDomain: shop.primaryDomain?.url || shop.myshopifyDomain,
