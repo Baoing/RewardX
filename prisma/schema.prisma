@@ -182,11 +182,13 @@ model Session {
   userId        BigInt?
   firstName     String?
   lastName      String?
+  email         String?
   order         String?
   accountOwner  Boolean   @default(false)
   locale        String?
   collaborator  Boolean?  @default(false)
   orderVerified Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
 }
 
 model SetupGuide {

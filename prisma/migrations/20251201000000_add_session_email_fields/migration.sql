@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Session" ADD COLUMN IF NOT EXISTS "email" TEXT;
+ALTER TABLE "Session" ADD COLUMN IF NOT EXISTS "emailVerified" BOOLEAN DEFAULT false;
+
