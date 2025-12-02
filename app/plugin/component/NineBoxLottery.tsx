@@ -87,6 +87,13 @@ export const NineBoxLottery = ({
   const mainBackgroundColor = campaignStyles.mainBackgroundColor || "#fff"
   const mainTextColor = campaignStyles.mainTextColor || "#000"
 
+  // CSS 变量（设置在最外层容器，供子元素继承）
+  const cssVariables = useMemo(() => ({
+    "--button-color": buttonColor,
+    "--main-bg-color": mainBackgroundColor,
+    "--main-text-color": mainTextColor
+  } as React.CSSProperties), [buttonColor, mainBackgroundColor, mainTextColor])
+
   // 转换奖品数据为 LuckyGrid 格式
   // blocks 配置：按行定义，只需要 rows 个元素（参考代码示例）
   const blocks = useMemo(() =>
@@ -452,9 +459,7 @@ export const NineBoxLottery = ({
                       onChange={(e) => onNameChange?.(e.target.value)}
                       placeholder="Enter your name (optional)"
                       disabled={inputLoading || disabled || isPlaying}
-                      style={{
-                        border: "1px solid #ddd"
-                      }}
+                      className={classNames(styles.inputBase, styles.nameInput, cn("inputBase"), cn("nameInput"))}
                     />
                   )}
                 </div>
@@ -483,10 +488,9 @@ export const NineBoxLottery = ({
   }
 
   return (
-    <div className={classNames(styles.contain, cn("contain"))}
-      style={{
-
-      }}
+    <div 
+      className={classNames(styles.contain, cn("contain"))}
+      style={cssVariables}
     >
       <div className={classNames(styles.gridWrapper, cn("gridWrapper"))}>
         <LuckyGrid
