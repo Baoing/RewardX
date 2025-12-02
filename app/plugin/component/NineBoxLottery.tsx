@@ -8,11 +8,11 @@ const cn = (name: string) => getComponentClassName("block", name)
 
 // 常量定义
 const CANVAS_WIDTH = "500px"
-const CANVAS_HEIGHT_3_ROWS = "500px"
-const MAX_PRIZES = 8
+const CANVAS_HEIGHT_1_ROW = "166px" // 1行高度
+const CANVAS_HEIGHT_2_ROWS = "334px" // 2行高度
+const CANVAS_HEIGHT_3_ROWS = "500px" // 3行高度
+const MAX_PRIZES = 9
 const GRID_COLS = 3
-const GRID_ROWS_6_PRIZES = 2
-const GRID_ROWS_9_PRIZES = 3
 const ANIMATION_MIN_TIME = 2000
 const ANIMATION_MAX_TIME = 3000
 
@@ -67,11 +67,15 @@ export const NineBoxLottery = ({
   const [showWinnerModal, setShowWinnerModal] = useState(false) // 控制中奖弹窗显示
   const [currentWonPrize, setCurrentWonPrize] = useState<(Prize & { discountCode?: string | null; expiresAt?: string | null }) | null>(null) // 当前要显示的中奖奖品
 
-  // 确定布局：6个奖品用2x3，8个奖品用3x3
+  // 确定布局：根据奖品数量动态计算行数
+  // 1-3个：1行，4-6个：2行，7-9个：3行
   const prizeCount = useMemo(() => Math.min(prizes.length, MAX_PRIZES), [prizes.length])
-  const is6Prizes = useMemo(() => prizeCount === 6, [prizeCount])
   const cols = GRID_COLS
-  const rows = useMemo(() => is6Prizes ? GRID_ROWS_6_PRIZES : GRID_ROWS_9_PRIZES, [is6Prizes])
+  const rows = useMemo(() => {
+    if (prizeCount <= 3) return 1 // 1-3个奖品：1行
+    if (prizeCount <= 6) return 2 // 4-6个奖品：2行
+    return 3 // 7-9个奖品：3行
+  }, [prizeCount])
 
   // 样式常量
   const borderColor = campaignStyles.moduleBorderColor || "#1a0202"
@@ -388,12 +392,11 @@ export const NineBoxLottery = ({
   // 计算画布尺寸
   const canvasWidth = CANVAS_WIDTH
   const canvasHeight = useMemo(() => {
-    if (is6Prizes) {
-      const baseHeight = Math.round(500 * (rows / 3))
-      return `${baseHeight + 4}px` // 添加间距
-    }
-    return CANVAS_HEIGHT_3_ROWS
-  }, [is6Prizes, rows])
+    // 根据行数返回对应高度
+    if (rows === 1) return CANVAS_HEIGHT_1_ROW
+    if (rows === 2) return CANVAS_HEIGHT_2_ROWS
+    return CANVAS_HEIGHT_3_ROWS // 3行
+  }, [rows])
 
   // 按钮文案
   const buttonText = useMemo(() => {
