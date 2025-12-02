@@ -101,7 +101,30 @@
         // 移动视图
         &.mobile {
           @apply w-full max-w-sm;
+          height: 100%;
 
+
+            background: red;
+            border-radius: 8px;
+          :global{
+            .rewardx-block__wrapper{
+              width: 100%;
+              padding: 0;
+            }
+            .rewardx-block__contain div div {
+              width: 100% !important;
+              height: auto !important;
+            }
+            canvas{
+              width: 100% !important;
+              transform: scale(1) !important;
+              height: auto !important;
+            }
+            .rewardx-block__input-wrapper{
+              margin: 0 4px 5px;
+              width: calc(100% - 10px);
+            }
+          }
         }
 
         .gameCanvas {
@@ -126,6 +149,12 @@
   padding: 16px;
   overflow-y: auto;
   background-color: var(--bg, #fff);
+}
+
+
+
+.rewardx-block__wrapper{
+  width: 100%;
 }
 
 // PreviewGame 组件样式（使用 className 工具生成的类名）
@@ -167,6 +196,14 @@
     margin: 0 auto;
     border-radius: 0 0 8px 8px;
   }
+
+
+  @media (max-width: 700px) {
+    .rewardx-block__wrapper {
+      width: 100%;
+    }
+  }
+
 
   // 顶部条
   .rewardx-block__topBar {
