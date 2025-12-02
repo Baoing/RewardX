@@ -3,6 +3,8 @@ import { LuckyGrid } from "@lucky-canvas/react"
 import type { Prize, CampaignStyles, CampaignContent } from "@plugin/main"
 import { getComponentClassName } from "@/utils/className"
 import { WinnerModal } from "./WinnerModal"
+import styles from "./NineBoxLottery.module.scss"
+import classNames from "classnames";
 
 const cn = (name: string) => getComponentClassName("block", name)
 
@@ -140,15 +142,6 @@ export const NineBoxLottery = ({
     decelerationTime: 2500
   }), [])
 
-  // 输入框基础样式
-  const inputBaseStyle = useMemo(() => ({
-    padding: "10px 12px",
-    borderRadius: "4px",
-    fontSize: "14px",
-    backgroundColor: mainBackgroundColor,
-    color: mainTextColor,
-  }), [mainBackgroundColor, mainTextColor])
-
   // 开始抽奖（包含验证、抽奖、记录等完整流程）
   const handleStart = useCallback(async () => {
     if (disabled || isPlaying || inputLoading) {
@@ -266,7 +259,7 @@ export const NineBoxLottery = ({
         // 只保存折扣码信息，不保存整个奖品对象
         const discountCode = data.entry.prize.discountCode || null
         const expiresAt = data.entry.prize.expiresAt || null
-        
+
         setPrizeDiscountInfo(prev => {
           const newMap = new Map(prev)
           newMap.set(data.entry.prize.id, {
@@ -275,7 +268,7 @@ export const NineBoxLottery = ({
           })
           return newMap
         })
-        
+
         console.log("✅ 保存折扣码信息:", {
           prizeId: data.entry.prize.id,
           discountCode, // 来自 API
@@ -348,15 +341,6 @@ export const NineBoxLottery = ({
           expiresAt: expiresAt || null
         }
 
-        console.log("✅ 显示中奖弹窗:", {
-          prizeName: wonPrizeData.name,
-          prizeId: wonPrizeData.id,
-          discountCode: wonPrizeData.discountCode, // 来自 API
-          hasDiscountCode: !!wonPrizeData.discountCode,
-          expiresAt: wonPrizeData.expiresAt,
-          source: "API response"
-        })
-
         setCurrentWonPrize(wonPrizeData)
         setShowWinnerModal(true)
       } else {
@@ -410,53 +394,10 @@ export const NineBoxLottery = ({
     [disabled, isPlaying, inputLoading, campaignType, orderNumber]
   )
 
-  // 禁用遮罩样式
-  const disabledOverlayStyle = useMemo(() => ({
-    position: "absolute" as const,
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: "rgba(0, 0, 0, 0.7)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: "8px",
-    color: "#fff",
-    fontSize: "16px",
-    textAlign: "center" as const,
-    padding: "20px"
-  }), [])
-
-  // 输入框容器样式
-  const inputContainerStyle = useMemo(() => ({
-    display: "flex",
-    flexDirection: "column" as const,
-    gap: "8px",
-    width: "100%",
-    alignItems: "center" as const
-  }), [])
-
-  // 输入框行样式
-  const inputRowStyle = useMemo(() => ({
-    display: "flex",
-    gap: "8px",
-    alignItems: "flex-start" as const,
-    width: "100%"
-  }), [])
-
-  // 错误提示样式
-  const errorTextStyle = useMemo(() => ({
-    color: "#e74c3c",
-    fontSize: "12px",
-    width: "100%",
-    textAlign: "left" as const
-  }), [])
-
   // 渲染输入框和按钮
   const renderInput = () => {
     return (
-      <div style={inputContainerStyle}>
+      <div className={classNames(styles.inputContainer, cn("inputWrapper"))}>
         {/* 输入框标题 */}
         {campaignContent.inputTitle && (
           <label className={cn("inputLabel")}>
@@ -465,7 +406,7 @@ export const NineBoxLottery = ({
         )}
 
         {/* 输入框和按钮行 */}
-        <div style={inputRowStyle}>
+        <div className={classNames(styles.inputRow, cn("inputRow"))}>
 
           {/* 输入框（订单号或邮件订阅） */}
           {campaignType === "order" || campaignType === "email_subscribe" ? (
@@ -474,6 +415,13 @@ export const NineBoxLottery = ({
               {campaignType === "order" && (
                 <input
                   type="text"
+                  className={classNames(
+                      styles.inputBase,
+                      styles.orderInput,
+                      cn("inputBase"),
+                      cn("orderInput"),
+                      ...(inputError? [styles.errorStatus, cn("errorStatus")]:[])
+                  )}
                   value={orderNumber}
                   onChange={(e) => onOrderNumberChange?.(e.target.value)}
                   placeholder={campaignContent.inputPlaceholder || "Enter your order number"}
@@ -483,29 +431,19 @@ export const NineBoxLottery = ({
                       handleStart()
                     }
                   }}
-                  style={{
-                    ...inputBaseStyle,
-                    flex: 1,
-                    border: inputError ? "1px solid #e74c3c" : "1px solid #ddd",
-                    minWidth: "200px",
-                    height: "51px"
-                  }}
                 />
               )}
 
               {/* 邮件订阅输入框 */}
               {campaignType === "email_subscribe" && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px", flex: 1 }}>
+                <div className={classNames(styles.emailFields, cn("emailFields"))}>
                   <input
                     type="email"
+                    className={classNames(styles.inputBase, cn("inputBase"), ...(inputError? [styles.errorStatus, cn("errorStatus")]:[]))}
                     value={order}
                     onChange={(e) => onOrderChange?.(e.target.value)}
                     placeholder={campaignContent.inputPlaceholder || "Enter your email"}
                     disabled={inputLoading || disabled || isPlaying}
-                    style={{
-                      ...inputBaseStyle,
-                      border: inputError ? "1px solid #e74c3c" : "1px solid #ddd"
-                    }}
                   />
                   {name !== undefined && (
                     <input
@@ -515,7 +453,6 @@ export const NineBoxLottery = ({
                       placeholder="Enter your name (optional)"
                       disabled={inputLoading || disabled || isPlaying}
                       style={{
-                        ...inputBaseStyle,
                         border: "1px solid #ddd"
                       }}
                     />
@@ -529,19 +466,7 @@ export const NineBoxLottery = ({
           <button
             onClick={handleStart}
             disabled={isButtonDisabled}
-            style={{
-              backgroundColor: buttonColor,
-              color: "#fff",
-              border: "none",
-              padding: "12px 48px",
-              borderRadius: "4px",
-              fontSize: "18px",
-              fontWeight: 500,
-              cursor: isButtonDisabled ? "not-allowed" : "pointer",
-              opacity: isButtonDisabled ? 0.6 : 1,
-              transition: "opacity 0.2s",
-              whiteSpace: "nowrap"
-            }}
+            className={classNames(styles.button, cn("button"))}
           >
             {buttonText}
           </button>
@@ -549,7 +474,7 @@ export const NineBoxLottery = ({
 
         {/* 错误提示 */}
         {inputError && (
-          <div style={errorTextStyle}>
+          <div className={classNames(styles.errorText, cn("errorText"))}>
             {inputError}
           </div>
         )}
@@ -558,8 +483,12 @@ export const NineBoxLottery = ({
   }
 
   return (
-    <div className={cn("contain")}>
-      <div style={{ position: "relative", display: "inline-block" }}>
+    <div className={classNames(styles.contain, cn("contain"))}
+      style={{
+
+      }}
+    >
+      <div className={classNames(styles.gridWrapper, cn("gridWrapper"))}>
         <LuckyGrid
           ref={luckyGridRef}
           width={canvasWidth}
@@ -578,7 +507,7 @@ export const NineBoxLottery = ({
         />
 
         {disabled && (
-          <div style={disabledOverlayStyle}>
+          <div className={classNames(styles.disabledOverlay, cn("disabledOverlay"))}>
             <p>The lucky draw event has not yet started or has ended.</p>
           </div>
         )}

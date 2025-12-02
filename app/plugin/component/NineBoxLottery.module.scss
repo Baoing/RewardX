@@ -1,0 +1,136 @@
+.contain {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.gridWrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.inputWrapper {
+  margin-top: 16px;
+  width: 100%;
+}
+
+.inputContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.inputLabel {
+  display: block;
+  width: 100%;
+  margin-bottom: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.inputRow {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.inputBase {
+  padding: 10px 12px;
+  border-radius: 4px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  background-color: var(--main-bg-color, #ffffff);
+  color: var(--main-text-color, #000000);
+  transition: border-color 0.2s ease;
+}
+
+.inputBase.errorStatus{
+  border-color: #e74c3c;
+}
+
+.inputBase:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.inputBase:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.orderInput {
+  height: 51px;
+  flex: 1;
+}
+
+.emailInput {
+  width: 100%;
+}
+
+.emailInput.error {
+  border-color: #e74c3c;
+}
+
+.nameInput {
+  width: 100%;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 12px 48px;
+  font-size: 18px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  background-color: var(--button-color, #8b4513);
+}
+
+.button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.errorText {
+  width: 100%;
+  text-align: left;
+  font-size: 12px;
+  color: #e74c3c;
+}
+
+.disabledOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #ffffff;
+  font-size: 16px;
+  text-align: center;
+  padding: 20px;
+}
+
+.emailFields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
