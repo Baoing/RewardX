@@ -84,12 +84,6 @@ export const NineBoxLottery = ({
   const textColor = campaignStyles.mainTextColor || "#000"
   const buttonColor = campaignStyles?.moduleButtonColor
 
-  // CSS 变量（设置在最外层容器，供子元素继承）
-  const cssVariables ={
-    "--button-color": buttonColor,
-    "--main-bg-color": campaignStyles?.moduleMainBackgroundColor,
-  }
-
   // 转换奖品数据为 LuckyGrid 格式
   // blocks 配置：按行定义，只需要 rows 个元素（参考代码示例）
   const blocks = useMemo(() =>
@@ -486,7 +480,10 @@ export const NineBoxLottery = ({
   return (
     <div
       className={classNames(styles.contain, cn("contain"))}
-      style={cssVariables}
+      style={{
+        "--button-color": buttonColor,
+        "--main-bg-color": campaignStyles?.moduleMainBackgroundColor,
+      }}
     >
       <div className={classNames(styles.gridWrapper, cn("gridWrapper"))}>
         <LuckyGrid
