@@ -163,13 +163,13 @@ export const ColorPicker = ({
       } else {
         // 即使解析失败，如果输入不为空，也传递带#的值（用于输入过程中的中间状态）
         if (prefValue.length > 0) {
-          onChange(`#${prefValue}`, id)
+          onChange(`#${prefValue.toUpperCase()}`, id)
         }
       }
     } catch (error) {
       // 解析失败时，如果输入不为空，也传递带#的值
       if (prefValue.length > 0) {
-        onChange(`#${prefValue}`, id)
+        onChange(`#${prefValue.toUpperCase()}`, id)
       }
     }
   }
@@ -202,7 +202,7 @@ export const ColorPicker = ({
       style={
         !isReallyEmpty && displayColor
           ? {
-              backgroundColor: displayColor
+              backgroundColor: "#" + displayColor
             }
           : undefined
       }
@@ -251,7 +251,7 @@ export const ColorPicker = ({
                 style={
                   !isReallyEmpty && displayColor
                     ? {
-                        backgroundColor: displayColor
+                        backgroundColor:  "#" + displayColor
                       }
                     : undefined
                 }

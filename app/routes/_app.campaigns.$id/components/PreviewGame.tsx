@@ -59,24 +59,21 @@ export const PreviewGame = observer(({ isAdmin = false }: PreviewGameProps) => {
   // 动态样式（通过 CSS 变量传递）
   const dynamicStyles = {
     // 整体背景色
-    "--bg": campaignStyles.mainBackgroundColor || "#fff",
-
-    // 顶部条颜色
-    "--topBar-bg": campaignStyles.topBarBackgroundColor || "#ff841f",
-    "--topBar-color": campaignStyles.topBarTextColor || "#000000",
+    "--bg": campaignStyles.mainBackgroundColor,
 
     // 抽奖wrapper颜色
-    "--wrapper-bg": "#ffcfa7",
+    "--wrapper-bg": campaignStyles.moduleContainerBackgroundColor,
 
     // 抽奖box颜色
-    "--main-bg": "#ff841f",
+    "--main-bg": campaignStyles.moduleMainBackgroundColor,
 
-    "--main-color": campaignStyles.mainTextColor || "#000",
-    "--button-bg": campaignStyles.moduleButtonColor || "#8B4513",
+    "--main-color": campaignStyles.mainTextColor,
+    "--title-color": campaignStyles.titleColor,
+    "--button-bg": campaignStyles.moduleButtonColor,
     "--footer-bg": "#8B4513",
-    "--footer-color": campaignStyles.footerTextColor || "#fff",
-    "--lottery-bg": campaignStyles.moduleDrawBackgroundColor || "#1a0202",
-    "--description-color": campaignStyles.mainTextColor || "#666"
+    "--footer-color": campaignStyles.footerTextColor,
+    "--lottery-bg": campaignStyles.moduleMainBackgroundColor,
+    "--description-color": campaignStyles.mainTextColor
   } as React.CSSProperties
 
   // 验证状态变化回调

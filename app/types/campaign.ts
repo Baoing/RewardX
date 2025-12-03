@@ -37,18 +37,16 @@ export interface CampaignContent {
 
 export interface CampaignStyles {
   // Main组
+  titleColor?: string // 标题颜色
   mainTextColor?: string // 主文本颜色
   mainBackgroundColor?: string // 主背景颜色
 
-  // TopBar组
-  topBarTextColor?: string // 顶部栏文本颜色（默认#000000）
-  topBarBackgroundColor?: string // 顶部栏背景颜色（默认#ff841f）
-
   // Module组
-  moduleTextColor?: string // 模块文本颜色
-  moduleBackgroundColor?: string // 模块背景颜色（默认#ffcfa7）
-  moduleBorderColor?: string // 模块边框颜色（默认#ff841f）
-  moduleDrawBackgroundColor?: string // 抽奖背景颜色（默认#1a0202）
+  moduleContainerBackgroundColor?: string // 容器背景颜色（默认#FFCFA7）
+  moduleBorderColor?: string // 边框颜色（默认#FF841F）
+  moduleDotsColor?: string // 点颜色（默认#FFCFA7）
+  moduleMainBackgroundColor?: string // 主背景颜色（默认#1A0202）
+  moduleCardBackgroundColor?: string // 卡片背景颜色
   moduleButtonColor?: string // 按钮颜色
 
   // Footer

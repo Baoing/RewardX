@@ -20,6 +20,7 @@ const StylesTab = observer(() => {
 
   if (!campaign) return null
 
+  console.log(campaign)
   // 确保 styles 对象存在
   const campaignStyles: CampaignStyles = campaign.styles || {}
 
@@ -54,6 +55,16 @@ const StylesTab = observer(() => {
           </Text>
           <div className={styles.colorGroup}>
             <ColorPicker
+              id="titleColor"
+              label="Title Color"
+              color={campaignStyles.titleColor}
+              onChange={(value) => updateStyle("titleColor", value)}
+              placeholder="Inherit from theme"
+              allowEmpty={true}
+              active={activeColorPickerId === "titleColor"}
+              onActiveChange={handleColorPickerActiveChange}
+            />
+            <ColorPicker
               id="mainTextColor"
               label="Text Color"
               color={campaignStyles.mainTextColor}
@@ -78,37 +89,6 @@ const StylesTab = observer(() => {
 
         <Divider />
 
-        {/* TopBar Colors */}
-        <div className={styles.section}>
-          <Text as="h3" variant="headingSm">
-            TopBar Colors
-          </Text>
-          <div className={styles.colorGroup}>
-            <ColorPicker
-              id="topBarTextColor"
-              label="Text Color"
-              color={campaignStyles.topBarTextColor}
-              onChange={(value) => updateStyle("topBarTextColor", value)}
-              placeholder="#000000"
-              allowEmpty={true}
-              active={activeColorPickerId === "topBarTextColor"}
-              onActiveChange={handleColorPickerActiveChange}
-            />
-            <ColorPicker
-              id="topBarBackgroundColor"
-              label="Background Color"
-              color={campaignStyles.topBarBackgroundColor}
-              onChange={(value) => updateStyle("topBarBackgroundColor", value)}
-              placeholder="#ff841f"
-              allowEmpty={true}
-              active={activeColorPickerId === "topBarBackgroundColor"}
-              onActiveChange={handleColorPickerActiveChange}
-            />
-          </div>
-        </div>
-
-        <Divider />
-
         {/* Module Colors */}
         <div className={styles.section}>
           <Text as="h3" variant="headingSm">
@@ -116,23 +96,13 @@ const StylesTab = observer(() => {
           </Text>
           <div className={styles.colorGroup}>
             <ColorPicker
-              id="moduleTextColor"
-              label="Text Color"
-              color={campaignStyles.moduleTextColor}
-              onChange={(value) => updateStyle("moduleTextColor", value)}
-              placeholder="#000000"
+              id="moduleContainerBackgroundColor"
+              label="Container Background"
+              color={campaignStyles.moduleContainerBackgroundColor}
+              onChange={(value) => updateStyle("moduleContainerBackgroundColor", value)}
+              placeholder="#FFCFA7"
               allowEmpty={true}
-              active={activeColorPickerId === "moduleTextColor"}
-              onActiveChange={handleColorPickerActiveChange}
-            />
-            <ColorPicker
-              id="moduleBackgroundColor"
-              label="Background Color"
-              color={campaignStyles.moduleBackgroundColor}
-              onChange={(value) => updateStyle("moduleBackgroundColor", value)}
-              placeholder="#ffcfa7"
-              allowEmpty={true}
-              active={activeColorPickerId === "moduleBackgroundColor"}
+              active={activeColorPickerId === "moduleContainerBackgroundColor"}
               onActiveChange={handleColorPickerActiveChange}
             />
             <ColorPicker
@@ -140,19 +110,39 @@ const StylesTab = observer(() => {
               label="Border Color"
               color={campaignStyles.moduleBorderColor}
               onChange={(value) => updateStyle("moduleBorderColor", value)}
-              placeholder="#ff841f"
+              placeholder="#FF841F"
               allowEmpty={true}
               active={activeColorPickerId === "moduleBorderColor"}
               onActiveChange={handleColorPickerActiveChange}
             />
             <ColorPicker
-              id="moduleDrawBackgroundColor"
-              label="Draw Background Color"
-              color={campaignStyles.moduleDrawBackgroundColor}
-              onChange={(value) => updateStyle("moduleDrawBackgroundColor", value)}
-              placeholder="#1a0202"
+              id="moduleDotsColor"
+              label="Dots Color"
+              color={campaignStyles.moduleDotsColor}
+              onChange={(value) => updateStyle("moduleDotsColor", value)}
+              placeholder="#FFCFA7"
               allowEmpty={true}
-              active={activeColorPickerId === "moduleDrawBackgroundColor"}
+              active={activeColorPickerId === "moduleDotsColor"}
+              onActiveChange={handleColorPickerActiveChange}
+            />
+            <ColorPicker
+              id="moduleMainBackgroundColor"
+              label="Main Background"
+              color={campaignStyles.moduleMainBackgroundColor}
+              onChange={(value) => updateStyle("moduleMainBackgroundColor", value)}
+              placeholder="#1A0202"
+              allowEmpty={true}
+              active={activeColorPickerId === "moduleMainBackgroundColor"}
+              onActiveChange={handleColorPickerActiveChange}
+            />
+            <ColorPicker
+              id="moduleCardBackgroundColor"
+              label="Card Background"
+              color={campaignStyles.moduleCardBackgroundColor}
+              onChange={(value) => updateStyle("moduleCardBackgroundColor", value)}
+              placeholder="Inherit from theme"
+              allowEmpty={true}
+              active={activeColorPickerId === "moduleCardBackgroundColor"}
               onActiveChange={handleColorPickerActiveChange}
             />
             <ColorPicker
@@ -160,7 +150,7 @@ const StylesTab = observer(() => {
               label="Button Color"
               color={campaignStyles.moduleButtonColor}
               onChange={(value) => updateStyle("moduleButtonColor", value)}
-              placeholder="#ff841f"
+              placeholder="Inherit from theme"
               allowEmpty={true}
               active={activeColorPickerId === "moduleButtonColor"}
               onActiveChange={handleColorPickerActiveChange}

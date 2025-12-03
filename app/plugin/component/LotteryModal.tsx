@@ -35,10 +35,10 @@ export const LotteryModal = ({
     return null
   }
 
-  // 应用样式
+  // 应用样式（TopBar 已移除，使用默认样式）
   const topBarStyle: React.CSSProperties = {
-    backgroundColor: styles.topBarBackgroundColor || "#ff841f",
-    color: styles.topBarTextColor || "#000000",
+    backgroundColor: "#FF841F",
+    color: "#000000",
     padding: "12px 20px",
     fontSize: "14px",
     textAlign: "center",
@@ -195,7 +195,7 @@ export const LotteryModal = ({
               alignItems: "center",
               margin: "24px 0",
               padding: "20px",
-              background: styles.moduleDrawBackgroundColor || styles.drawBackgroundColor || "#1a0202",
+              background: styles.moduleMainBackgroundColor || "#1A0202",
               borderRadius: "8px"
             }}
           >

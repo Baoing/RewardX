@@ -80,9 +80,9 @@ export const NineBoxLottery = ({
   }, [prizeCount])
 
   // 样式常量
-  const borderColor = campaignStyles.moduleBorderColor || "#1a0202"
-  const backgroundColor = campaignStyles.moduleBackgroundColor || "#ffcfa7"
-  const textColor = campaignStyles.moduleTextColor || "#000"
+  const borderColor = campaignStyles.moduleBorderColor || "#FF841F"
+  const backgroundColor = campaignStyles.moduleContainerBackgroundColor || "#FFCFA7"
+  const textColor = campaignStyles.mainTextColor || "#000"
   const buttonColor = campaignStyles.moduleButtonColor || campaignStyles.buttonColor || "#8B4513"
   const mainBackgroundColor = campaignStyles.mainBackgroundColor || "#fff"
   const mainTextColor = campaignStyles.mainTextColor || "#000"

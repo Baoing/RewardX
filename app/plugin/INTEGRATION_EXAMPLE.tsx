@@ -295,14 +295,15 @@ export interface Prize {
 }
 
 export interface CampaignStyles {
+  titleColor?: string
   mainTextColor?: string
   mainBackgroundColor?: string
-  topBarTextColor?: string
-  topBarBackgroundColor?: string
-  moduleTextColor?: string
-  moduleBackgroundColor?: string
+  moduleContainerBackgroundColor?: string
   moduleBorderColor?: string
-  drawBackgroundColor?: string
+  moduleDotsColor?: string
+  moduleMainBackgroundColor?: string
+  moduleCardBackgroundColor?: string
+  moduleButtonColor?: string
   buttonColor?: string
   footerTextColor?: string
   customCSS?: string

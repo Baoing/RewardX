@@ -159,17 +159,17 @@ interface Prize {
 
 ```typescript
 interface CampaignStyles {
-  mainTextColor?: string           // 主文字颜色
-  mainBackgroundColor?: string     // 主背景颜色
-  topBarTextColor?: string         // 顶栏文字颜色
-  topBarBackgroundColor?: string   // 顶栏背景颜色
-  moduleTextColor?: string         // 模块文字颜色
-  moduleBackgroundColor?: string   // 模块背景颜色
-  moduleBorderColor?: string       // 模块边框颜色
-  drawBackgroundColor?: string     // 抽奖区背景颜色
-  buttonColor?: string             // 按钮颜色
-  footerTextColor?: string         // 底部文字颜色
-  customCSS?: string               // 自定义 CSS
+  titleColor?: string                      // 标题颜色
+  mainTextColor?: string                   // 主文字颜色
+  mainBackgroundColor?: string             // 主背景颜色
+  moduleContainerBackgroundColor?: string  // 容器背景颜色（默认#FFCFA7）
+  moduleBorderColor?: string               // 边框颜色（默认#FF841F）
+  moduleDotsColor?: string                // 点颜色（默认#FFCFA7）
+  moduleMainBackgroundColor?: string       // 主背景颜色（默认#1A0202）
+  moduleCardBackgroundColor?: string       // 卡片背景颜色
+  moduleButtonColor?: string               // 按钮颜色
+  footerTextColor?: string                 // 底部文字颜色
+  customCSS?: string                       // 自定义 CSS
 }
 ```
 
