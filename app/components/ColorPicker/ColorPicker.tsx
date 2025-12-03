@@ -202,7 +202,7 @@ export const ColorPicker = ({
       style={
         !isReallyEmpty && displayColor
           ? {
-              backgroundColor: `#${displayColor}`
+              backgroundColor: displayColor
             }
           : undefined
       }
@@ -251,7 +251,7 @@ export const ColorPicker = ({
                 style={
                   !isReallyEmpty && displayColor
                     ? {
-                        backgroundColor: `#${displayColor}`
+                        backgroundColor: displayColor
                       }
                     : undefined
                 }
