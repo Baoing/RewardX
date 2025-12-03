@@ -25,9 +25,9 @@ const getDefaultStyles = () => ({
   moduleBorderColor: "#FF841F",
   moduleDotsColor: "#FFCFA7",
   moduleMainBackgroundColor: "#1A0202",
-  moduleCardBackgroundColor: undefined,
-  moduleButtonColor: undefined,
-  buttonColor: undefined, // 兼容字段
+  moduleCardBackgroundColor: "#FFCFA7",
+  moduleButtonColor: "#8B4513",
+  buttonColor: "#8B4513", // 兼容字段
 
   // Footer
   footerTextColor: "#666666",

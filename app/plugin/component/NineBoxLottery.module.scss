@@ -41,13 +41,17 @@
 .inputBase {
   padding: 10px 12px;
   border-radius: 4px;
-  border: 1px solid #d1d5db;
-  font-size: 14px;
-  background-color: var(--main-bg-color, #ffffff);
-  color: var(--main-text-color, #000000);
+  border: 1px solid var(--main-bg, #000000);
+  font-size: 16px;
+  color: var(--main-bg, #000000);
+  background-color: var(--wrapper-bg);
   transition: border-color 0.2s ease;
 }
 
+.inputBase::placeholder {
+  color: var(--main-bg, #000000);
+  opacity: 0.8;
+}
 .inputBase.errorStatus{
   border-color: #e74c3c;
 }
@@ -59,7 +63,7 @@
 
 .inputBase:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--main-bg, #000000);
 }
 
 .orderInput {

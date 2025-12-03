@@ -190,7 +190,7 @@
     max-width: 628px;
     overflow: hidden;
     background: var(--wrapper-bg);
-
+    color: var(--main-color);
     width: calc(100% - 84px);
     padding: 20px 35px;
     margin: 0 auto;
@@ -204,30 +204,17 @@
     }
   }
 
-
-  // 顶部条
-  .rewardx-block__topBar {
-    padding: 12px 20px;
-    font-size: 14px;
-    text-align: center;
-    font-weight: 500;
-    border-radius: 8px 8px 0 0;
-    background-color: var(--topBar-bg, #ff841f);
-    color: var(--topBar-color, #000000);
-  }
-
   // 主内容区
   .rewardx-block__main {
     position: relative;
     padding: 24px;
     flex: 1;
-    background-color: var(--main-bg);
-    color: var(--main-color);
+    background-color: var(--border-bg);
     border-radius: 10px;
   }
 
   .rewardx-block__main:before {
-    border: 14px dotted #ffcfa7;
+    border: 14px dotted var(--dotted-bg);
     content: '';
     position: absolute;
     width: calc(100% - 12px);
@@ -262,12 +249,12 @@
     flex-direction: column;
     align-items: center;
     gap: 4px;
-    background: #1a0202;
+    background: var(--main-bg);
     border-radius: 8px;
   }
 
   .rewardx-block__input-wrapper{
-    background: #ffcfa7;
+    background: var(--wrapper-bg);
     padding: 12px 12px 12px;
     margin: 0 12px 12px;
     width: calc(100% - 24px);
@@ -365,8 +352,6 @@
     padding: 20px 24px;
     font-size: 13px;
     line-height: 1.6;
-    background-color: var(--footer-bg, #8B4513);
-    color: var(--footer-color, #fff);
     border-radius: 0 0 8px 8px;
   }
 

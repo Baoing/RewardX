@@ -58,7 +58,6 @@ export const NineBoxLottery = ({
   onOrderNumberChange,
   onOrderChange,
   onNameChange,
-  onPhoneChange,
   onVerified,
 }: NineBoxLotteryProps) => {
   const luckyGridRef = useRef<any>(null)
@@ -81,25 +80,24 @@ export const NineBoxLottery = ({
 
   // 样式常量
   const borderColor = campaignStyles.moduleBorderColor || "#FF841F"
-  const backgroundColor = campaignStyles.moduleContainerBackgroundColor || "#FFCFA7"
+  const backgroundColor = campaignStyles?.moduleCardBackgroundColor || "#FFCFA7"
   const textColor = campaignStyles.mainTextColor || "#000"
-  const buttonColor = campaignStyles.moduleButtonColor || campaignStyles.buttonColor || "#8B4513"
+  const buttonColor = campaignStyles?.moduleButtonColor
   const mainBackgroundColor = campaignStyles.mainBackgroundColor || "#fff"
   const mainTextColor = campaignStyles.mainTextColor || "#000"
 
   // CSS 变量（设置在最外层容器，供子元素继承）
-  const cssVariables = useMemo(() => ({
+  const cssVariables ={
     "--button-color": buttonColor,
-    "--main-bg-color": mainBackgroundColor,
-    "--main-text-color": mainTextColor
-  } as React.CSSProperties), [buttonColor, mainBackgroundColor, mainTextColor])
+    "--main-bg-color": campaignStyles?.moduleMainBackgroundColor,
+  }
 
   // 转换奖品数据为 LuckyGrid 格式
   // blocks 配置：按行定义，只需要 rows 个元素（参考代码示例）
   const blocks = useMemo(() =>
     Array.from({ length: rows }, () => ({
       padding: "4px",
-      background: borderColor
+      // background: borderColor
     })),
     [rows, borderColor]
   )
@@ -488,7 +486,7 @@ export const NineBoxLottery = ({
   }
 
   return (
-    <div 
+    <div
       className={classNames(styles.contain, cn("contain"))}
       style={cssVariables}
     >
@@ -504,7 +502,7 @@ export const NineBoxLottery = ({
           buttons={[]}
           activeStyle={{
             fontColor: '#ffffff',
-            background: '#ff841f'
+            background: campaignStyles?.mainBackgroundColor
           }}
           defaultStyle={defaultStyle}
           defaultConfig={defaultConfig}

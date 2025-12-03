@@ -58,19 +58,24 @@ export const PreviewGame = observer(({ isAdmin = false }: PreviewGameProps) => {
 
   // 动态样式（通过 CSS 变量传递）
   const dynamicStyles = {
+    "--title-color": campaignStyles.titleColor,
+    "--main-color": campaignStyles.mainTextColor,
+
     // 整体背景色
     "--bg": campaignStyles.mainBackgroundColor,
 
     // 抽奖wrapper颜色
     "--wrapper-bg": campaignStyles.moduleContainerBackgroundColor,
+    "--border-bg": campaignStyles.moduleBorderColor,
+    "--dotted-bg": campaignStyles.moduleDotsColor,
 
     // 抽奖box颜色
     "--main-bg": campaignStyles.moduleMainBackgroundColor,
 
-    "--main-color": campaignStyles.mainTextColor,
-    "--title-color": campaignStyles.titleColor,
+
+
     "--button-bg": campaignStyles.moduleButtonColor,
-    "--footer-bg": "#8B4513",
+
     "--footer-color": campaignStyles.footerTextColor,
     "--lottery-bg": campaignStyles.moduleMainBackgroundColor,
     "--description-color": campaignStyles.mainTextColor
@@ -143,11 +148,6 @@ export const PreviewGame = observer(({ isAdmin = false }: PreviewGameProps) => {
       </div>
 
       <div className={cn("wrapper")}>
-        {/* 顶部条 - 显示中奖信息 */}
-        {/*<div className={cn("topBar")}>*/}
-        {/*  {recentWinner} 赢得了"{recentWinner}"奖。*/}
-        {/*</div>*/}
-
         {/* 主内容区 */}
         <div className={cn("main")}>
           {/* 输入框和按钮（在 lotterySection 外面，主内容区中） */}
