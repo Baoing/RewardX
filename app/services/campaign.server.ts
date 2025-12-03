@@ -150,10 +150,27 @@ export const getCampaignById = async (
     return null
   }
 
+  // 解析 gameConfig JSON 字段，提取 content 和 styles
+  let content: any = undefined
+  let styles: any = undefined
+  
+  try {
+    const gameConfig = campaign.gameConfig ? JSON.parse(campaign.gameConfig) : {}
+    content = gameConfig.content
+    styles = gameConfig.styles
+  } catch (error) {
+    console.error("❌ Failed to parse gameConfig:", error)
+    // 如果解析失败，使用空对象
+    content = undefined
+    styles = undefined
+  }
+
   // 转换字段名以保持前端代码一致性
   return {
     ...campaign,
     prizes: campaign.Prize || [],
+    content,
+    styles,
     _count: campaign._count ? {
       prizes: campaign._count.Prize || 0,
       lotteryEntries: campaign._count.LotteryEntry || 0
@@ -279,6 +296,33 @@ export const updateCampaign = async (
     // 构建更新数据，过滤掉 undefined 字段
     const updateData: any = {}
 
+    // 获取当前活动的 gameConfig（用于合并 content 和 styles）
+    const currentCampaign = await tx.campaign.findUnique({
+      where: { id: campaignId },
+      select: { gameConfig: true }
+    })
+
+    // 解析现有的 gameConfig
+    let gameConfig: any = {}
+    try {
+      gameConfig = currentCampaign?.gameConfig ? JSON.parse(currentCampaign.gameConfig) : {}
+    } catch (error) {
+      console.error("❌ Failed to parse existing gameConfig:", error)
+      gameConfig = {}
+    }
+
+    // 如果提供了 content 或 styles，合并到 gameConfig 中
+    if (data.content !== undefined || data.styles !== undefined) {
+      if (data.content !== undefined) {
+        gameConfig.content = data.content
+      }
+      if (data.styles !== undefined) {
+        gameConfig.styles = data.styles
+      }
+      // 将合并后的 gameConfig 序列化回 JSON 字符串
+      updateData.gameConfig = JSON.stringify(gameConfig)
+    }
+
     if (data.name !== undefined) updateData.name = data.name
     if (data.description !== undefined) updateData.description = data.description
     if (data.type !== undefined) updateData.type = data.type
@@ -328,10 +372,24 @@ export const updateCampaign = async (
       } as any
     }) as any
 
+    // 解析 gameConfig，提取 content 和 styles
+    let content: any = undefined
+    let styles: any = undefined
+    
+    try {
+      const parsedGameConfig = updated.gameConfig ? JSON.parse(updated.gameConfig) : {}
+      content = parsedGameConfig.content
+      styles = parsedGameConfig.styles
+    } catch (error) {
+      console.error("❌ Failed to parse gameConfig after update:", error)
+    }
+
     // 转换字段名以保持前端代码一致性
     return {
       ...updated,
       prizes: updated.Prize || [],
+      content,
+      styles,
       _count: updated._count ? {
         prizes: updated._count.Prize || 0,
         lotteryEntries: updated._count.LotteryEntry || 0

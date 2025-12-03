@@ -148,16 +148,30 @@ export const ColorPicker = ({
       return
     }
 
-    const { red, green, blue } = hexToRgb(`#${prefValue}`)
-
+    // 更新输入框显示的值（不带#）
     setHexColor(prefValue)
 
-    if (isNaN(red) || isNaN(green) || isNaN(blue)) {
-      return
-    }
+    // 尝试解析颜色值
+    try {
+      const { red, green, blue } = hexToRgb(`#${prefValue}`)
 
-    setPickerColor({ ...rgbToHsb({ blue, green, red }), alpha: 1 })
-    onChange(prefValue, id)
+      // 如果解析成功，更新颜色选择器并传递带#的值
+      if (!isNaN(red) && !isNaN(green) && !isNaN(blue)) {
+        setPickerColor({ ...rgbToHsb({ blue, green, red }), alpha: 1 })
+        // 确保传递带#的值
+        onChange(`#${prefValue}`, id)
+      } else {
+        // 即使解析失败，如果输入不为空，也传递带#的值（用于输入过程中的中间状态）
+        if (prefValue.length > 0) {
+          onChange(`#${prefValue}`, id)
+        }
+      }
+    } catch (error) {
+      // 解析失败时，如果输入不为空，也传递带#的值
+      if (prefValue.length > 0) {
+        onChange(`#${prefValue}`, id)
+      }
+    }
   }
 
   // 清空颜色

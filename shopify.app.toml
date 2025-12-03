@@ -2,7 +2,7 @@
 
 client_id = "d5f18f7769e1b15b9537ff44e1e911d2"
 name = "RewardX – Spin, Win & Repeat"
-application_url = "https://example.com"
+application_url = "https://intersection-storage-birth-segments.trycloudflare.com"
 embedded = true
 
 [build]
