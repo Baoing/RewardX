@@ -37,6 +37,95 @@ const getDefaultStyles = () => ({
 })
 
 /**
+ * 默认奖品配置（6个奖品）
+ */
+const getDefaultPrizes = (): Array<{
+  name: string
+  type: string
+  discountValue?: number | null
+  discountCode?: string | null
+  giftProductId?: string | null
+  giftVariantId?: string | null
+  chancePercentage: number
+  totalStock?: number | null
+  displayOrder: number
+  image?: string | null
+}> => [
+  {
+    name: "10% OFF",
+    type: "discount_percentage",
+    discountValue: 10,
+    discountCode: null,
+    giftProductId: null,
+    giftVariantId: null,
+    chancePercentage: 15,
+    totalStock: null,
+    displayOrder: 0,
+    image: null
+  },
+  {
+    name: "20% OFF",
+    type: "discount_percentage",
+    discountValue: 20,
+    discountCode: null,
+    giftProductId: null,
+    giftVariantId: null,
+    chancePercentage: 10,
+    totalStock: null,
+    displayOrder: 1,
+    image: null
+  },
+  {
+    name: "5% OFF",
+    type: "discount_percentage",
+    discountValue: 5,
+    discountCode: null,
+    giftProductId: null,
+    giftVariantId: null,
+    chancePercentage: 25,
+    totalStock: null,
+    displayOrder: 2,
+    image: null
+  },
+  {
+    name: "Free Shipping",
+    type: "free_shipping",
+    discountValue: null,
+    discountCode: null,
+    giftProductId: null,
+    giftVariantId: null,
+    chancePercentage: 10,
+    totalStock: null,
+    displayOrder: 3,
+    image: null
+  },
+  {
+    name: "Free Gift",
+    type: "free_gift",
+    discountValue: null,
+    discountCode: null,
+    giftProductId: null,
+    giftVariantId: null,
+    chancePercentage: 5,
+    totalStock: null,
+    displayOrder: 4,
+    image: null
+  },
+  {
+    name: "No Luck",
+    type: "no_prize",
+    discountValue: null,
+    discountCode: null,
+    giftProductId: null,
+    giftVariantId: null,
+    chancePercentage: 35,
+    totalStock: null,
+    displayOrder: 5,
+    image: null
+  }
+]
+
+/**
  * 规范化颜色值（确保是大写格式）
  */
 const normalizeColorValue = (value: string | undefined): string | undefined => {
@@ -110,8 +199,6 @@ interface CreateCampaignData {
     chancePercentage: number
     totalStock?: number
     displayOrder: number
-    color?: string
-    icon?: string
     image?: string
   }>
   [key: string]: unknown
@@ -137,8 +224,6 @@ interface UpdateCampaignData {
     chancePercentage: number
     totalStock?: number
     displayOrder: number
-    color?: string
-    icon?: string
     image?: string
   }>
   [key: string]: unknown
@@ -193,7 +278,7 @@ export const getCampaignsByUserId = async (
     // 解析 gameConfig，提取 content 和 styles
     let content: any = {}
     let styles: any = defaultStylesForList
-    
+
     try {
       const gameConfig = c.gameConfig ? JSON.parse(c.gameConfig) : {}
       content = gameConfig.content || {}
@@ -207,7 +292,7 @@ export const getCampaignsByUserId = async (
 
     // 移除 gameConfig 和 Prize 字段，因为前端只需要解析后的 content 和 styles
     const { gameConfig: _, Prize, ...campaignWithoutGameConfig } = c as any
-    
+
     return {
       ...campaignWithoutGameConfig,
       prizes: c.Prize || [],
@@ -255,7 +340,7 @@ export const getCampaignById = async (
   const defaultStylesForGet = getDefaultStyles()
   let content: any = {}
   let styles: any = defaultStylesForGet
-  
+
   try {
     const gameConfig = campaign.gameConfig ? JSON.parse(campaign.gameConfig) : {}
     content = gameConfig.content || {}
@@ -271,7 +356,7 @@ export const getCampaignById = async (
   // 转换字段名以保持前端代码一致性
   // 移除 gameConfig 字段，因为前端只需要解析后的 content 和 styles
   const { gameConfig: _, Prize, ...campaignWithoutGameConfig } = campaign as any
-  
+
   return {
     ...campaignWithoutGameConfig,
     prizes: campaign.Prize || [],
@@ -324,8 +409,8 @@ export const createCampaign = async (
   // 始终初始化 content 和 styles，即使没有传入也使用默认值
   const gameConfig: any = {
     content: data.content !== undefined ? data.content : {},
-    styles: data.styles !== undefined 
-      ? { ...defaultStyles, ...normalizeColorValues(data.styles) } 
+    styles: data.styles !== undefined
+      ? { ...defaultStyles, ...normalizeColorValues(data.styles) }
       : defaultStyles
   }
 
@@ -349,8 +434,8 @@ export const createCampaign = async (
       isActive: false,  // ✅ 新创建的活动默认为未发布
       gameConfig: JSON.stringify(gameConfig),
       updatedAt: new Date(), // 设置更新时间
-      Prize: data.prizes ? {
-        create: data.prizes.map(prize => ({
+      Prize: {
+        create: (data.prizes && data.prizes.length > 0 ? data.prizes : getDefaultPrizes()).map(prize => ({
           id: randomUUID(), // 生成 UUID
           name: prize.name,
           type: prize.type,
@@ -361,13 +446,11 @@ export const createCampaign = async (
           chancePercentage: prize.chancePercentage,
           totalStock: prize.totalStock ?? null,
           displayOrder: prize.displayOrder,
-          color: prize.color || "#FF6B6B",
-          icon: prize.icon ?? null,
           image: prize.image ?? null,
           isActive: true,
           updatedAt: new Date() // 设置更新时间
         }))
-      } as any : undefined
+      } as any
     } as any,
     include: {
       Prize: {
@@ -381,7 +464,7 @@ export const createCampaign = async (
   // 解析 gameConfig，提取 content 和 styles
   let content: any = {}
   let styles: any = defaultStyles
-  
+
   try {
     const parsedGameConfig = campaign.gameConfig ? JSON.parse(campaign.gameConfig) : {}
     content = parsedGameConfig.content || {}
@@ -397,7 +480,7 @@ export const createCampaign = async (
   // 转换字段名以保持前端代码一致性
   // 移除 gameConfig 字段，因为前端只需要解析后的 content 和 styles
   const { gameConfig: _, Prize, ...campaignWithoutGameConfig } = campaign as any
-  
+
   return {
     ...campaignWithoutGameConfig,
     prizes: campaign.Prize || [],
@@ -493,8 +576,6 @@ export const updateCampaign = async (
             chancePercentage: prize.chancePercentage ?? 0,
             totalStock: prize.totalStock ?? null,
             displayOrder: prize.displayOrder ?? 0,
-            color: prize.color || "#FF6B6B",
-            icon: prize.icon ?? null,
             image: prize.image ?? null,
             isActive: true,
             updatedAt: new Date() // 设置更新时间
@@ -517,7 +598,7 @@ export const updateCampaign = async (
     const defaultStylesForUpdate = getDefaultStyles()
     let content: any = {}
     let styles: any = defaultStylesForUpdate
-    
+
     try {
       const parsedGameConfig = updated.gameConfig ? JSON.parse(updated.gameConfig) : {}
       content = parsedGameConfig.content || {}
@@ -533,7 +614,7 @@ export const updateCampaign = async (
     // 转换字段名以保持前端代码一致性
     // 移除 gameConfig 字段，因为前端只需要解析后的 content 和 styles
     const { gameConfig: _, Prize, ...updatedWithoutGameConfig } = updated as any
-    
+
     return {
       ...updatedWithoutGameConfig,
       prizes: updated.Prize || [],

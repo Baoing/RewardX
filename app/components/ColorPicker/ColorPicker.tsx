@@ -67,7 +67,7 @@ export const ColorPicker = ({
 
         if (!isNaN(red) && !isNaN(green) && !isNaN(blue)) {
           setPickerColor({ ...rgbToHsb({ blue, green, red }), alpha: 1 })
-          setHexColor(placeholderColor)
+          // setHexColor(placeholderColor)
           return
         }
       }
@@ -186,10 +186,10 @@ export const ColorPicker = ({
 
   // 判断是否为空（用户选择了清空）vs 使用默认值
   // color 为空 且 placeholder 不是颜色值 = 真正的空
-  const isReallyEmpty = (!color || color === "") && (!placeholder || !placeholder.startsWith("#"))
+  const isReallyEmpty = !color || color === ""
 
   // 显示颜色：优先使用 color，否则使用 placeholder（如果是颜色）
-  const displayColor = color || (placeholder?.startsWith("#") ? placeholder.replace("#", "") : "")
+  const displayColor = color
 
   const colorBlock = (
     <div
@@ -202,7 +202,7 @@ export const ColorPicker = ({
       style={
         !isReallyEmpty && displayColor
           ? {
-              backgroundColor: "#" + displayColor
+              backgroundColor: displayColor
             }
           : undefined
       }
@@ -251,7 +251,7 @@ export const ColorPicker = ({
                 style={
                   !isReallyEmpty && displayColor
                     ? {
-                        backgroundColor:  "#" + displayColor
+                        backgroundColor: displayColor
                       }
                     : undefined
                 }
@@ -295,11 +295,10 @@ export const ColorPicker = ({
             {label}
           </Text>
         )}
-        {placeholder && (
-          <Text variant="bodySm" as="span" tone="subdued">
-            {color ? `#${color.replace("#", "")}` : (placeholder.startsWith("#") ? placeholder : placeholder)}
-          </Text>
-        )}
+
+        <Text variant="bodySm" as="span" tone="subdued">
+          {color ? `#${color.replace("#", "")}` : "Inherit from theme"}
+        </Text>
       </div>
     </div>
   )

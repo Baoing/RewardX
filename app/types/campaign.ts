@@ -103,6 +103,7 @@ export interface CreateCampaignRequest {
   minOrderAmount?: number
   maxPlaysPerCustomer?: number
   requireOrder?: boolean
+  requireEmail?: boolean
   requireName?: boolean
   requirePhone?: boolean
   startAt?: string

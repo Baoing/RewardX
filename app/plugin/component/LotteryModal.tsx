@@ -35,16 +35,6 @@ export const LotteryModal = ({
     return null
   }
 
-  // 应用样式（TopBar 已移除，使用默认样式）
-  const topBarStyle: React.CSSProperties = {
-    backgroundColor: "#FF841F",
-    color: "#000000",
-    padding: "12px 20px",
-    fontSize: "14px",
-    textAlign: "center",
-    fontWeight: 500
-  }
-
   const mainStyle: React.CSSProperties = {
     backgroundColor: styles.mainBackgroundColor || "#fff",
     color: styles.mainTextColor || "#000",
@@ -118,17 +108,8 @@ export const LotteryModal = ({
         overflow: "auto"
       }}
     >
-      {/* 自定义 CSS */}
       {styles.customCSS && <style>{styles.customCSS}</style>}
 
-      {/* 顶部条 - 显示中奖信息 */}
-      {recentWinner && (
-        <div style={topBarStyle}>
-          {recentWinner} 赢得了"{recentWinner}"奖。
-        </div>
-      )}
-
-      {/* 主内容区 */}
       <div
         style={{
           ...mainStyle,

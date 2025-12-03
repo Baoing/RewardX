@@ -54,8 +54,6 @@ export const createDefaultCampaign = async (): Promise<Campaign> => {
         chancePercentage: 15,
         totalStock: null,
         displayOrder: 0,
-        color: "#FFD700",
-        icon: "🎁"
       },
       {
         name: "20% OFF",
@@ -64,8 +62,6 @@ export const createDefaultCampaign = async (): Promise<Campaign> => {
         chancePercentage: 10,
         totalStock: null,
         displayOrder: 1,
-        color: "#FF6B6B",
-        icon: "🎉"
       },
       {
         name: "5% OFF",
@@ -74,8 +70,6 @@ export const createDefaultCampaign = async (): Promise<Campaign> => {
         chancePercentage: 25,
         totalStock: null,
         displayOrder: 2,
-        color: "#4ECDC4",
-        icon: "🎊"
       },
       {
         name: "No Luck",
@@ -83,8 +77,6 @@ export const createDefaultCampaign = async (): Promise<Campaign> => {
         chancePercentage: 50,
         totalStock: null,
         displayOrder: 3,
-        color: "#95A5A6",
-        icon: "😔"
       }
     ]
   }

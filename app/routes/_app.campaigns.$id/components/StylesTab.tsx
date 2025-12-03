@@ -23,6 +23,7 @@ const StylesTab = observer(() => {
   console.log(campaign)
   // 确保 styles 对象存在
   const campaignStyles: CampaignStyles = campaign.styles || {}
+  console.log(campaignStyles)
 
   const updateStyle = (field: keyof CampaignStyles, value: string | undefined) => {
     editorStore.updateField("styles", {
@@ -165,7 +166,7 @@ const StylesTab = observer(() => {
           <Text as="h3" variant="headingSm">
             Footer
           </Text>
-          <div className={styles.colorGroup}>
+          <div className={styles.colorGroup}>{campaignStyles.footerTextColor}
             <ColorPicker
               id="footerTextColor"
               label="Text Color"
