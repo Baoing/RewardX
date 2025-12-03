@@ -22,7 +22,7 @@ api_version = "2025-10"
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 # 订单抽奖功能需要的权限
-scopes = "read_orders,read_customers"
+scopes = "read_orders,read_customers,write_discounts,write_draft_orders,read_products,write_files"
 optional_scopes = [ ]
 use_legacy_install_flow = false
 

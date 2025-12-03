@@ -7,6 +7,18 @@
 .gridWrapper {
   position: relative;
   display: inline-block;
+  padding: 8px;
+
+  // 为 lucky-canvas 生成的图片添加样式
+  :global {
+    canvas {
+      // 确保图片有圆角和间距
+      img {
+        border-radius: 8px;
+        object-fit: contain;
+      }
+    }
+  }
 }
 
 .inputWrapper {

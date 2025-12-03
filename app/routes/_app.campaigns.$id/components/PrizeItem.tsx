@@ -11,9 +11,10 @@ import {
   Thumbnail,
   Link
 } from "@shopify/polaris"
-import { useCallback, useState } from "react"
+import { useCallback, useState, useRef } from "react"
 import { useCampaignEditorStore } from "@/stores"
 import type { Prize } from "@/types/campaign"
+import { showSuccessToast, showErrorToast } from "@/utils/toast"
 import styles from "../styles.module.scss"
 
 interface PrizeItemProps {
@@ -25,6 +26,8 @@ interface PrizeItemProps {
 const PrizeItem = observer(({ prize, index, onDelete }: PrizeItemProps) => {
   const editorStore = useCampaignEditorStore()
   const [open, setOpen] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const handleToggle = useCallback(() => setOpen((open) => !open), [])
 
   const prizeTypes = [
@@ -84,6 +87,66 @@ const PrizeItem = observer(({ prize, index, onDelete }: PrizeItemProps) => {
   const handleImageUrlChange = (value: string) => {
     updatePrizeField("image", value || undefined)
   }
+
+  const handleFileSelect = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // 验证文件类型
+    if (!file.type.startsWith("image/")) {
+      showErrorToast("Please select an image file")
+      return
+    }
+
+    // 验证文件大小（10MB）
+    const maxSize = 10 * 1024 * 1024
+    if (file.size > maxSize) {
+      showErrorToast("File size must be less than 10MB")
+      return
+    }
+
+    setUploading(true)
+
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+
+      const response = await fetch("/api/upload-image", {
+        method: "POST",
+        body: formData
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Upload failed")
+      }
+
+      if (data.url) {
+        // 直接使用返回的URL
+        updatePrizeField("image", data.url)
+        showSuccessToast("Image uploaded successfully")
+      } else if (data.fileId) {
+        // 如果文件还在处理中，提示用户
+        showErrorToast(data.message || "File is being processed. Please try again in a moment.")
+      } else {
+        throw new Error("No URL returned from server")
+      }
+    } catch (error) {
+      console.error("❌ 图片上传失败:", error)
+      showErrorToast(error instanceof Error ? error.message : "Failed to upload image")
+    } finally {
+      setUploading(false)
+      // 重置input，允许重复选择同一文件
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
+    }
+  }, [updatePrizeField])
+
+  const handleUploadClick = useCallback(() => {
+    fileInputRef.current?.click()
+  }, [])
 
   const handleDelete = () => {
     if (onDelete) {
@@ -196,8 +259,24 @@ const PrizeItem = observer(({ prize, index, onDelete }: PrizeItemProps) => {
                 onChange={handleImageUrlChange}
                 placeholder="Enter image URL or upload image"
                 autoComplete="off"
-                helpText="Enter a full image URL (e.g., https://example.com/image.jpg)"
+                helpText="Enter a full image URL or upload an image file"
               />
+              <InlineStack gap="200">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  style={{ display: "none" }}
+                />
+                <Button
+                  onClick={handleUploadClick}
+                  loading={uploading}
+                  disabled={uploading}
+                >
+                  {uploading ? "Uploading..." : "Upload Image"}
+                </Button>
+              </InlineStack>
               {prize.image && (
                 <div>
                   <Thumbnail
@@ -210,7 +289,6 @@ const PrizeItem = observer(({ prize, index, onDelete }: PrizeItemProps) => {
                   </Text>
                 </div>
               )}
-              {/* TODO: 未来可以添加图片上传功能 */}
               <Text as="p" variant="bodySm" tone="subdued">
                 <Link
                   url="https://help.shopify.com/en/manual/products/product-media"

@@ -9,9 +9,9 @@ import classNames from "classnames";
 const cn = (name: string) => getComponentClassName("block", name)
 
 // 常量定义
-const CANVAS_WIDTH = "524px"
+const CANVAS_WIDTH = "500px"
 const CANVAS_HEIGHT_1_ROW = "166px" // 1行高度
-const CANVAS_HEIGHT_2_ROWS = "334px" // 2行高度
+const CANVAS_HEIGHT_2_ROWS = "330px" // 2行高度
 const CANVAS_HEIGHT_3_ROWS = "500px" // 3行高度
 const MAX_PRIZES = 9
 const GRID_COLS = 3
@@ -107,9 +107,9 @@ export const NineBoxLottery = ({
           background: backgroundColor,
           imgs: [{
             src: prize.image,
-            width: "90%",
-            top: "5%",
-          }]
+            width: '100%'
+          }],
+          borderRadius: "10px",
         }
       }
 
@@ -135,6 +135,7 @@ export const NineBoxLottery = ({
 
   const defaultConfig = useMemo(() => ({
     speed: 10,
+    gutter: 8,
     accelerationTime: 2500,
     decelerationTime: 2500
   }), [])
@@ -483,7 +484,7 @@ export const NineBoxLottery = ({
       style={{
         "--button-color": buttonColor,
         "--main-bg-color": campaignStyles?.moduleMainBackgroundColor,
-      }}
+      } as React.CSSProperties}
     >
       <div className={classNames(styles.gridWrapper, cn("gridWrapper"))}>
         <LuckyGrid
@@ -492,7 +493,7 @@ export const NineBoxLottery = ({
           height={canvasHeight}
           rows={rows}
           cols={cols}
-          blocks={blocks}
+          // blocks={blocks}
           prizes={prizes_data}
           buttons={[]}
           activeStyle={{
