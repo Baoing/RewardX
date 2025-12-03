@@ -19,7 +19,7 @@ export const PreviewGame = observer(() => {
     return (
       <Card>
         <BlockStack gap="400">
-          <Text as="p">加载中...</Text>
+          <Text as="p">Loading...</Text>
         </BlockStack>
       </Card>
     )

@@ -11,6 +11,22 @@ import { validateCampaignData } from "@/utils/validation.server"
 // ============ 工具函数 ============
 
 /**
+ * 默认内容配置
+ * 包含所有 Content 字段的默认值
+ */
+const getDefaultContent = () => ({
+  title: "Win Amazing Prizes!",
+  description: "Enter your order number to participate in our exciting lottery and win amazing prizes!",
+  inputTitle: "Please enter your order number (e.g., #ORDER1234567)",
+  inputPlaceholder: "Please enter your order number",
+  inputEmptyError: "Order number is required",
+  errorMessage: "Something went wrong. Please try again.",
+  buttonText: "Start",
+  rulesText1: "1. Each customer can participate once per order.\n2. Prizes are limited and subject to availability.\n3. Winners will receive their discount codes via email.",
+  rulesText2: "4. This promotion is valid for a limited time only.\n5. Terms and conditions apply.\n6. We reserve the right to modify or cancel this promotion at any time."
+})
+
+/**
  * 默认样式配置
  * 包含所有可能的颜色字段，即使某些字段可能是 undefined
  */
@@ -273,20 +289,22 @@ export const getCampaignsByUserId = async (
   }) as any[]
 
   // 转换字段名以保持前端代码一致性
+  const defaultContentForList = getDefaultContent()
   const defaultStylesForList = getDefaultStyles()
   return campaigns.map(c => {
     // 解析 gameConfig，提取 content 和 styles
-    let content: any = {}
+    let content: any = defaultContentForList
     let styles: any = defaultStylesForList
 
     try {
       const gameConfig = c.gameConfig ? JSON.parse(c.gameConfig) : {}
-      content = gameConfig.content || {}
+      // 合并默认内容和数据库中的内容
+      content = { ...defaultContentForList, ...(gameConfig.content || {}) }
       // 合并默认样式和数据库中的样式
       styles = { ...defaultStylesForList, ...(gameConfig.styles || {}) }
     } catch (error) {
       console.error("❌ Failed to parse gameConfig:", error)
-      content = {}
+      content = defaultContentForList
       styles = defaultStylesForList
     }
 
@@ -337,19 +355,21 @@ export const getCampaignById = async (
   }
 
   // 解析 gameConfig JSON 字段，提取 content 和 styles
+  const defaultContentForGet = getDefaultContent()
   const defaultStylesForGet = getDefaultStyles()
-  let content: any = {}
+  let content: any = defaultContentForGet
   let styles: any = defaultStylesForGet
 
   try {
     const gameConfig = campaign.gameConfig ? JSON.parse(campaign.gameConfig) : {}
-    content = gameConfig.content || {}
+    // 合并默认内容和数据库中的内容
+    content = { ...defaultContentForGet, ...(gameConfig.content || {}) }
     // 合并默认样式和数据库中的样式
     styles = { ...defaultStylesForGet, ...(gameConfig.styles || {}) }
   } catch (error) {
     console.error("❌ Failed to parse gameConfig:", error)
     // 如果解析失败，使用默认值
-    content = {}
+    content = defaultContentForGet
     styles = defaultStylesForGet
   }
 
@@ -402,13 +422,16 @@ export const createCampaign = async (
   // 验证数据
   validateCampaignData(data, true)
 
-  // 获取默认样式（在函数开始时声明一次，后续复用）
+  // 获取默认内容、样式（在函数开始时声明一次，后续复用）
+  const defaultContent = getDefaultContent()
   const defaultStyles = getDefaultStyles()
 
   // 构建 gameConfig（包含 content 和 styles）
   // 始终初始化 content 和 styles，即使没有传入也使用默认值
   const gameConfig: any = {
-    content: data.content !== undefined ? data.content : {},
+    content: data.content !== undefined
+      ? { ...defaultContent, ...data.content }
+      : defaultContent,
     styles: data.styles !== undefined
       ? { ...defaultStyles, ...normalizeColorValues(data.styles) }
       : defaultStyles
@@ -462,18 +485,20 @@ export const createCampaign = async (
   console.log("✅ Campaign created:", campaign.id)
 
   // 解析 gameConfig，提取 content 和 styles
-  let content: any = {}
+  const defaultContentForCreate = getDefaultContent()
+  let content: any = defaultContentForCreate
   let styles: any = defaultStyles
 
   try {
     const parsedGameConfig = campaign.gameConfig ? JSON.parse(campaign.gameConfig) : {}
-    content = parsedGameConfig.content || {}
+    // 合并默认内容和数据库中的内容
+    content = { ...defaultContentForCreate, ...(parsedGameConfig.content || {}) }
     // 合并默认样式和数据库中的样式
     styles = { ...defaultStyles, ...(parsedGameConfig.styles || {}) }
   } catch (error) {
     console.error("❌ Failed to parse gameConfig after create:", error)
     // 如果解析失败，使用默认值
-    content = {}
+    content = defaultContentForCreate
     styles = defaultStyles
   }
 
@@ -507,6 +532,9 @@ export const updateCampaign = async (
   // 验证数据
   validateCampaignData(data, false)
 
+  // 获取默认内容（在函数开始时声明一次，后续复用）
+  const defaultContentForUpdate = getDefaultContent()
+
   // 更新活动（使用事务）
   const updated = await prisma.$transaction(async (tx) => {
     // 如果提供了奖品列表，先删除旧奖品
@@ -537,7 +565,8 @@ export const updateCampaign = async (
     // 如果提供了 content 或 styles，合并到 gameConfig 中
     if (data.content !== undefined || data.styles !== undefined) {
       if (data.content !== undefined) {
-        gameConfig.content = data.content
+        // 合并默认内容和传入的内容
+        gameConfig.content = { ...defaultContentForUpdate, ...data.content }
       }
       if (data.styles !== undefined) {
         // 规范化颜色值（确保是大写格式）
@@ -596,18 +625,19 @@ export const updateCampaign = async (
 
     // 解析 gameConfig，提取 content 和 styles
     const defaultStylesForUpdate = getDefaultStyles()
-    let content: any = {}
+    let content: any = defaultContentForUpdate
     let styles: any = defaultStylesForUpdate
 
     try {
       const parsedGameConfig = updated.gameConfig ? JSON.parse(updated.gameConfig) : {}
-      content = parsedGameConfig.content || {}
+      // 合并默认内容和数据库中的内容
+      content = { ...defaultContentForUpdate, ...(parsedGameConfig.content || {}) }
       // 合并默认样式和数据库中的样式
       styles = { ...defaultStylesForUpdate, ...(parsedGameConfig.styles || {}) }
     } catch (error) {
       console.error("❌ Failed to parse gameConfig after update:", error)
       // 如果解析失败，使用默认值
-      content = {}
+      content = defaultContentForUpdate
       styles = defaultStylesForUpdate
     }
 
@@ -666,5 +696,3 @@ export const getCampaignStats = (campaign: Campaign) => {
     winRate: Math.round(winRate * 100) / 100
   }
 }
-
-

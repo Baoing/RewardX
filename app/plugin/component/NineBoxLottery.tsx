@@ -9,7 +9,7 @@ import classNames from "classnames";
 const cn = (name: string) => getComponentClassName("block", name)
 
 // 常量定义
-const CANVAS_WIDTH = "500px"
+const CANVAS_WIDTH = "524px"
 const CANVAS_HEIGHT_1_ROW = "166px" // 1行高度
 const CANVAS_HEIGHT_2_ROWS = "334px" // 2行高度
 const CANVAS_HEIGHT_3_ROWS = "500px" // 3行高度
@@ -83,8 +83,6 @@ export const NineBoxLottery = ({
   const backgroundColor = campaignStyles?.moduleCardBackgroundColor || "#FFCFA7"
   const textColor = campaignStyles.mainTextColor || "#000"
   const buttonColor = campaignStyles?.moduleButtonColor
-  const mainBackgroundColor = campaignStyles.mainBackgroundColor || "#fff"
-  const mainTextColor = campaignStyles.mainTextColor || "#000"
 
   // CSS 变量（设置在最外层容器，供子元素继承）
   const cssVariables ={

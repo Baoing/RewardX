@@ -174,10 +174,10 @@ function MyComponent() {
 ```json
 {
   "common": {
-    "loading": "加载中..."
+    "loading": "Loading..."
   },
   "billing": {
-    "title": "套餐与计费"
+    "title": "Plan & Billing"
   }
 }
 ```
