@@ -1,6 +1,15 @@
 {
   "common": {
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "remove": "Remove"
+  },
+  "uploadPicture": {
+    "success": "Image uploaded successfully",
+    "processing": "File is being processed. Please try again in a moment.",
+    "errorTitle": "The following images couldn't be uploaded:",
+    "errorText1": "File size should be less than {{size}}MB",
+    "errorText2": "File type should be {{types}}",
+    "acceptType": "Accepts {{types}}"
   },
   "nav": {
     "home": "Home",

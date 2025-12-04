@@ -1,6 +1,15 @@
 {
   "common": {
-    "loading": "加载中..."
+    "loading": "加载中...",
+    "remove": "移除"
+  },
+  "uploadPicture": {
+    "success": "图片上传成功",
+    "processing": "文件正在处理中，请稍后再试",
+    "errorTitle": "以下图片无法上传：",
+    "errorText1": "文件大小应小于 {{size}}MB",
+    "errorText2": "文件类型应为 {{types}}",
+    "acceptType": "接受 {{types}}"
   },
   "nav": {
     "home": "首页",
