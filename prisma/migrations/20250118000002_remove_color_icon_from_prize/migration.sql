@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Prize" DROP COLUMN IF EXISTS "color";
+ALTER TABLE "Prize" DROP COLUMN IF EXISTS "icon";
+

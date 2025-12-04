@@ -158,8 +158,6 @@ model Prize {
   totalStock       Int?
   usedStock        Int            @default(0)
   displayOrder     Int            @default(0)
-  color            String?        @default("#FF6B6B")
-  icon             String?
   isActive         Boolean        @default(true)
   createdAt        DateTime       @default(now())
   updatedAt        DateTime
