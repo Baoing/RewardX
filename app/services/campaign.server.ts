@@ -216,6 +216,7 @@ interface CreateCampaignData {
     totalStock?: number
     displayOrder: number
     image?: string
+    activeImage?: string
   }>
   [key: string]: unknown
 }
@@ -241,6 +242,7 @@ interface UpdateCampaignData {
     totalStock?: number
     displayOrder: number
     image?: string
+    activeImage?: string
   }>
   [key: string]: unknown
 }
@@ -470,6 +472,7 @@ export const createCampaign = async (
           totalStock: prize.totalStock ?? null,
           displayOrder: prize.displayOrder,
           image: prize.image ?? null,
+          activeImage: prize.activeImage ?? null,
           isActive: true,
           updatedAt: new Date() // 设置更新时间
         }))
@@ -606,6 +609,7 @@ export const updateCampaign = async (
             totalStock: prize.totalStock ?? null,
             displayOrder: prize.displayOrder ?? 0,
             image: prize.image ?? null,
+            activeImage: prize.activeImage ?? null,
             isActive: true,
             updatedAt: new Date() // 设置更新时间
           }))

@@ -107,6 +107,7 @@ export const NineBoxLottery = ({
           background: backgroundColor,
           imgs: [{
             src: prize.image,
+            activeSrc: prize.activeImage,
             width: '100%'
           }],
           borderRadius: "10px",

@@ -27,6 +27,7 @@ export interface Prize {
   usedStock?: number
   displayOrder?: number
   image?: string
+  activeImage?: string
   isActive?: boolean
 }
 

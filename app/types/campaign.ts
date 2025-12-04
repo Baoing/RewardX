@@ -16,6 +16,7 @@ export interface Prize {
   usedStock?: number // 已使用库存
   displayOrder?: number // 显示顺序
   image?: string // 奖品图片 URL
+  activeImage?: string // 九宫格滑动划过时的图片 URL
   isActive?: boolean
 }
 

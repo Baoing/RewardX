@@ -164,6 +164,7 @@ model Prize {
   createdAt        DateTime       @default(now())
   updatedAt        DateTime
   image            String?
+  activeImage      String?
   LotteryEntry     LotteryEntry[]
   Campaign         Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 

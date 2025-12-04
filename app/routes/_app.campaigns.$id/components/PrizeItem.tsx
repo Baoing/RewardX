@@ -86,6 +86,10 @@ const PrizeItem = observer(({ prize, index, onDelete }: PrizeItemProps) => {
     updatePrizeField("image", url || undefined)
   }
 
+  const handleActiveImageChange = (url: string) => {
+    updatePrizeField("activeImage", url || undefined)
+  }
+
   const handleDelete = () => {
     if (onDelete) {
       onDelete(index)
@@ -190,17 +194,38 @@ const PrizeItem = observer(({ prize, index, onDelete }: PrizeItemProps) => {
             />
 
             {/* Image Upload */}
-            <BlockStack gap="200">
-              <Text as="p" variant="bodyMd" fontWeight="semibold">
-                Prize Image
-              </Text>
-              <UploadPicture
-                value={prize.image}
-                onChange={handleImageChange}
-                limitSize={10 * 1024 * 1024}
-                validImageTypes={["image/gif", "image/jpeg", "image/png", "image/webp"]}
-                acceptFileTypes={[".jpg", ".png", ".gif", ".jpeg", ".webp"]}
-              />
+            <BlockStack gap="300">
+              <BlockStack gap="200">
+                <Text as="p" variant="bodyMd" fontWeight="semibold">
+                  Prize Image
+                </Text>
+                <Text as="p" variant="bodySm" tone="subdued">
+                  Default image displayed in the lottery grid
+                </Text>
+                <UploadPicture
+                  value={prize.image}
+                  onChange={handleImageChange}
+                  limitSize={10 * 1024 * 1024}
+                  validImageTypes={["image/gif", "image/jpeg", "image/png", "image/webp"]}
+                  acceptFileTypes={[".jpg", ".png", ".gif", ".jpeg", ".webp"]}
+                />
+              </BlockStack>
+
+              <BlockStack gap="200">
+                <Text as="p" variant="bodyMd" fontWeight="semibold">
+                  Active Image (Hover)
+                </Text>
+                <Text as="p" variant="bodySm" tone="subdued">
+                  Image displayed when hovering over the prize in the lottery grid
+                </Text>
+                <UploadPicture
+                  value={prize.activeImage}
+                  onChange={handleActiveImageChange}
+                  limitSize={10 * 1024 * 1024}
+                  validImageTypes={["image/gif", "image/jpeg", "image/png", "image/webp"]}
+                  acceptFileTypes={[".jpg", ".png", ".gif", ".jpeg", ".webp"]}
+                />
+              </BlockStack>
             </BlockStack>
 
             {/* Type */}
