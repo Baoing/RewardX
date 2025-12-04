@@ -1,6 +1,9 @@
+import React from "react"
 import ReactDOM from "react-dom/client"
 import { NineBoxLottery } from "./component/NineBoxLottery"
 import { LotteryModal } from "./component/LotteryModal"
+// 导入全局样式（Storefront 使用）
+import "./styles/global.scss"
 
 /**
  * RewardX Plugin - Main Entry
@@ -245,17 +248,40 @@ const initContainers = (containers: NodeListOf<Element>) => {
 
       console.log(`✅ RewardX: Campaign loaded - ${campaign.name} (${campaign.id})`)
 
+      // 检查渲染模式：从 data-render-mode 属性获取，默认为 "preview"
+      // "preview" - 使用 PreviewGame（直接显示，不使用弹窗）
+      // "modal" - 使用 LotteryModal（弹窗形式）
+      const renderMode = container.getAttribute("data-render-mode") || "preview"
+      
       // 渲染抽奖组件
       const root = ReactDOM.createRoot(container as HTMLElement)
-      root.render(
-        <LotteryModal
-          campaign={campaign}
-          isAdmin={false} // Storefront 环境
-          onPrizeWon={(prize) => {
-            console.log("🎉 Prize won:", prize)
-          }}
-        />
-      )
+      
+      if (renderMode === "modal") {
+        // 使用 Modal 形式
+        root.render(
+          <LotteryModal
+            campaign={campaign}
+            isAdmin={false} // Storefront 环境
+            onPrizeWon={(prize) => {
+              console.log("🎉 Prize won:", prize)
+            }}
+          />
+        )
+      } else {
+        // 使用 PreviewGame 形式（默认）
+        // 动态导入以避免循环依赖
+        const PreviewGameModule = await import("./component/PreviewGame")
+        const PreviewGameComponent = PreviewGameModule.PreviewGame || PreviewGameModule.default
+        root.render(
+          React.createElement(PreviewGameComponent, {
+            campaign: campaign,
+            isAdmin: false, // Storefront 环境
+            onPrizeWon: (prize: Prize) => {
+              console.log("🎉 Prize won:", prize)
+            }
+          })
+        )
+      }
     } catch (err) {
       console.error("❌ RewardX: Failed to load campaign", err)
     }
@@ -293,6 +319,13 @@ export const renderLotteryPreview = (
 
 export { NineBoxLottery, LotteryModal }
 
+// PreviewGame 需要延迟导出，因为它可能依赖 main.tsx 中的类型
+// 提供异步获取方法以避免循环依赖
+export const getPreviewGame = async () => {
+  const module = await import("./component/PreviewGame")
+  return module.PreviewGame || module.default
+}
+
 // ============ 浏览器环境自动初始化 ============
 
 if (typeof window !== "undefined") {
@@ -313,6 +346,14 @@ if (typeof window !== "undefined") {
     renderLotteryPreview,
     NineBoxLottery,
     LotteryModal,
+    getPreviewGame, // 提供异步获取 PreviewGame 的方法
     init: initStorefront // 允许手动初始化
   }
+  
+  // 异步加载 PreviewGame 并添加到全局对象
+  import("./component/PreviewGame").then((module) => {
+    ;(window as any).RewardX.PreviewGame = module.PreviewGame || module.default
+  }).catch((err) => {
+    console.warn("⚠️ Failed to load PreviewGame:", err)
+  })
 }

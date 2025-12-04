@@ -64,10 +64,17 @@ export default defineConfig(({ mode }) => {
 
   define: {
     "process.env.NODE_ENV": JSON.stringify("production"),
-    // 注入应用 API URL 环境变量
+    // 注入应用 API URL 环境变量（用于 process.env）
     // 优先使用 REWARDX_APP_URL，如果没有则使用 SHOPIFY_APP_URL
     "process.env.REWARDX_APP_URL": JSON.stringify(
       env.REWARDX_APP_URL || env.SHOPIFY_APP_URL || ""
+    ),
+    // 同时注入到 import.meta.env（用于浏览器环境）
+    "import.meta.env.REWARDX_APP_URL": JSON.stringify(
+      env.REWARDX_APP_URL || env.SHOPIFY_APP_URL || ""
+    ),
+    "import.meta.env.SHOPIFY_APP_URL": JSON.stringify(
+      env.SHOPIFY_APP_URL || ""
     ),
   },
 
@@ -76,7 +83,15 @@ export default defineConfig(({ mode }) => {
     port: 5174,
     open: true,
     // 支持 HMR
-    hmr: true
+    hmr: true,
+    // 代理 API 请求到主服务器
+    proxy: {
+      "/api": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+        secure: false
+      }
+    }
   },
   
   // 开发模式配置

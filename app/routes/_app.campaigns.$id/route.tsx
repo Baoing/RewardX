@@ -16,7 +16,7 @@ import { showToast } from "@/utils/toast"
 import RulesTab from "./components/RulesTab"
 import ContentTab from "./components/ContentTab"
 import StylesTab from "./components/StylesTab"
-import PreviewGame from "./components/PreviewGame"
+import PreviewGame from "@/plugin/component/PreviewGame"
 import styles from "./styles.module.scss"
 
 // loader 进行 Shopify 认证

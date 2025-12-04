@@ -1,0 +1,117 @@
+// PreviewGame 组件样式
+// 与 Admin 端的 styles.module.scss 保持一致
+
+.container {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 16px;
+  overflow-y: auto;
+  background-color: var(--bg);
+  min-height: 500px;
+  box-sizing: border-box;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: #666;
+  text-align: center;
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: #666;
+  text-align: center;
+}
+
+.title-module {
+  text-align: center;
+  margin-bottom: 30px;
+  width: 100%;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 8px;
+  text-align: center;
+  color: var(--title-color, #000);
+}
+
+.description {
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0 0 24px;
+  text-align: center;
+  color: var(--description-color, #666);
+}
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  max-width: 628px;
+  overflow: hidden;
+  background: var(--wrapper-bg);
+  color: var(--main-color);
+  width: calc(100% - 84px);
+  padding: 24px;
+  margin: 0 auto;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 700px) {
+  .wrapper {
+    width: 100%;
+  }
+}
+
+.main {
+  position: relative;
+  padding: 24px;
+  flex: 1;
+  background-color: var(--border-bg);
+  border-radius: 10px;
+  min-height: 400px;
+}
+
+.main::before {
+  border: 14px dotted var(--dotted-bg);
+  content: "";
+  position: absolute;
+  width: calc(100% - 12px);
+  height: calc(100% - 12px);
+  top: 5px;
+  left: 5px;
+  border-radius: 18px;
+  pointer-events: none;
+}
+
+.rules {
+  margin-top: 20px;
+}
+
+.rulesContent {
+  text-align: center;
+  color: var(--footer-color, #999);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.rulesSection {
+  margin-bottom: 10px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+

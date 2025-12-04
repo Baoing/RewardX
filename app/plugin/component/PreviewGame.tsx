@@ -3,23 +3,44 @@ import { observer } from "mobx-react-lite"
 import { BlockStack, Text, Spinner } from "@shopify/polaris"
 import { useCampaignEditorStore } from "@/stores"
 import { NineBoxLottery } from "@plugin/main"
-import type { Prize } from "@plugin/main"
+import type { Campaign, Prize } from "@plugin/main"
 import { getComponentClassName } from "@/utils/className"
-import styles from "../styles.module.scss"
+import styles from "./PreviewGame.module.scss"
 
 const cn = (name: string) => getComponentClassName("block", name)
 
 interface PreviewGameProps {
+  campaign?: Campaign // Storefront 模式：直接传入 campaign
   isAdmin?: boolean // 是否在 Admin 环境中
+  onPrizeWon?: (prize: Prize) => void // Storefront 模式：中奖回调
 }
 
 /**
  * 活动预览组件
  * 在右侧预览窗口中直接显示九宫格和完整内容，不使用弹窗
+ *
+ * 支持两种模式：
+ * 1. Admin 模式：从 MobX store 获取 campaign（不传 campaign prop）
+ * 2. Storefront 模式：直接接收 campaign 作为 prop
  */
-export const PreviewGame = observer(({ isAdmin = false }: PreviewGameProps) => {
-  const editorStore = useCampaignEditorStore()
-  const campaign = editorStore.editingCampaign
+const PreviewGameComponent = ({ campaign: campaignProp, isAdmin = false, onPrizeWon }: PreviewGameProps) => {
+  // Admin 模式：从 store 获取
+  // Storefront 模式：使用传入的 campaign prop
+  let campaign: Campaign | null = null
+
+  if (campaignProp) {
+    // Storefront 模式：使用传入的 campaign
+    campaign = campaignProp
+  } else {
+    // Admin 模式：从 MobX store 获取
+    try {
+      const editorStore = useCampaignEditorStore()
+      campaign = editorStore.editingCampaign
+    } catch (e) {
+      // 如果 store 不可用（Storefront 环境），campaign 保持为 null
+      console.warn("⚠️ CampaignEditorStore not available, using campaign prop")
+    }
+  }
   const [orderNumber, setOrderNumber] = useState("")
   const [verified, setVerified] = useState(false)
   const [recentWinner, setRecentWinner] = useState<string | null>(null)
@@ -55,7 +76,7 @@ export const PreviewGame = observer(({ isAdmin = false }: PreviewGameProps) => {
       </div>
     )
   }
-
+  console.log(campaignStyles)
   // 动态样式（通过 CSS 变量传递）
   const dynamicStyles = {
     "--title-color": campaignStyles.titleColor,
@@ -89,6 +110,9 @@ export const PreviewGame = observer(({ isAdmin = false }: PreviewGameProps) => {
   // 抽奖完成
   const handleComplete = (prize: Prize) => {
     console.log("🎉 中奖:", prize)
+    if (onPrizeWon) {
+      onPrizeWon(prize)
+    }
     if (prize.type !== "no_prize") {
       setRecentWinner(`${prize.name}`)
     }
@@ -125,7 +149,7 @@ export const PreviewGame = observer(({ isAdmin = false }: PreviewGameProps) => {
 
   return (
     <div
-      className={`${styles.previewGame} ${cn("container")}`}
+      className={`${styles.container} ${cn("container")}`}
       style={dynamicStyles}
     >
       {/* 自定义 CSS */}
@@ -171,6 +195,9 @@ export const PreviewGame = observer(({ isAdmin = false }: PreviewGameProps) => {
       </div>
     </div>
   )
-})
+}
+
+// 使用 observer 包装以支持 MobX（Admin 模式）
+export const PreviewGame = observer(PreviewGameComponent)
 
 export default PreviewGame

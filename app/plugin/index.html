@@ -27,6 +27,7 @@
       }
 
       .header {
+        text-align: center;
         background: white;
         padding: 24px;
         border-radius: 8px;
@@ -92,20 +93,17 @@
   <body>
     <div class="container">
       <div class="header">
-        <h1>🎁 RewardX Plugin - 开发预览</h1>
-        <p class="subtitle">九宫格抽奖游戏组件 - 本地开发环境</p>
+        <h1>RewardX Plugin - 开发预览</h1>
       </div>
 
-      <div class="preview-section">
         <!-- 组件容器 -->
-        <div id="rewardx-lottery-preview"></div>
-      </div>
+      <div id="rewardx-lottery-preview"></div>
 
       <div class="info">
         <h3>📖 使用说明</h3>
         <p>
-          这是客户端抽奖组件的开发预览页面。组件会被打包成 IIFE 格式，
-          可以直接在 Shopify Storefront 中使用。
+          这是客户端抽奖组件的开发预览页面。组件使用 <strong>PreviewGame</strong> 形式（直接显示，不使用弹窗），
+          会从 API 接口获取最新的活跃活动数据。
         </p>
         <div class="code">
           <pre># 开发模式（热更新）
@@ -115,17 +113,32 @@ npm run dev:plugin
 npm run build:plugin
 
 # 构建产物位置
-extensions/lottery-game/assets/lottery-game.js</pre>
+extensions/rewardx-lottery-extension/assets/lottery-game.js
+
+# 指定 shop 参数（可选）
+http://localhost:5173/plugin/index.html?shop=your-shop.myshopify.com</pre>
         </div>
       </div>
 
       <div class="info">
         <h3>💡 在 Admin 中使用</h3>
         <div class="code">
-          <pre>import { LotteryModal } from "@plugin/main"
+          <pre>import { PreviewGame } from "@plugin/main"
 
-&lt;LotteryModal
+&lt;PreviewGame
+  isAdmin={true}
+/&gt;</pre>
+        </div>
+      </div>
+
+      <div class="info">
+        <h3>🌐 在 Storefront 中使用</h3>
+        <div class="code">
+          <pre>import { PreviewGame } from "@plugin/main"
+
+&lt;PreviewGame
   campaign={campaign}
+  isAdmin={false}
   onPrizeWon={(prize) => console.log(prize)}
 /&gt;</pre>
         </div>
@@ -133,108 +146,183 @@ extensions/lottery-game/assets/lottery-game.js</pre>
     </div>
 
     <script type="module">
-      // 模拟活动数据用于预览
-      const mockCampaign = {
-        id: "demo",
-        userId: "user-1",
-        name: "Black Friday Lottery",
-        type: "order",
-        gameType: "ninebox",
-        isActive: true,
-        content: {
-          title: "Black Friday 抽奖活动",
-          description: "下单后即可参与抽奖，赢取丰厚奖品！",
-          inputTitle: "请输入您的订单号 (例如 #HTVRONT1234567)",
-          inputPlaceholder: "请输入您的订单号",
-          inputEmptyError: "请输入您的订单号 (例如 #HTVRONT1234567)",
-          buttonText: "加入",
-          rulesText1: "1. 下单后10分钟即可参加抽奖;\n- 黑色星期五活动期间在全站下的任何订单均可参与抽奖;\n一次下单,一次机会。",
-          rulesText2: "2. 奖品:5美元优惠券(无最低消费)/10美元优惠券(无最低消费)/A200 自动滚筒热压机/自动热压机2/ iPhone 17/感谢您的参与!"
-        },
-        styles: {
-          titleColor: "#000000",
-          mainBackgroundColor: "#fff",
-          mainTextColor: "#000",
-          moduleContainerBackgroundColor: "#FFCFA7",
-          moduleBorderColor: "#FF841F",
-          moduleDotsColor: "#FFCFA7",
-          moduleMainBackgroundColor: "#1A0202",
-          moduleCardBackgroundColor: "#fff",
-          moduleButtonColor: "#8B4513",
-          footerTextColor: "#fff"
-        },
-        prizes: [
-          {
-            id: "1",
-            label: "% SALE $5 OFF COUPON",
-            type: "discount_fixed",
-            discountValue: 5,
-            chancePercentage: 20,
-            totalStock: 100,
-            usedStock: 0
-          },
-          {
-            id: "2",
-            label: "% SALE $10 OFF COUPON",
-            type: "discount_fixed",
-            discountValue: 10,
-            chancePercentage: 15,
-            totalStock: 50,
-            usedStock: 0
-          },
-          {
-            id: "3",
-            label: "Auto Heat Press 2",
-            type: "free_gift",
-            chancePercentage: 5,
-            totalStock: 10,
-            usedStock: 0,
-            image: "https://via.placeholder.com/150?text=Heat+Press"
-          },
-          {
-            id: "4",
-            label: "A200 Auto Tumbler Heat Press",
-            type: "free_gift",
-            chancePercentage: 5,
-            totalStock: 10,
-            usedStock: 0,
-            image: "https://via.placeholder.com/150?text=Tumbler"
-          },
-          {
-            id: "5",
-            label: "iPhone 17",
-            type: "free_gift",
-            chancePercentage: 1,
-            totalStock: 1,
-            usedStock: 0,
-            image: "https://via.placeholder.com/150?text=iPhone"
-          },
-          {
-            id: "6",
-            label: "Thanks for Your Participation!",
-            type: "no_prize",
-            chancePercentage: 54,
-            totalStock: null,
-            usedStock: 0
+      // 从 URL 查询参数获取 shop 域名，或使用默认值
+      const urlParams = new URLSearchParams(window.location.search)
+      const shopParam = urlParams.get("shop")
+      const shop = shopParam || "baoea.myshopify.com" // 默认 shop，用于开发预览
+
+      // 获取应用 API URL
+      const getAppApiUrl = () => {
+        // 1. 优先使用 Vite 注入的环境变量（import.meta.env）
+        // Vite 会自动处理以 VITE_ 开头的环境变量，或通过 define 注入的变量
+        try {
+          // @ts-ignore - Vite 会在构建时替换这个值
+          const envUrl = import.meta.env.REWARDX_APP_URL || import.meta.env.SHOPIFY_APP_URL || import.meta.env.VITE_REWARDX_APP_URL || import.meta.env.VITE_SHOPIFY_APP_URL
+
+          if (envUrl && envUrl !== "") {
+            console.log("🔗 Using env API URL:", envUrl)
+            // 移除末尾的斜杠，避免双斜杠
+            return String(envUrl).replace(/\/+$/, "")
           }
-        ],
-        allowedOrderStatus: "paid",
-        requireOrder: false,
-        requireName: false,
-        requirePhone: false,
-        gameConfig: "{}",
-        totalPlays: 0,
-        totalWins: 0,
-        totalOrders: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        } catch (e) {
+          console.warn("⚠️ Failed to read env variables:", e)
+        }
+
+        // 2. 开发环境：如果当前是 Vite dev server (端口 5174)，则使用主服务器 (端口 3000)
+        const currentOrigin = window.location.origin
+        const currentPort = window.location.port
+
+        // 如果是 Vite dev server (5174)，代理到主服务器 (3000)
+        if (currentPort === "5174" || currentOrigin.includes(":5174")) {
+          console.log("🔗 Using dev proxy (port 3000)")
+          return currentOrigin.replace(":5174", ":3000").replace(/\/+$/, "")
+        }
+
+        // 3. 最后回退：使用当前域名（生产环境）
+        console.log("🔗 Using current origin:", currentOrigin)
+        return currentOrigin.replace(/\/+$/, "")
       }
 
-      // 等待模块加载后渲染
-      import("/main.tsx").then((module) => {
+      // 构建 API URL
+      const buildApiUrl = (endpoint) => {
+        const apiBase = getAppApiUrl()
+        const cleanEndpoint = endpoint.startsWith("/") ? endpoint.slice(1) : endpoint
+        return `${apiBase}/api/${cleanEndpoint}`
+      }
+
+      // 从接口获取最新的活跃活动
+      const fetchCampaign = async () => {
+        try {
+          const apiUrl = buildApiUrl(`/campaigns/latest?shop=${shop}`)
+          console.log("📡 Fetching campaign from:", apiUrl)
+
+          const response = await fetch(apiUrl, {
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json"
+            }
+          })
+
+          if (!response.ok) {
+            // 尝试读取错误响应内容
+            const contentType = response.headers.get("content-type")
+            let errorMessage = `HTTP ${response.status}: ${response.statusText}`
+
+            if (contentType && contentType.includes("application/json")) {
+              try {
+                const errorData = await response.json()
+                errorMessage = errorData.error || errorData.message || errorMessage
+              } catch (e) {
+                // 忽略 JSON 解析错误
+              }
+            } else {
+              // 如果是 HTML 响应，可能是错误页面
+              const text = await response.text()
+              if (text.includes("<")) {
+                errorMessage = `Server returned HTML instead of JSON. This usually means the API endpoint doesn't exist or the server isn't running.`
+              }
+            }
+
+            throw new Error(errorMessage)
+          }
+
+          // 检查响应内容类型
+          const contentType = response.headers.get("content-type")
+          if (!contentType || !contentType.includes("application/json")) {
+            const text = await response.text()
+            console.error("❌ Unexpected response type:", contentType)
+            console.error("Response text:", text.substring(0, 200))
+            throw new Error(`Expected JSON but got ${contentType || "unknown"}. The API endpoint may not be configured correctly.`)
+          }
+
+          const data = await response.json()
+          console.log("📦 Campaign data:", data)
+
+          if (data.success && data.campaign) {
+            return data.campaign
+          } else if (data.success && !data.campaign) {
+            throw new Error("No active campaign found for this shop")
+          } else {
+            throw new Error(data.error || "Failed to load campaign")
+          }
+        } catch (error) {
+          console.error("❌ Failed to fetch campaign:", error)
+          throw error
+        }
+      }
+
+      // 等待模块加载后获取数据并渲染
+      import("/main.tsx").then(async (module) => {
         const container = document.getElementById("rewardx-lottery-preview")
-        if (container && module.renderLotteryPreview) {
-          module.renderLotteryPreview(container, mockCampaign)
+        if (!container) {
+          console.error("❌ Container not found")
+          return
+        }
+
+        try {
+          // 显示加载状态
+          container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">Loading campaign...</div>'
+
+          // 获取活动数据
+          const campaign = await fetchCampaign()
+
+          // 使用 PreviewGame 渲染（不是弹窗）
+          // 动态导入 PreviewGame 组件（避免循环依赖）
+          const React = await import("react")
+          const ReactDOM = await import("react-dom/client")
+
+          // 动态导入 PreviewGame 组件
+          let PreviewGameComponent = null
+
+          // 方法1：尝试从 main.tsx 的 getPreviewGame 获取
+          if (module.getPreviewGame) {
+            try {
+              PreviewGameComponent = await module.getPreviewGame()
+              console.log("✅ Got PreviewGame from getPreviewGame")
+            } catch (e) {
+              console.warn("⚠️ Failed to get PreviewGame from getPreviewGame:", e)
+            }
+          }
+
+          // 方法2：如果方法1失败，直接导入组件文件（相对于 plugin 目录）
+          if (!PreviewGameComponent) {
+            try {
+              // 从 plugin/component/PreviewGame.tsx 导入
+              const PreviewGameModule = await import("./component/PreviewGame.tsx")
+              PreviewGameComponent = PreviewGameModule.PreviewGame || PreviewGameModule.default
+              console.log("✅ Got PreviewGame from direct import")
+            } catch (e) {
+              console.error("❌ Failed to import PreviewGame:", e)
+              throw new Error(`PreviewGame component not found: ${e.message}`)
+            }
+          }
+
+          if (!PreviewGameComponent) {
+            throw new Error("PreviewGame component not found. Make sure the component is properly exported.")
+          }
+
+          const root = ReactDOM.createRoot(container)
+          root.render(
+            React.createElement(PreviewGameComponent, {
+              campaign: campaign,
+              isAdmin: false, // 开发预览模式
+              onPrizeWon: (prize) => {
+                console.log("🎉 Prize won:", prize)
+              }
+            })
+          )
+        } catch (error) {
+          console.error("❌ Failed to render:", error)
+          container.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #d32f2f;">
+              <h3>Failed to load campaign</h3>
+              <p>${error.message}</p>
+              <p style="margin-top: 16px; font-size: 14px; color: #666;">
+                Shop: ${shop}<br/>
+                Make sure the API server is running and the shop has an active campaign.
+              </p>
+            </div>
+          `
         }
       })
     </script>

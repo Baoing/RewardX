@@ -95,7 +95,7 @@
         // 桌面视图
         &.desktop {
           @apply w-full;
-          height: calc(100%);
+          min-height: calc(100%);
         }
 
         // 移动视图
@@ -150,7 +150,7 @@
   }
 }
 
-// 预览游戏组件（不使用 Tailwind，因为会在 Storefront 运行）
+// 预览游戏组件（Admin 预览使用，不使用 Tailwind）
 .previewGame {
   width: 100%;
   display: flex;
@@ -162,17 +162,13 @@
   background-color: var(--bg, #fff);
 }
 
-
-
-.rewardx-block__wrapper{
-  width: 100%;
-}
-
-// PreviewGame 组件样式（使用 className 工具生成的类名）
+// Admin 预览也需要使用 rewardx-block__* 样式（与 Storefront 共享）
+// 直接在这里定义，因为 SCSS @import 可能无法正确处理 :global
 :global {
-  .rewardx-block__title-module{
-
+  .rewardx-block__title-module {
+    // 标题模块容器
   }
+
   // 容器
   .rewardx-block__container {
     width: 100%;
@@ -207,7 +203,6 @@
     border-radius: 8px;
   }
 
-
   @media (max-width: 700px) {
     .rewardx-block__wrapper {
       width: 100%;
@@ -225,7 +220,7 @@
 
   .rewardx-block__main:before {
     border: 14px dotted var(--dotted-bg);
-    content: '';
+    content: "";
     position: absolute;
     width: calc(100% - 12px);
     height: calc(100% - 12px);
@@ -263,7 +258,7 @@
     border-radius: 8px;
   }
 
-  .rewardx-block__input-wrapper{
+  .rewardx-block__input-wrapper {
     background: var(--wrapper-bg);
     padding: 12px 12px 12px;
     margin: 0 12px 12px;
