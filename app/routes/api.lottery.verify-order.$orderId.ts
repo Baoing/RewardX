@@ -2,15 +2,22 @@ import type { LoaderFunctionArgs } from "react-router"
 import { authenticate } from "@/shopify.server"
 import prisma from "@/db.server"
 import { isCampaignValid } from "@/utils/lottery.server"
+import { handleCorsPreflight, jsonWithCors } from "@/utils/api.server"
 
 // GET /api/lottery/verify-order/:orderId - 验证订单是否可以抽奖
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
+  // 处理 OPTIONS 预检请求
+  const preflightResponse = handleCorsPreflight(request)
+  if (preflightResponse) {
+    return preflightResponse
+  }
+
   try {
     const { admin, session } = await authenticate.admin(request)
     const { orderId } = params
 
     if (!orderId) {
-      return Response.json({ success: false, error: "Order ID is required" }, { status: 400 })
+      return jsonWithCors({ success: false, error: "Order ID is required" }, { status: 400 }, request)
     }
 
     const user = await prisma.user.findUnique({
@@ -18,7 +25,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     })
 
     if (!user) {
-      return Response.json({ success: false, error: "User not found" }, { status: 404 })
+      return jsonWithCors({ success: false, error: "User not found" }, { status: 404 }, request)
     }
 
     // 查找激活的订单抽奖活动
@@ -37,21 +44,21 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     })
 
     if (!campaign) {
-      return Response.json({
+      return jsonWithCors({
         success: true,
         canPlay: false,
         reason: "No active order lottery campaign found"
-      })
+      }, undefined, request)
     }
 
     // 验证活动有效性
     const validity = isCampaignValid(campaign)
     if (!validity.valid) {
-      return Response.json({
+      return jsonWithCors({
         success: true,
         canPlay: false,
         reason: validity.reason
-      })
+      }, undefined, request)
     }
 
     // 检查订单是否已经抽过奖
@@ -60,7 +67,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     })
 
     if (existingEntry) {
-      return Response.json({
+      return jsonWithCors({
         success: true,
         canPlay: false,
         reason: "Order has already been used for lottery",
@@ -72,7 +79,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
           discountCode: existingEntry.discountCode,
           createdAt: existingEntry.createdAt
         }
-      })
+      }, undefined, request)
     }
 
     // 从 Shopify 获取订单信息
@@ -106,11 +113,11 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     const order = orderData.data?.order
 
     if (!order) {
-      return Response.json({
+      return jsonWithCors({
         success: true,
         canPlay: false,
         reason: "Order not found"
-      })
+      }, undefined, request)
     }
 
     // 检查订单状态（统一转换为小写比较，避免大小写不匹配）
@@ -118,21 +125,21 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     const allowedStatus = campaign.allowedOrderStatus?.toLowerCase() || ""
     
     if (orderStatus !== allowedStatus) {
-      return Response.json({
+      return jsonWithCors({
         success: true,
         canPlay: false,
         reason: `Order status must be '${campaign.allowedOrderStatus}', current: '${order.displayFinancialStatus}'`
-      })
+      }, undefined, request)
     }
 
     // 检查订单金额
     const orderAmount = parseFloat(order.totalPriceSet.shopMoney.amount)
     if (campaign.minOrderAmount && orderAmount < campaign.minOrderAmount) {
-      return Response.json({
+      return jsonWithCors({
         success: true,
         canPlay: false,
         reason: `Order amount (${orderAmount}) is below minimum requirement (${campaign.minOrderAmount})`
-      })
+      }, undefined, request)
     }
 
     // 检查客户参与次数限制
@@ -145,16 +152,16 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
       })
 
       if (customerPlays >= campaign.maxPlaysPerCustomer) {
-        return Response.json({
+        return jsonWithCors({
           success: true,
           canPlay: false,
           reason: `Maximum plays per customer (${campaign.maxPlaysPerCustomer}) reached`
-        })
+        }, undefined, request)
       }
     }
 
     // 通过所有验证
-    return Response.json({
+    return jsonWithCors({
       success: true,
       canPlay: true,
       order: {
@@ -171,14 +178,14 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
         name: campaign.name,
         gameType: campaign.gameType
       }
-    })
+    }, undefined, request)
 
   } catch (error) {
     console.error("❌ Error verifying order:", error)
-    return Response.json({
+    return jsonWithCors({
       success: false,
       error: error instanceof Error ? error.message : "Unknown error"
-    }, { status: 500 })
+    }, { status: 500 }, request)
   }
 }
 

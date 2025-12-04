@@ -1,4 +1,4 @@
-import { defineConfig } from "vite"
+import { defineConfig, loadEnv } from "vite"
 import react from "@vitejs/plugin-react"
 import path from "path"
 
@@ -10,7 +10,11 @@ import path from "path"
  * 
  * 运行: npm run build:plugin
  */
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  // 加载环境变量
+  const env = loadEnv(mode, process.cwd(), "")
+  
+  return {
   plugins: [react()],
   
   resolve: {
@@ -59,7 +63,12 @@ export default defineConfig({
   },
 
   define: {
-    "process.env.NODE_ENV": JSON.stringify("production")
+    "process.env.NODE_ENV": JSON.stringify("production"),
+    // 注入应用 API URL 环境变量
+    // 优先使用 REWARDX_APP_URL，如果没有则使用 SHOPIFY_APP_URL
+    "process.env.REWARDX_APP_URL": JSON.stringify(
+      env.REWARDX_APP_URL || env.SHOPIFY_APP_URL || ""
+    ),
   },
 
   // 开发服务器配置
@@ -73,6 +82,7 @@ export default defineConfig({
   // 开发模式配置
   optimizeDeps: {
     include: ["react", "react-dom", "@lucky-canvas/react"]
+  }
   }
 })
 

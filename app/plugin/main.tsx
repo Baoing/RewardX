@@ -93,42 +93,148 @@ export interface Campaign {
  * 如果没有指定 campaign-id，则自动获取最新的活跃活动
  */
 const initStorefront = () => {
+  // 查找所有容器
   const containers = document.querySelectorAll("[data-rewardx-lottery]")
 
   if (containers.length === 0) {
+    // 使用 MutationObserver 监听容器出现
+    const observer = new MutationObserver(() => {
+      const newContainers = document.querySelectorAll("[data-rewardx-lottery]")
+      if (newContainers.length > 0) {
+        observer.disconnect()
+        initContainers(newContainers)
+      }
+    })
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    })
+
+    // 5秒后停止监听
+    setTimeout(() => {
+      observer.disconnect()
+    }, 5000)
+
     return
   }
 
-  console.log(`🎮 RewardX: Found ${containers.length} lottery container(s)`)
+  initContainers(containers)
+}
 
+/**
+ * 获取应用 API URL
+ * 优先使用 Vite 注入的环境变量
+ *
+ * 环境变量配置：
+ * - REWARDX_APP_URL: 应用部署 URL（例如: https://your-app.vercel.app）
+ * - 如果没有设置，会使用 SHOPIFY_APP_URL
+ */
+const getAppApiUrl = (): string => {
+  // 1. 优先使用 Vite 注入的环境变量（构建时替换）
+  // Vite 的 define 会在构建时替换 process.env.REWARDX_APP_URL
+  // @ts-ignore - Vite 会在构建时替换这个值
+  let envUrl = process.env.REWARDX_APP_URL || process.env.SHOPIFY_APP_URL
+
+  if (envUrl) {
+    // 移除末尾的斜杠，避免双斜杠
+    return envUrl.replace(/\/+$/, "")
+  }
+
+  // 2. 尝试从 window 对象获取（如果 Liquid 传递了）
+  const windowUrl = (window as any).__REWARDX_APP_URL__
+  if (windowUrl) {
+    // 移除末尾的斜杠
+    return String(windowUrl).replace(/\/+$/, "")
+  }
+
+  // 3. 尝试从配置脚本中读取（Metafield 配置）
+  const configScript = document.querySelector('script[id^="rewardx-api-config-"]')
+  if (configScript && configScript.textContent) {
+    try {
+      const config = JSON.parse(configScript.textContent)
+      if (config.apiUrl) {
+        // 移除末尾的斜杠
+        return String(config.apiUrl).replace(/\/+$/, "")
+      }
+    } catch (e) {
+      console.warn("⚠️ RewardX: Failed to parse API config", e)
+    }
+  }
+
+  // 4. 最后回退：使用当前域名（不推荐，但作为兜底）
+  return window.location.origin.replace(/\/+$/, "")
+}
+
+/**
+ * 构建 API URL
+ */
+const buildApiUrl = (endpoint: string): string => {
+  const apiBase = getAppApiUrl()
+  // 移除 endpoint 开头的斜杠，避免双斜杠
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint.slice(1) : endpoint
+
+  return `${apiBase}/api/${cleanEndpoint}`
+}
+
+/**
+ * 初始化容器
+ */
+const initContainers = (containers: NodeListOf<Element>) => {
   containers.forEach(async (container) => {
     const campaignId = container.getAttribute("data-campaign-id")
     let campaign: Campaign | null = null
 
     try {
+      let apiUrl: string
+
       if (campaignId) {
         // 如果指定了 campaign-id，获取指定活动
-        console.log(`📡 RewardX: Loading campaign ${campaignId}`)
-        const response = await fetch(`/api/campaigns/${campaignId}`, {
-          credentials: "include"
-        })
-        const data = await response.json()
-        campaign = data.campaign || data
+        apiUrl = buildApiUrl(`/campaigns/${campaignId}`)
       } else {
         // 如果没有指定 campaign-id，获取最新的活跃活动
-        console.log(`📡 RewardX: Loading latest active campaign`)
-        const response = await fetch(`/api/campaigns/latest`, {
-          credentials: "include"
+        // 从当前页面 URL 提取 shop 域名
+        const currentHostname = window.location.hostname
+        let shopParam = ""
+        if (currentHostname.includes(".myshopify.com")) {
+          shopParam = `?shop=${currentHostname}`
+        } else {
+          // 尝试从其他方式获取 shop
+          const shopFromData = container.getAttribute("data-shop")
+          if (shopFromData) {
+            shopParam = `?shop=${shopFromData}`
+          }
+        }
+        apiUrl = buildApiUrl(`/campaigns/latest${shopParam}`)
+      }
+      let response: Response
+      try {
+        response = await fetch(apiUrl, {
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json"
+          }
         })
-        const data = await response.json()
-        
+      } catch (fetchError: any) {
+        // 处理网络错误（DNS 解析失败、连接超时等）
+        const errorMessage = fetchError?.message || String(fetchError)
+        // 其他网络错误
+        throw fetchError
+      }
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+
+      if (campaignId) {
+        campaign = data.campaign || data
+      } else {
         if (data.success && data.campaign) {
           campaign = data.campaign
         } else {
-          console.warn("RewardX: No active campaign found")
-          ;(container as HTMLElement).innerHTML = 
-            '<p style="color: #666; padding: 20px; text-align: center;">No active lottery campaign available.</p>'
-          return
+          console.warn("RewardX: No active campaign found", data)
         }
       }
 
@@ -152,8 +258,6 @@ const initStorefront = () => {
       )
     } catch (err) {
       console.error("❌ RewardX: Failed to load campaign", err)
-      ;(container as HTMLElement).innerHTML = 
-        '<p style="color: #d32f2f; padding: 20px; text-align: center;">Failed to load lottery game. Please try again later.</p>'
     }
   })
 }
@@ -194,15 +298,21 @@ export { NineBoxLottery, LotteryModal }
 if (typeof window !== "undefined") {
   // 等待 DOM 加载完成
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initStorefront)
+    document.addEventListener("DOMContentLoaded", () => {
+      initStorefront()
+    })
   } else {
-    initStorefront()
+    // DOM 已加载，但可能容器还没渲染，延迟一下
+    setTimeout(() => {
+      initStorefront()
+    }, 100)
   }
 
   // 暴露全局 API
   ;(window as any).RewardX = {
     renderLotteryPreview,
     NineBoxLottery,
-    LotteryModal
+    LotteryModal,
+    init: initStorefront // 允许手动初始化
   }
 }

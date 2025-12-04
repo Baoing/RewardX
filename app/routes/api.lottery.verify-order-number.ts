@@ -2,12 +2,19 @@ import type { ActionFunctionArgs } from "react-router"
 import { authenticate } from "@/shopify.server"
 import prisma from "@/db.server"
 import { isCampaignValid } from "@/utils/lottery.server"
+import { handleCorsPreflight, jsonWithCors } from "@/utils/api.server"
 
 /**
  * POST /api/lottery/verify-order-number
  * 通过订单号验证订单是否可以抽奖（用于 storefront）
  */
 export const action = async ({ request }: ActionFunctionArgs) => {
+  // 处理 OPTIONS 预检请求
+  const preflightResponse = handleCorsPreflight(request)
+  if (preflightResponse) {
+    return preflightResponse
+  }
+
   try {
     const { admin, session } = await authenticate.admin(request)
     const data = await request.json()
@@ -15,17 +22,17 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const { orderNumber, campaignId } = data
 
     if (!orderNumber) {
-      return Response.json({
+      return jsonWithCors({
         success: false,
         error: "Order number is required"
-      }, { status: 400 })
+      }, { status: 400 }, request)
     }
 
     if (!campaignId) {
-      return Response.json({
+      return jsonWithCors({
         success: false,
         error: "Campaign ID is required"
-      }, { status: 400 })
+      }, { status: 400 }, request)
     }
 
     const user = await prisma.user.findUnique({
@@ -33,10 +40,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     })
 
     if (!user) {
-      return Response.json({
+      return jsonWithCors({
         success: false,
         error: "User not found"
-      }, { status: 404 })
+      }, { status: 404 }, request)
     }
 
     // 获取活动
@@ -55,19 +62,19 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     })
 
     if (!campaign) {
-      return Response.json({
+      return jsonWithCors({
         success: false,
         error: "Campaign not found or not active"
-      }, { status: 404 })
+      }, { status: 404 }, request)
     }
 
     // 验证活动有效性
     const validity = isCampaignValid(campaign)
     if (!validity.valid) {
-      return Response.json({
+      return jsonWithCors({
         success: false,
         error: validity.reason
-      }, { status: 400 })
+      }, { status: 400 }, request)
     }
 
     // 处理订单号：保留原始格式和清理后的格式
@@ -76,10 +83,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     
     // 确保订单号格式正确（Shopify 订单号通常是数字）
     if (!/^\d+$/.test(cleanOrderNumber)) {
-      return Response.json({
+      return jsonWithCors({
         success: false,
         error: "Invalid order number format"
-      }, { status: 400 })
+      }, { status: 400 }, request)
     }
 
     console.log("🔍 查询订单号:", {
@@ -134,32 +141,32 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         
         // 检查是否是受保护数据权限错误
         if (errorMessage.includes("not approved to access") || errorMessage.includes("protected-customer-data")) {
-          return Response.json({
+          return jsonWithCors({
             success: false,
             error: "This app is not approved to access the Order object. Please apply for Protected Customer Data access in the Shopify Partner Dashboard. See https://shopify.dev/docs/apps/launch/protected-customer-data for more details."
-          }, { status: 403 })
+          }, { status: 403 }, request)
         }
         
         // 如果是权限错误，提供更清晰的提示
         if (errorMessage.includes("Access denied") || errorMessage.includes("permission")) {
-          return Response.json({
+          return jsonWithCors({
             success: false,
             error: "Access denied. Please ensure the app has 'read_orders' permission. You may need to reinstall the app or update permissions in the Shopify Partner Dashboard."
-          }, { status: 403 })
+          }, { status: 403 }, request)
         }
         
-        return Response.json({
+        return jsonWithCors({
           success: false,
           error: errorMessage
-        }, { status: 400 })
+        }, { status: 400 }, request)
       }
 
       const orders = orderData.data?.orders?.edges || []
       if (orders.length === 0) {
-        return Response.json({
+        return jsonWithCors({
           success: false,
           error: `Order not found: ${trimmedOrderNumber}`
-        }, { status: 404 })
+        }, { status: 404 }, request)
       }
 
       order = orders[0].node
@@ -199,24 +206,24 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       const errorMessage = error?.message || String(error)
       
       if (errorMessage.includes("not approved to access") || errorMessage.includes("protected-customer-data")) {
-        return Response.json({
+        return jsonWithCors({
           success: false,
           error: "This app is not approved to access the Order object. Please apply for Protected Customer Data access in the Shopify Partner Dashboard. See https://shopify.dev/docs/apps/launch/protected-customer-data for more details."
-        }, { status: 403 })
+        }, { status: 403 }, request)
       }
       
-      return Response.json({
+      return jsonWithCors({
         success: false,
         error: `Failed to query order: ${errorMessage}`
-      }, { status: 500 })
+      }, { status: 500 }, request)
     }
 
     // 检查是否找到订单
     if (!order || !orderId) {
-      return Response.json({
+      return jsonWithCors({
         success: false,
         error: `Order not found: ${trimmedOrderNumber}`
-      }, { status: 404 })
+      }, { status: 404 }, request)
     }
 
     // 检查订单是否已经抽过奖
@@ -225,13 +232,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     })
 
     if (existingEntry) {
-      return Response.json({
+      return jsonWithCors({
         success: true,
         canPlay: false,
         reason: "Order has already been used for lottery",
         discountCode: existingEntry.discountCode,
         createdAt: existingEntry.createdAt
-      })
+      }, undefined, request)
     }
 
     // 检查订单状态（统一转换为小写比较，避免大小写不匹配）
@@ -239,19 +246,19 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const allowedStatus = campaign.allowedOrderStatus?.toLowerCase() || ""
     
     if (orderStatus !== allowedStatus) {
-      return Response.json({
+      return jsonWithCors({
         success: false,
         error: `Order status must be '${campaign.allowedOrderStatus}', current: '${order.displayFinancialStatus}'`
-      }, { status: 400 })
+      }, { status: 400 }, request)
     }
 
     // 检查订单金额
     const orderAmount = parseFloat(order.totalPriceSet.shopMoney.amount)
     if (campaign.minOrderAmount && orderAmount < campaign.minOrderAmount) {
-      return Response.json({
+      return jsonWithCors({
         success: false,
         error: `Order amount (${orderAmount}) is below minimum requirement (${campaign.minOrderAmount})`
-      }, { status: 400 })
+      }, { status: 400 }, request)
     }
 
     // 检查客户参与次数限制
@@ -264,15 +271,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       })
 
       if (customerPlays >= campaign.maxPlaysPerCustomer) {
-        return Response.json({
+        return jsonWithCors({
           success: false,
           error: `Maximum plays per customer (${campaign.maxPlaysPerCustomer}) reached`
-        }, { status: 400 })
+        }, { status: 400 }, request)
       }
     }
 
     // 通过所有验证
-    return Response.json({
+    return jsonWithCors({
       success: true,
       canPlay: true,
       order: {
@@ -286,12 +293,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           phone: order.customer.phone
         } : null
       }
-    })
+    }, undefined, request)
   } catch (error) {
     console.error("❌ 验证订单失败:", error)
-    return Response.json({
+    return jsonWithCors({
       success: false,
       error: error instanceof Error ? error.message : "Failed to verify order"
-    }, { status: 500 })
+    }, { status: 500 }, request)
   }
 }

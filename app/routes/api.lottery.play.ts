@@ -4,6 +4,7 @@ import { authenticate } from "@/shopify.server"
 import prisma from "@/db.server"
 import { selectPrize, generateDiscountCode, isCampaignValid, calculateExpiresAt } from "@/utils/lottery.server"
 import { createShopifyDiscount } from "@/utils/shopify-discount.server"
+import { handleCorsPreflight, jsonWithCors } from "@/utils/api.server"
 // Draft Order 功能保留在 webhook 中，供将来需要时使用
 // import { createDraftOrder } from "@/utils/shopify-draft-order.server"
 
@@ -32,6 +33,12 @@ interface PlayLotteryRequest {
 }
 
 export const action = async ({ request }: ActionFunctionArgs) => {
+  // 处理 OPTIONS 预检请求
+  const preflightResponse = handleCorsPreflight(request)
+  if (preflightResponse) {
+    return preflightResponse
+  }
+
   try {
     const { admin, session } = await authenticate.admin(request)
     const data: PlayLotteryRequest = await request.json()
@@ -39,7 +46,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const { campaignId, type } = data
 
     if (!campaignId) {
-      return Response.json({ success: false, error: "Campaign ID is required" }, { status: 400 })
+      return jsonWithCors({ success: false, error: "Campaign ID is required" }, { status: 400 }, request)
     }
 
     const user = await prisma.user.findUnique({
@@ -47,7 +54,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     })
 
     if (!user) {
-      return Response.json({ success: false, error: "User not found" }, { status: 404 })
+      return jsonWithCors({ success: false, error: "User not found" }, { status: 404 }, request)
     }
 
     // 获取活动
@@ -65,63 +72,44 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     })
 
     if (!campaign) {
-      return Response.json({ success: false, error: "Campaign not found" }, { status: 404 })
+      return jsonWithCors({ success: false, error: "Campaign not found" }, { status: 404 }, request)
     }
 
     // 验证活动有效性
     const validity = isCampaignValid(campaign)
     if (!validity.valid) {
-      return Response.json({ success: false, error: validity.reason }, { status: 400 })
+      return jsonWithCors({ success: false, error: validity.reason }, { status: 400 }, request)
     }
 
     // 根据类型执行不同的验证和抽奖
     if (type === "order") {
-      return await handleOrderLottery(admin, campaign, data, user.id)
+      return await handleOrderLottery(admin, campaign, data, user.id, request)
     } else if (type === "email_form") {
-      return await handleEmailFormLottery(admin, campaign, data, user.id)
+      return await handleEmailFormLottery(admin, campaign, data, user.id, request)
     } else {
-      return Response.json({ success: false, error: "Invalid lottery type" }, { status: 400 })
+      return jsonWithCors({ success: false, error: "Invalid lottery type" }, { status: 400 }, request)
     }
 
   } catch (error) {
-    console.error("❌ Error playing lottery:", error)
-    return Response.json({
+    return jsonWithCors({
       success: false,
       error: error instanceof Error ? error.message : "Unknown error"
-    }, { status: 500 })
+    }, { status: 500 }, request)
   }
 }
 
 // 订单抽奖
-async function handleOrderLottery(admin: any, campaign: any, data: PlayLotteryRequest, userId: string) {
+async function handleOrderLottery(admin: any, campaign: any, data: PlayLotteryRequest, userId: string, request: Request) {
   const { orderId, orderNumber } = data
 
   // 支持通过订单号或订单ID
   if (!orderId && !orderNumber) {
-    return Response.json({ success: false, error: "Order ID or order number is required" }, { status: 400 })
+    return jsonWithCors({ success: false, error: "Order ID or order number is required" }, { status: 400 }, request)
   }
 
   let order: any = null
   let finalOrderId: string | null = null
-
-  // 🔓 暗门：如果订单号是 #10086，跳过订单验证，直接抽奖
-  if (orderNumber && orderNumber.trim() === "#10086") {
-    console.log("🔓 暗门激活：跳过订单验证")
-    finalOrderId = `gid://shopify/Order/10086`
-    order = {
-      id: finalOrderId,
-      name: "#10086",
-      totalPriceSet: {
-        shopMoney: {
-          amount: "100.00",
-          currencyCode: "USD"
-        }
-      },
-      displayFinancialStatus: campaign.allowedOrderStatus || "paid",
-      displayFulfillmentStatus: "fulfilled",
-      customer: null
-    }
-  } else if (orderNumber && !orderId) {
+  if (orderNumber && !orderId) {
     // 如果提供了订单号，先通过订单号查询订单
     const cleanOrderNumber = orderNumber.replace(/^#/, "").trim()
     const query = `name:"#${cleanOrderNumber}"`
@@ -156,18 +144,18 @@ async function handleOrderLottery(admin: any, campaign: any, data: PlayLotteryRe
     const orderData: any = await orderResponse.json()
 
     if (orderData.errors) {
-      return Response.json({
+      return jsonWithCors({
         success: false,
         error: orderData.errors[0]?.message || "Failed to query order"
-      }, { status: 400 })
+      }, { status: 400 }, request)
     }
 
     const orders = orderData.data?.orders?.edges || []
     if (orders.length === 0) {
-      return Response.json({
+      return jsonWithCors({
         success: false,
         error: `Order not found: ${orderNumber}`
-      }, { status: 404 })
+      }, { status: 404 }, request)
     }
 
     order = orders[0].node
@@ -221,7 +209,7 @@ async function handleOrderLottery(admin: any, campaign: any, data: PlayLotteryRe
     order = orderData.data?.order
 
     if (!order) {
-      return Response.json({ success: false, error: "Order not found" }, { status: 404 })
+      return jsonWithCors({ success: false, error: "Order not found" }, { status: 404 }, request)
     }
 
     finalOrderId = order.id
@@ -229,77 +217,7 @@ async function handleOrderLottery(admin: any, campaign: any, data: PlayLotteryRe
 
   // 检查订单是否已经抽过奖
   if (!finalOrderId) {
-    return Response.json({ success: false, error: "Order ID is required" }, { status: 400 })
-  }
-
-  // 🔓 暗门：订单号 #10086 跳过已抽过奖检查，允许重复抽奖
-  const isBackdoor = orderNumber && orderNumber.trim() === "#10086"
-  let existingEntry: any = null
-
-  if (!isBackdoor) {
-    existingEntry = await prisma.lotteryEntry.findUnique({
-      where: { orderId: finalOrderId }
-    })
-
-    if (existingEntry) {
-      // 如果已经抽过奖，返回之前的结果和奖品 ID（前端根据 ID 查找索引）
-      return Response.json({
-        success: false,
-        error: "Order has already been used",
-        hasPlayed: true,
-        prizeId: existingEntry.prizeId, // 返回奖品 ID，让前端根据 ID 查找索引
-        previousEntry: {
-          id: existingEntry.id,
-          isWinner: existingEntry.isWinner,
-          prizeName: existingEntry.prizeName,
-          discountCode: existingEntry.discountCode
-        }
-      }, { status: 400 })
-    }
-  } else {
-    console.log("🔓 暗门：跳过已抽过奖检查，允许重复抽奖")
-  }
-
-  // 🔓 暗门：跳过订单状态、金额和客户参与次数检查
-  if (!isBackdoor) {
-    // 检查订单状态（统一转换为小写比较）
-    const orderStatus = order.displayFinancialStatus?.toLowerCase() || ""
-    const allowedStatus = campaign.allowedOrderStatus?.toLowerCase() || ""
-
-    if (orderStatus !== allowedStatus) {
-      return Response.json({
-        success: false,
-        error: `Order status must be '${campaign.allowedOrderStatus}', current: '${order.displayFinancialStatus}'`
-      }, { status: 400 })
-    }
-
-    // 检查订单金额
-    const orderAmount = parseFloat(order.totalPriceSet.shopMoney.amount)
-    if (campaign.minOrderAmount && orderAmount < campaign.minOrderAmount) {
-      return Response.json({
-        success: false,
-        error: `Order amount (${orderAmount}) is below minimum requirement (${campaign.minOrderAmount})`
-      }, { status: 400 })
-    }
-
-    // 检查客户参与次数限制
-    if (campaign.maxPlaysPerCustomer && order.customer) {
-      const customerPlays = await prisma.lotteryEntry.count({
-        where: {
-          campaignId: campaign.id,
-          customerId: order.customer.id
-        }
-      })
-
-      if (customerPlays >= campaign.maxPlaysPerCustomer) {
-        return Response.json({
-          success: false,
-          error: `Maximum plays per customer (${campaign.maxPlaysPerCustomer}) reached`
-        }, { status: 400 })
-      }
-    }
-  } else {
-    console.log("🔓 暗门：跳过订单状态、金额和客户参与次数检查")
+    return jsonWithCors({ success: false, error: "Order ID is required" }, { status: 400 }, request)
   }
 
   // 计算订单金额（暗门情况下使用假订单的金额）
@@ -317,24 +235,24 @@ async function handleOrderLottery(admin: any, campaign: any, data: PlayLotteryRe
     email: order.customer?.email || undefined,
     userId
     // shippingAddress: data.shippingAddress // 保留字段，供将来使用
-  })
+  }, request)
 }
 
 // 邮件表单抽奖
-async function handleEmailFormLottery(admin: any, campaign: any, data: PlayLotteryRequest, userId: string) {
+async function handleEmailFormLottery(admin: any, campaign: any, data: PlayLotteryRequest, userId: string, request: Request) {
   const { email, name, phone } = data
 
   // 验证必填字段
   if (!email) {
-    return Response.json({ success: false, error: "Email is required" }, { status: 400 })
+    return jsonWithCors({ success: false, error: "Email is required" }, { status: 400 }, request)
   }
 
   if (campaign.requireName && !name) {
-    return Response.json({ success: false, error: "Name is required" }, { status: 400 })
+    return jsonWithCors({ success: false, error: "Name is required" }, { status: 400 }, request)
   }
 
   if (campaign.requirePhone && !phone) {
-    return Response.json({ success: false, error: "Phone is required" }, { status: 400 })
+    return jsonWithCors({ success: false, error: "Phone is required" }, { status: 400 }, request)
   }
 
   // 检查参与次数限制（通过 email 检查，存储在 order 字段中）
@@ -347,10 +265,10 @@ async function handleEmailFormLottery(admin: any, campaign: any, data: PlayLotte
     })
 
     if (existingPlays >= campaign.maxPlaysPerCustomer) {
-      return Response.json({
+      return jsonWithCors({
         success: false,
         error: `Maximum plays per customer (${campaign.maxPlaysPerCustomer}) reached`
-      }, { status: 400 })
+      }, { status: 400 }, request)
     }
   }
 
@@ -367,12 +285,12 @@ async function handleEmailFormLottery(admin: any, campaign: any, data: PlayLotte
 }
 
 // 执行抽奖核心逻辑
-async function performLottery(admin: any, campaign: any, entryData: any) {
+async function performLottery(admin: any, campaign: any, entryData: any, request?: Request) {
   // 1. 抽奖算法选择奖品
   const selectedPrize = selectPrize(campaign.Prize)
 
   if (!selectedPrize) {
-    return Response.json({ success: false, error: "No prizes available" }, { status: 400 })
+    return jsonWithCors({ success: false, error: "No prizes available" }, { status: 400 }, request)
   }
 
   const isWinner = selectedPrize.type !== "no_prize"
@@ -384,11 +302,11 @@ async function performLottery(admin: any, campaign: any, entryData: any) {
   if (isWinner) {
     // 所有中奖类型都创建折扣码（discount_percentage, discount_fixed, free_shipping, free_gift）
     discountCode = selectedPrize.discountCode || generateDiscountCode("LOTTERY")
-    
+
     // 调用 Shopify API 创建折扣码
     try {
       const expiresAt = calculateExpiresAt(30) // 默认 30 天后过期
-      
+
       // 根据奖品类型设置折扣码参数
       let discountType: "discount_percentage" | "discount_fixed" | "free_shipping" | "free_gift"
       if (selectedPrize.type === "discount_percentage") {
@@ -403,7 +321,7 @@ async function performLottery(admin: any, campaign: any, entryData: any) {
         // 默认使用百分比折扣
         discountType = "discount_percentage"
       }
-      
+
       const shopifyDiscount = await createShopifyDiscount(admin, {
         code: discountCode,
         type: discountType,
@@ -420,11 +338,6 @@ async function performLottery(admin: any, campaign: any, entryData: any) {
       })
 
       discountCodeId = shopifyDiscount.discountCodeId
-      console.log("✅ Shopify 折扣码创建成功:", {
-        code: discountCode,
-        discountCodeId,
-        type: discountType
-      })
     } catch (error) {
       console.error("❌ 创建 Shopify 折扣码失败:", error)
       // 即使 Shopify 折扣码创建失败，也继续流程，但记录错误
@@ -483,12 +396,10 @@ async function performLottery(admin: any, campaign: any, entryData: any) {
     return entry
   })
 
-  console.log(`✅ Lottery completed: ${result.id}, Winner: ${isWinner}, Prize: ${selectedPrize.name}`)
-
   // 4. 返回结果（包含奖品 ID，前端根据 ID 查找索引）
   // 注意：所有奖品类型（包括 free_gift）都通过折扣码方式发放，不自动创建 Draft Order
   // Draft Order 功能保留在 webhook 中，供将来需要时使用
-  return Response.json({
+  return jsonWithCors({
     success: true,
     prizeId: selectedPrize.id, // 返回奖品 ID，让前端根据 ID 查找索引
     entry: {
@@ -503,6 +414,6 @@ async function performLottery(admin: any, campaign: any, entryData: any) {
         expiresAt: result.expiresAt
       } : undefined
     }
-  })
+  }, undefined, request)
 }
 
