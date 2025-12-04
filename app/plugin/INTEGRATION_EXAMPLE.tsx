@@ -150,7 +150,7 @@ export const DynamicPreview = observer(() => {
 
 /*
 {% comment %}
-  File: extensions/lottery-game/blocks/lottery-block.liquid
+  File: extensions/rewardx-lottery-extension/blocks/app-embed.liquid
 {% endcomment %}
 
 {{ 'lottery-game.js' | asset_url | script_tag }}

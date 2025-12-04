@@ -39,7 +39,7 @@ npm run dev:plugin
 npm run build:plugin
 ```
 
-构建产物会输出到 `extensions/lottery-game/assets/lottery-game.js`。
+构建产物会输出到 `extensions/rewardx-lottery-extension/assets/lottery-game.js`。
 
 ## 💡 使用方式
 
@@ -85,7 +85,7 @@ npm run build:plugin
 
 #### Step 2: 在 Theme Extension 中使用
 
-创建 `extensions/lottery-game/blocks/lottery-block.liquid`:
+创建 `extensions/rewardx-lottery-extension/blocks/app-embed.liquid`:
 
 ```liquid
 {{ 'lottery-game.js' | asset_url | script_tag }}

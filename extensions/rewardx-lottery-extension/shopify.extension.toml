@@ -1,0 +1,10 @@
+# Learn more about theme app extensions at https://shopify.dev/docs/apps/online-store/theme-app-extensions
+
+api_version = "2025-01"
+
+[[extensions]]
+uid = "c5543dd4-1d9f-29a5-5f9a-0093004378f120635b41"
+type = "theme"
+name = "RewardX Lottery Game Extension"
+handle = "rewardx-lottery-extension"
+

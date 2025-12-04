@@ -90,36 +90,71 @@ export interface Campaign {
 /**
  * Storefront 初始化函数
  * 在页面加载时自动查找并初始化所有抽奖容器
+ * 如果没有指定 campaign-id，则自动获取最新的活跃活动
  */
 const initStorefront = () => {
   const containers = document.querySelectorAll("[data-rewardx-lottery]")
 
-  containers.forEach((container) => {
+  if (containers.length === 0) {
+    return
+  }
+
+  console.log(`🎮 RewardX: Found ${containers.length} lottery container(s)`)
+
+  containers.forEach(async (container) => {
     const campaignId = container.getAttribute("data-campaign-id")
+    let campaign: Campaign | null = null
 
-    if (!campaignId) {
-      console.warn("RewardX: data-campaign-id is required")
-      return
+    try {
+      if (campaignId) {
+        // 如果指定了 campaign-id，获取指定活动
+        console.log(`📡 RewardX: Loading campaign ${campaignId}`)
+        const response = await fetch(`/api/campaigns/${campaignId}`, {
+          credentials: "include"
+        })
+        const data = await response.json()
+        campaign = data.campaign || data
+      } else {
+        // 如果没有指定 campaign-id，获取最新的活跃活动
+        console.log(`📡 RewardX: Loading latest active campaign`)
+        const response = await fetch(`/api/campaigns/latest`, {
+          credentials: "include"
+        })
+        const data = await response.json()
+        
+        if (data.success && data.campaign) {
+          campaign = data.campaign
+        } else {
+          console.warn("RewardX: No active campaign found")
+          ;(container as HTMLElement).innerHTML = 
+            '<p style="color: #666; padding: 20px; text-align: center;">No active lottery campaign available.</p>'
+          return
+        }
+      }
+
+      if (!campaign) {
+        console.warn("RewardX: Campaign not found")
+        return
+      }
+
+      console.log(`✅ RewardX: Campaign loaded - ${campaign.name} (${campaign.id})`)
+
+      // 渲染抽奖组件
+      const root = ReactDOM.createRoot(container as HTMLElement)
+      root.render(
+        <LotteryModal
+          campaign={campaign}
+          isAdmin={false} // Storefront 环境
+          onPrizeWon={(prize) => {
+            console.log("🎉 Prize won:", prize)
+          }}
+        />
+      )
+    } catch (err) {
+      console.error("❌ RewardX: Failed to load campaign", err)
+      ;(container as HTMLElement).innerHTML = 
+        '<p style="color: #d32f2f; padding: 20px; text-align: center;">Failed to load lottery game. Please try again later.</p>'
     }
-
-    // 加载活动数据并渲染
-    fetch(`/api/campaigns/${campaignId}`)
-      .then(res => res.json())
-      .then(campaign => {
-        const root = ReactDOM.createRoot(container as HTMLElement)
-        root.render(
-          <LotteryModal
-            campaign={campaign}
-            isAdmin={false} // Storefront 环境
-            onPrizeWon={(prize) => {
-              console.log("Prize won:", prize)
-            }}
-          />
-        )
-      })
-      .catch(err => {
-        console.error("RewardX: Failed to load campaign", err)
-      })
   })
 }
 

@@ -1,0 +1,42 @@
+{%- comment -%}
+  RewardX Lottery Game App Block
+  Automatically loads the latest active campaign for the shop
+  This block can be added to any section in the theme editor
+{%- endcomment -%}
+
+{%- liquid
+  assign block_id = section.id | append: '--' | append: block.id
+-%}
+
+<div
+  class="rewardx-lottery-block"
+  data-rewardx-block-id="{{ block_id }}"
+  data-shop="{{ shop.permanent_domain }}"
+>
+  <div class="rewardx-lottery-container" data-rewardx-lottery></div>
+</div>
+
+{%- comment -%} Load lottery game script {%- endcomment -%}
+<script src="{{ 'lottery-game.js' | asset_url }}" defer></script>
+
+<style>
+  .rewardx-lottery-block {
+    margin: 20px 0;
+    text-align: center;
+  }
+
+  .rewardx-lottery-container {
+    min-height: 500px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+</style>
+
+{% schema %}
+{
+  "name": "RewardX Lottery Game",
+  "target": "section",
+  "settings": []
+}
+{% endschema %}

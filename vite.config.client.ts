@@ -6,7 +6,7 @@ import path from "path"
  * Vite 配置 - 客户端组件构建
  * 
  * 用于构建 Storefront 客户端游戏组件
- * 构建产物会输出到 extensions/lottery-game/assets/
+ * 构建产物会输出到 extensions/rewardx-lottery-extension/assets/
  * 
  * 运行: npm run build:plugin
  */
@@ -24,7 +24,7 @@ export default defineConfig({
   root: path.resolve(__dirname, "app/plugin"),
   
   build: {
-    outDir: path.resolve(__dirname, "extensions/lottery-game/assets"),
+    outDir: path.resolve(__dirname, "extensions/rewardx-lottery-extension/assets"),
     emptyOutDir: false,
     
     rollupOptions: {
