@@ -2,9 +2,9 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router"
 import { randomUUID } from "crypto"
 import { authenticate } from "@/shopify.server"
 import prisma from "@/db.server"
-import { selectPrize, generateDiscountCode, isCampaignValid, calculateExpiresAt } from "@/utils/lottery.server"
-import { createShopifyDiscount } from "@/utils/shopify-discount.server"
+import { selectPrize, isCampaignValid, calculateExpiresAt } from "@/utils/lottery.server"
 import { handleCorsPreflight, jsonWithCors, errorResponseWithCors } from "@/utils/api.server"
+import { createDiscountCodeForPrize } from "@/services/discount-code.server"
 
 // 强制允许所有来源访问此接口
 const ALLOW_ALL_ORIGINS = true
@@ -426,6 +426,7 @@ async function handleOrderLottery(admin: any, campaign: any, data: PlayLotteryRe
 
   // 执行抽奖并返回索引
   return await performLottery(admin, campaign, {
+    shop: shop?.shop || null, // 传递 shop 信息，用于 storefront 调用时创建折扣码
     campaignType: "order",
     orderId: finalOrderId,
     orderNumber: order?.name || orderNumber || `#${finalOrderId}`,
@@ -475,8 +476,15 @@ async function handleEmailFormLottery(admin: any, campaign: any, data: PlayLotte
     }
   }
 
+  // 获取 shop 信息（用于 storefront 调用时创建折扣码）
+  const shopInfo = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { shop: true }
+  })
+
   // 执行抽奖
   return await performLottery(admin, campaign, {
+    shop: shopInfo?.shop || null, // 传递 shop 信息，用于 storefront 调用时创建折扣码
     campaignType: "email_subscribe",
     order: email, // 将 email 存储到 order 字段
     customerName: name,
@@ -498,67 +506,37 @@ async function performLottery(admin: any, campaign: any, entryData: any, request
 
   const isWinner = selectedPrize.type !== "no_prize"
 
-  // 2. 生成折扣码（如果中奖）
+  // 2. 创建折扣码（如果中奖）
   let discountCode = null
   let discountCodeId = null
 
   if (isWinner) {
-    // 所有中奖类型都创建折扣码（discount_percentage, discount_fixed, free_shipping, free_gift）
-    discountCode = selectedPrize.discountCode || generateDiscountCode("LOTTERY")
-
-    // 如果 admin 为 null，尝试重新获取（创建折扣码需要 admin）
-    if (!admin && request) {
-      try {
-        const authResult = await authenticate.admin(request)
-        admin = authResult.admin
-      } catch (authError) {
-        // 即使认证失败，也继续流程
-        // discountCodeId 保持为 null，前端仍会显示折扣码，但可能无法在 Shopify 中使用
+    // 使用封装的折扣码创建服务
+    const discountResult = await createDiscountCodeForPrize({
+      prize: {
+        id: selectedPrize.id,
+        name: selectedPrize.name,
+        type: selectedPrize.type as "discount_percentage" | "discount_fixed" | "free_shipping" | "free_gift" | "no_prize",
+        discountValue: selectedPrize.discountValue || undefined,
+        discountCode: selectedPrize.discountCode || undefined,
+        giftProductId: selectedPrize.giftProductId || undefined,
+        giftVariantId: selectedPrize.giftVariantId || undefined
+      },
+      shop: entryData.shop || undefined,
+      request: request,
+      expiresInDays: 30,
+      usageLimit: 1,
+      minimumRequirement: {
+        type: "none" // 可以根据活动配置设置最低购买金额
       }
-    }
+    })
 
-    // 调用 Shopify API 创建折扣码
-    try {
-      const expiresAt = calculateExpiresAt(30) // 默认 30 天后过期
+    discountCode = discountResult.code
+    discountCodeId = discountResult.discountCodeId
 
-      // 根据奖品类型设置折扣码参数
-      let discountType: "discount_percentage" | "discount_fixed" | "free_shipping" | "free_gift"
-      if (selectedPrize.type === "discount_percentage") {
-        discountType = "discount_percentage"
-      } else if (selectedPrize.type === "discount_fixed") {
-        discountType = "discount_fixed"
-      } else if (selectedPrize.type === "free_shipping") {
-        discountType = "free_shipping"
-      } else if (selectedPrize.type === "free_gift") {
-        discountType = "free_gift"
-      } else {
-        // 默认使用百分比折扣
-        discountType = "discount_percentage"
-      }
-
-      // 只有在 admin 存在时才创建 Shopify 折扣码
-      if (admin) {
-        const shopifyDiscount = await createShopifyDiscount(admin, {
-          code: discountCode,
-          type: discountType,
-          value: selectedPrize.discountValue || 0,
-          title: `Lottery Prize: ${selectedPrize.name}`,
-          endsAt: expiresAt,
-          usageLimit: 1, // 每个客户只能使用一次
-          minimumRequirement: {
-            type: "none" // 可以根据活动配置设置最低购买金额
-          },
-          // 免费赠品需要指定产品 ID
-          giftProductId: selectedPrize.giftProductId || undefined,
-          giftVariantId: selectedPrize.giftVariantId || undefined
-        })
-
-        discountCodeId = shopifyDiscount.discountCodeId
-      }
-    } catch (error) {
-      console.error("❌ 创建 Shopify 折扣码失败:", error)
-      // 即使 Shopify 折扣码创建失败，也继续流程，但记录错误
-      // discountCodeId 保持为 null，前端仍会显示折扣码，但可能无法在 Shopify 中使用
+    // 如果创建失败，记录错误但不中断流程
+    if (!discountResult.created && discountResult.error) {
+      console.error("❌ 创建 Shopify 折扣码失败:", discountResult.error)
     }
   }
 
