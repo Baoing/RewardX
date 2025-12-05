@@ -37,6 +37,8 @@ interface NineBoxLotteryProps {
   onNameChange?: (value: string) => void
   onPhoneChange?: (value: string) => void
   onVerified?: (verified: boolean) => void // 验证状态变化回调
+  shop?: string // Shop 域名（已废弃，现在通过 container 自动获取）
+  container?: Element | null // 容器元素，用于自动获取 shop 等公共参数
 }
 
 /**
@@ -60,6 +62,8 @@ export const NineBoxLottery = ({
   onOrderChange,
   onNameChange,
   onVerified,
+  shop, // 保留以兼容旧代码，但优先使用 container
+  container,
 }: NineBoxLotteryProps) => {
   const luckyGridRef = useRef<any>(null)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -198,7 +202,7 @@ export const NineBoxLottery = ({
             phone: phone?.trim()
           })
         })
-      })
+      }, container)
 
       // 如果接口返回 success 为 false，不启动抽奖动画
       if (!data.success) {

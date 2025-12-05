@@ -13,6 +13,8 @@ interface PreviewGameProps {
   campaign?: Campaign // Storefront 模式：直接传入 campaign
   isAdmin?: boolean // 是否在 Admin 环境中
   onPrizeWon?: (prize: Prize) => void // Storefront 模式：中奖回调
+  shop?: string // Shop 域名（已废弃，现在通过 container 自动获取）
+  container?: Element | null // 容器元素，用于自动获取 shop 等公共参数
 }
 
 /**
@@ -23,7 +25,7 @@ interface PreviewGameProps {
  * 1. Admin 模式：从 MobX store 获取 campaign（不传 campaign prop）
  * 2. Storefront 模式：直接接收 campaign 作为 prop
  */
-const PreviewGameComponent = ({ campaign: campaignProp, isAdmin = false, onPrizeWon }: PreviewGameProps) => {
+const PreviewGameComponent = ({ campaign: campaignProp, isAdmin = false, onPrizeWon, shop, container }: PreviewGameProps) => {
   // Admin 模式：从 store 获取
   // Storefront 模式：使用传入的 campaign prop
   let campaign: Campaign | null = null
@@ -185,6 +187,8 @@ const PreviewGameComponent = ({ campaign: campaignProp, isAdmin = false, onPrize
             orderNumber={orderNumber}
             onOrderNumberChange={setOrderNumber}
             onVerified={handleVerified}
+            shop={shop}
+            container={container}
           />
         </div>
 

@@ -4,6 +4,47 @@
  */
 
 /**
+ * 获取 shop 域名
+ * 从多个来源尝试获取 shop 信息
+ *
+ * 优先级：
+ * 1. 全局变量（window.__REWARDX_SHOP__）
+ * 2. 当前 URL hostname（如果包含 .myshopify.com）
+ * 3. 从容器元素获取（如果提供了 container）
+ *
+ * @param container - 可选的容器元素，用于获取 data-shop 属性
+ * @returns Shop 域名或 null
+ */
+export const getShop = (container?: Element | null): string | null => {
+  if (typeof window !== "undefined" && window?.Shopify?.shop) {
+    return window.Shopify.shop
+  }
+  // 1. 检查全局变量
+  if (typeof window !== "undefined" && (window as any).__REWARDX_SHOP__) {
+    return String((window as any).__REWARDX_SHOP__)
+  }
+
+  // 2. 从当前 URL hostname 提取
+  if (typeof window !== "undefined") {
+    const hostname = window.location.hostname
+    if (hostname.includes(".myshopify.com")) {
+      return hostname
+    }
+  }
+
+  // 3. 从容器元素获取
+  if (container) {
+    const shopFromData = container.getAttribute("data-shop") ||
+                        container.closest("[data-shop]")?.getAttribute("data-shop")
+    if (shopFromData) {
+      return shopFromData
+    }
+  }
+
+  return null
+}
+
+/**
  * 获取应用 API URL
  * 优先使用 Vite 注入的环境变量，然后回退到其他方式
  *
@@ -52,12 +93,19 @@ export const getAppApiUrl = (): string => {
 
 /**
  * 构建完整的 API URL
+ * 自动添加 shop 等公共参数
  *
  * @param endpoint - API 端点路径（例如："/campaigns/latest" 或 "campaigns/latest"）
- * @returns 完整的 API URL（例如：https://your-app.com/api/campaigns/latest）
+ * @param params - 查询参数对象（可选，会自动与公共参数合并）
+ * @param container - 可选的容器元素，用于获取 shop 信息
+ * @returns 完整的 API URL（例如：https://your-app.com/api/campaigns/latest?shop=xxx）
  * @throws 如果 API 基础 URL 未配置，会抛出错误
  */
-export const buildApiUrl = (endpoint: string): string => {
+export const buildApiUrl = (
+  endpoint: string,
+  params?: Record<string, string | null | undefined>,
+  container?: Element | null
+): string => {
   const apiBase = getAppApiUrl()
   if (!apiBase) {
     console.error("❌ RewardX: No API URL configured")
@@ -65,21 +113,54 @@ export const buildApiUrl = (endpoint: string): string => {
   }
   const cleanEndpoint = endpoint.startsWith("/") ? endpoint.slice(1) : endpoint
 
-  return `${apiBase}/api/${cleanEndpoint}`
+  let url = `${apiBase}/api/${cleanEndpoint}`
+
+  // 构建查询参数（合并公共参数和自定义参数）
+  const searchParams = new URLSearchParams()
+
+  // 1. 添加公共参数（shop 等）
+  const shop = getShop(container)
+  if (shop) {
+    searchParams.append("shop", shop)
+  }
+
+  // 2. 添加自定义参数（会覆盖公共参数中的同名参数）
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== null && value !== undefined && value !== "") {
+        searchParams.set(key, String(value)) // 使用 set 以便覆盖公共参数
+      }
+    })
+  }
+
+  // 3. 构建最终 URL
+  const queryString = searchParams.toString()
+  if (queryString) {
+    url += `?${queryString}`
+  }
+
+  return url
 }
 
 /**
  * 执行 API 请求（带错误处理）
+ * 自动添加 shop 等公共参数
  *
  * @param endpoint - API 端点路径
  * @param options - Fetch 选项
+ * @param container - 可选的容器元素，用于获取 shop 信息
  * @returns Promise<Response>
  */
 export const fetchApi = async (
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  container?: Element | null
 ): Promise<Response> => {
-  const apiUrl = buildApiUrl(endpoint)
+  // 从 endpoint 中提取查询参数（如果已包含）
+  const [path, existingQuery] = endpoint.split("?")
+  const existingParams = existingQuery ? Object.fromEntries(new URLSearchParams(existingQuery)) : {}
+  
+  const apiUrl = buildApiUrl(path, existingParams, container)
 
   const defaultOptions: RequestInit = {
     credentials: "include", // 支持 CORS
@@ -103,18 +184,21 @@ export const fetchApi = async (
 
 /**
  * 执行 API 请求并解析 JSON 响应
+ * 自动添加 shop 等公共参数
  *
  * @param endpoint - API 端点路径
  * @param options - Fetch 选项
+ * @param container - 可选的容器元素，用于获取 shop 信息
  * @returns Promise<T> - 解析后的 JSON 数据
  * @throws 如果响应不成功，会抛出包含错误信息的 Error
  */
 export const fetchApiJson = async <T = any>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  container?: Element | null
 ): Promise<T> => {
   try {
-    const response = await fetchApi(endpoint, options)
+    const response = await fetchApi(endpoint, options, container)
 
     // 先尝试解析 JSON（即使状态码不是 200，也可能返回 JSON 格式的错误信息）
     let data: any

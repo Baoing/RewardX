@@ -142,22 +142,10 @@ const initContainers = (containers: NodeListOf<Element>) => {
         endpoint = `/campaigns/${campaignId}`
       } else {
         // 如果没有指定 campaign-id，获取最新的活跃活动
-        // 从当前页面 URL 提取 shop 域名
-        const currentHostname = window.location.hostname
-        let shopParam = ""
-        if (currentHostname.includes(".myshopify.com")) {
-          shopParam = `?shop=${currentHostname}`
-        } else {
-          // 尝试从其他方式获取 shop
-          const shopFromData = container.getAttribute("data-shop")
-          if (shopFromData) {
-            shopParam = `?shop=${shopFromData}`
-          }
-        }
-        endpoint = `/campaigns/latest${shopParam}`
+        endpoint = `/campaigns/latest`
       }
-      // 使用封装的 API 请求函数
-      const data = await fetchApiJson<any>(endpoint)
+      // 使用封装的 API 请求函数（自动添加 shop 参数）
+      const data = await fetchApiJson<any>(endpoint, {}, container)
 
       if (campaignId) {
         campaign = data.campaign || data
@@ -175,6 +163,12 @@ const initContainers = (containers: NodeListOf<Element>) => {
       }
 
       console.log(`✅ RewardX: Campaign loaded - ${campaign.name} (${campaign.id})`)
+
+      // 获取 shop 信息（从容器元素的 data-shop 属性或从 API URL 中提取）
+      const shop = container.getAttribute("data-shop") || 
+                   container.closest("[data-shop]")?.getAttribute("data-shop") ||
+                   (window.location.hostname.includes(".myshopify.com") ? window.location.hostname : null) ||
+                   null
 
       // 检查渲染模式：从 data-render-mode 属性获取，默认为 "preview"
       // "preview" - 使用 PreviewGame（直接显示，不使用弹窗）
@@ -204,6 +198,8 @@ const initContainers = (containers: NodeListOf<Element>) => {
           React.createElement(PreviewGameComponent, {
             campaign: campaign,
             isAdmin: false, // Storefront 环境
+            shop: shop || undefined, // 保留以兼容旧代码
+            container: container, // 传递容器元素，用于自动获取 shop 等公共参数
             onPrizeWon: (prize: Prize) => {
               console.log("🎉 Prize won:", prize)
             }

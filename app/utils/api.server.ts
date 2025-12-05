@@ -13,7 +13,7 @@ import { isAllowedAllOrigins } from "@/config/cors"
  * 获取允许的 CORS 源
  * 允许所有 Shopify Storefront 域名
  */
-const getAllowedOrigins = (): string[] => {
+const getAllowedOrigins = (): any[] => {
   // 允许所有 .myshopify.com 域名
   return [
     /^https:\/\/.*\.myshopify\.com$/,
@@ -26,14 +26,14 @@ const getAllowedOrigins = (): string[] => {
  */
 const isOriginAllowed = (origin: string | null): boolean => {
   if (!origin) return false
-  
+
   const allowedPatterns = getAllowedOrigins()
   return allowedPatterns.some(pattern => pattern.test(origin))
 }
 
 /**
  * 添加 CORS 头到响应
- * 
+ *
  * @param response - 响应对象
  * @param request - 请求对象
  * @param allowAllOrigins - 是否强制允许所有来源（可选，如果不提供则根据路径自动判断）
@@ -42,16 +42,16 @@ export const addCorsHeaders = (response: Response, request: Request, allowAllOri
   const origin = request.headers.get("Origin")
   const url = new URL(request.url)
   const path = url.pathname
-  
+
   // 如果没有明确指定，根据路径自动判断
-  const shouldAllowAll = allowAllOrigins !== undefined 
-    ? allowAllOrigins 
+  const shouldAllowAll = allowAllOrigins !== undefined
+    ? allowAllOrigins
     : isAllowedAllOrigins(path)
-  
+
   // 如果允许所有来源
   if (shouldAllowAll) {
     const headers = new Headers(response.headers)
-    
+
     // 重要：如果请求包含 credentials，不能使用 *，必须使用具体的 Origin
     // 如果请求没有 Origin 或不需要 credentials，可以使用 *
     if (origin) {
@@ -61,19 +61,32 @@ export const addCorsHeaders = (response: Response, request: Request, allowAllOri
     } else {
       // 没有 Origin 时，使用 *（但此时不能使用 credentials）
       headers.set("Access-Control-Allow-Origin", "*")
+      // 注意：不能同时设置 Access-Control-Allow-Origin: * 和 Access-Control-Allow-Credentials: true
     }
-    
+
     headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
     headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
     headers.set("Access-Control-Max-Age", "86400") // 24 小时
-    
+
+    // 调试日志（仅在开发环境）
+    if (process.env.NODE_ENV === "development") {
+      console.log("🔍 CORS Headers Added:", {
+        path,
+        origin,
+        shouldAllowAll,
+        allowAllOrigins,
+        allowOrigin: headers.get("Access-Control-Allow-Origin"),
+        allowCredentials: headers.get("Access-Control-Allow-Credentials")
+      })
+    }
+
     return new Response(response.body, {
       status: response.status,
       statusText: response.statusText,
       headers
     })
   }
-  
+
   // 如果来源被允许，添加 CORS 头
   if (origin && isOriginAllowed(origin)) {
     const headers = new Headers(response.headers)
@@ -82,20 +95,37 @@ export const addCorsHeaders = (response: Response, request: Request, allowAllOri
     headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
     headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
     headers.set("Access-Control-Max-Age", "86400") // 24 小时
-    
+
     return new Response(response.body, {
       status: response.status,
       statusText: response.statusText,
       headers
     })
   }
-  
+
+  // 即使来源不在白名单中，如果 allowAllOrigins 为 true，也允许访问
+  // 这可以处理一些边缘情况（比如本地开发环境）
+  if (allowAllOrigins && origin) {
+    const headers = new Headers(response.headers)
+    headers.set("Access-Control-Allow-Origin", origin)
+    headers.set("Access-Control-Allow-Credentials", "true")
+    headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+    headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+    headers.set("Access-Control-Max-Age", "86400") // 24 小时
+
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers
+    })
+  }
+
   return response
 }
 
 /**
  * 处理 OPTIONS 预检请求
- * 
+ *
  * @param request - 请求对象
  * @param allowAllOrigins - 是否强制允许所有来源（可选，如果不提供则根据路径自动判断）
  */
@@ -104,27 +134,89 @@ export const handleCorsPreflight = (request: Request, allowAllOrigins?: boolean)
     const url = new URL(request.url)
     const path = url.pathname
     const origin = request.headers.get("Origin")
-    
+    const requestCredentials = request.headers.get("Access-Control-Request-Credentials")
+
     // 如果没有明确指定，根据路径自动判断
-    const shouldAllowAll = allowAllOrigins !== undefined 
-      ? allowAllOrigins 
+    const shouldAllowAll = allowAllOrigins !== undefined
+      ? allowAllOrigins
       : isAllowedAllOrigins(path)
-    
+
     // 如果允许所有来源
     if (shouldAllowAll) {
-      const headers: Record<string, string> = {
-        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
-        "Access-Control-Max-Age": "86400"
-      }
-      
+      // 使用 Headers 对象确保响应头正确设置
+      const headers = new Headers()
+      headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+      headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+      headers.set("Access-Control-Max-Age", "86400")
+
       // 重要：如果请求包含 Origin，必须使用具体的 Origin，不能使用 *
       // 因为预检请求通常包含 Origin，所以优先使用 Origin
+      // 我们的 API 需要支持 credentials，所以当有 Origin 时总是设置 Access-Control-Allow-Credentials: true
       if (origin) {
-        headers["Access-Control-Allow-Origin"] = origin
-        headers["Access-Control-Allow-Credentials"] = "true"
+        headers.set("Access-Control-Allow-Origin", origin)
+        // 总是设置 credentials 支持（因为我们的 API 需要支持 credentials）
+        headers.set("Access-Control-Allow-Credentials", "true")
       } else {
-        headers["Access-Control-Allow-Origin"] = "*"
+        // 没有 Origin 时，使用 *（但此时不能使用 credentials）
+        // 注意：如果请求包含 credentials，浏览器会发送 Origin 头部，所以这种情况应该很少发生
+        headers.set("Access-Control-Allow-Origin", "*")
+        // 注意：不能同时设置 Access-Control-Allow-Origin: * 和 Access-Control-Allow-Credentials: true
+      }
+
+      // 调试日志（仅在开发环境）
+      if (process.env.NODE_ENV === "development") {
+        console.log("🔍 CORS Preflight:", {
+          path,
+          origin,
+          requestCredentials,
+          shouldAllowAll,
+          allowAllOrigins,
+          allowOrigin: headers.get("Access-Control-Allow-Origin"),
+          allowCredentials: headers.get("Access-Control-Allow-Credentials"),
+          allowMethods: headers.get("Access-Control-Allow-Methods"),
+          allowHeaders: headers.get("Access-Control-Allow-Headers")
+        })
+      }
+
+      return new Response(null, {
+        status: 204,
+        headers
+      })
+    }
+
+    // 如果来源被允许，添加 CORS 头
+    if (origin && isOriginAllowed(origin)) {
+      const headers = new Headers()
+      headers.set("Access-Control-Allow-Origin", origin)
+      headers.set("Access-Control-Allow-Credentials", "true")
+      headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+      headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+      headers.set("Access-Control-Max-Age", "86400")
+      
+      return new Response(null, {
+        status: 204,
+        headers
+      })
+    }
+
+    // 即使来源不在白名单中，如果 allowAllOrigins 为 true，也允许访问
+    // 这可以处理一些边缘情况（比如本地开发环境）
+    if (allowAllOrigins && origin) {
+      const headers = new Headers()
+      headers.set("Access-Control-Allow-Origin", origin)
+      headers.set("Access-Control-Allow-Credentials", "true")
+      headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+      headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+      headers.set("Access-Control-Max-Age", "86400")
+      
+      // 调试日志（仅在开发环境）
+      if (process.env.NODE_ENV === "development") {
+        console.log("🔍 CORS Preflight (allowAllOrigins fallback):", {
+          path,
+          origin,
+          allowOrigin: headers.get("Access-Control-Allow-Origin"),
+          allowCredentials: headers.get("Access-Control-Allow-Credentials")
+        })
       }
       
       return new Response(null, {
@@ -132,30 +224,16 @@ export const handleCorsPreflight = (request: Request, allowAllOrigins?: boolean)
         headers
       })
     }
-  
-    // 如果来源被允许，添加 CORS 头
-    if (origin && isOriginAllowed(origin)) {
-      return new Response(null, {
-        status: 204,
-        headers: {
-          "Access-Control-Allow-Origin": origin,
-          "Access-Control-Allow-Credentials": "true",
-          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
-          "Access-Control-Max-Age": "86400"
-        }
-      })
-    }
-    
+
     return new Response(null, { status: 204 })
   }
-  
+
   return null
 }
 
 /**
  * 创建带 CORS 头的 JSON 响应
- * 
+ *
  * @param data - 响应数据
  * @param init - 响应初始化选项
  * @param request - 请求对象
@@ -300,12 +378,12 @@ export const apiHandler = async <T = unknown>(
   try {
     const result = await handler()
     const response = ok(result)
-    
+
     // 添加 CORS 头（自动根据路径判断是否允许所有来源）
     if (request) {
       return addCorsHeaders(response, request)
     }
-    
+
     return response
   } catch (error) {
     // 自定义错误码处理
@@ -331,15 +409,46 @@ export const apiHandler = async <T = unknown>(
 /**
  * 统一的 Action 处理器包装
  * 用于需要返回不同响应类型的场景
+ * 支持 CORS（自动根据路径判断是否允许所有来源）
  */
 export const actionHandler = async (
-  handler: () => Promise<Response>
+  handler: () => Promise<Response>,
+  request?: Request
 ): Promise<Response> => {
-  try {
-    return await handler()
-  } catch (error) {
-    return serverError(error)
+  // 处理 OPTIONS 预检请求
+  if (request) {
+    const preflightResponse = handleCorsPreflight(request)
+    if (preflightResponse) {
+      return preflightResponse
+    }
   }
+
+  try {
+    const response = await handler()
+    // 添加 CORS 头（自动根据路径判断是否允许所有来源）
+    return request ? addCorsHeaders(response, request) : response
+  } catch (error) {
+    const response = serverError(error)
+    return request ? addCorsHeaders(response, request) : response
+  }
+}
+
+/**
+ * 创建带 CORS 的错误响应（用于需要允许所有来源的 API）
+ * 封装常用的错误响应，减少重复代码
+ */
+export const errorResponseWithCors = (
+  error: string,
+  status: number = 400,
+  request?: Request,
+  allowAllOrigins: boolean = true
+): Response => {
+  return jsonWithCors(
+    { success: false, error },
+    { status },
+    request,
+    allowAllOrigins
+  )
 }
 
 // ============ 分页工具 ============

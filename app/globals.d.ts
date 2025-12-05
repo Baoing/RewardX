@@ -41,7 +41,8 @@ declare namespace JSX {
 
 // Shopify Toast API
 interface Window {
-  shopify?: {
+  Shopify?: {
+    shop: string
     toast: {
       show: (message: string) => void
     }

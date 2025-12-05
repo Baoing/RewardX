@@ -13,7 +13,7 @@
  */
 import type { LoaderFunctionArgs } from "react-router"
 import { authenticate } from "@/shopify.server"
-import { apiHandler, getUserByShop, addCorsHeaders } from "@/utils/api.server"
+import { handleCorsPreflight, jsonWithCors, getUserByShop } from "@/utils/api.server"
 import { getCampaignsByUserId } from "@/services/campaign.server"
 
 /**
@@ -63,30 +63,39 @@ const getShopFromRequest = (request: Request): string | null => {
 }
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
+  // 处理 OPTIONS 预检请求（强制允许所有来源）
+  const preflightResponse = handleCorsPreflight(request, true)
+  if (preflightResponse) {
+    return preflightResponse
+  }
+
   try {
-    // apiHandler 会自动根据路径判断是否允许所有来源
-    return await apiHandler(async () => {
-      let shop: string | null = null
-      let user: any = null
+    let shop: string | null = null
+    let user: any = null
 
-      // 尝试从请求中获取 shop
-      shop = getShopFromRequest(request)
+    // 尝试从请求中获取 shop
+    shop = getShopFromRequest(request)
 
-      // 如果无法从请求中获取，尝试使用 authenticate.admin（可能失败）
-      if (!shop) {
-        try {
-          const { session } = await authenticate.admin(request)
-          shop = session.shop
-        } catch (authError) {
-          console.warn("⚠️ Authentication failed, trying alternative methods:", authError)
-        }
+    // 如果无法从请求中获取，尝试使用 authenticate.admin（可能失败）
+    if (!shop) {
+      try {
+        const { session } = await authenticate.admin(request)
+        shop = session.shop
+      } catch (authError) {
+        console.warn("⚠️ Authentication failed, trying alternative methods:", authError)
       }
+    }
 
-      if (!shop) {
-        throw new Error("VALIDATION_Shop domain is required. Please provide 'shop' query parameter or ensure you have a valid Shopify session.")
-      }
+    if (!shop) {
+      return jsonWithCors(
+        { success: false, error: "Shop domain is required. Please provide 'shop' query parameter or ensure you have a valid Shopify session." },
+        { status: 400 },
+        request,
+        true
+      )
+    }
 
-      user = await getUserByShop(shop)
+    user = await getUserByShop(shop)
 
     // 获取所有活跃的活动，按更新时间倒序排列
     const campaigns = await getCampaignsByUserId(user.id, {})
@@ -100,37 +109,49 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     const latestCampaign = activeCampaigns.length > 0 ? activeCampaigns[0] : null
 
     if (!latestCampaign) {
-      return {
-        success: true,
-        campaign: null
-      }
+      return jsonWithCors(
+        {
+          success: true,
+          campaign: null
+        },
+        undefined,
+        request,
+        true
+      )
     }
 
     // 类型断言：getCampaignsByUserId 返回的数据已经转换了字段名
     const campaign = latestCampaign as any
 
-    return {
-      success: true,
-      campaign: {
-        id: campaign.id,
-        name: campaign.name,
-        type: campaign.type,
-        gameType: campaign.gameType,
-        isActive: campaign.isActive,
-        prizes: campaign.prizes || [],
-        content: campaign.content || {},
-        styles: campaign.styles || {}
-      }
-    }
-  }, request)
-  } catch (error) {
-    // 如果 authenticate.admin 失败，确保错误响应也有 CORS 头
-    // addCorsHeaders 会自动根据路径判断是否允许所有来源
-    const errorResponse = Response.json(
-      { success: false, error: "Authentication failed" },
-      { status: 401 }
+    return jsonWithCors(
+      {
+        success: true,
+        campaign: {
+          id: campaign.id,
+          name: campaign.name,
+          type: campaign.type,
+          gameType: campaign.gameType,
+          isActive: campaign.isActive,
+          prizes: campaign.prizes || [],
+          content: campaign.content || {},
+          styles: campaign.styles || {}
+        }
+      },
+      undefined,
+      request,
+      true
     )
-    return addCorsHeaders(errorResponse, request)
+  } catch (error) {
+    // 确保所有错误响应都有 CORS 头（强制允许所有来源）
+    return jsonWithCors(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Internal server error"
+      },
+      { status: 500 },
+      request,
+      true
+    )
   }
 }
 
