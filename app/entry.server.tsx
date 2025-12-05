@@ -5,6 +5,7 @@ import { createReadableStreamFromReadable } from "@react-router/node";
 import { type EntryContext } from "react-router";
 import { isbot } from "isbot";
 import { addDocumentResponseHeaders } from "./shopify.server";
+import { handleCorsPreflight } from "./utils/api.server";
 
 export const streamTimeout = 5000;
 
@@ -14,6 +15,16 @@ export default async function handleRequest(
   responseHeaders: Headers,
   reactRouterContext: EntryContext
 ) {
+  // 在 Shopify 中间件处理之前，先处理 OPTIONS 预检请求
+  // 这样可以避免认证中间件导致的重定向
+  const url = new URL(request.url)
+  if (request.method === "OPTIONS" && url.pathname.startsWith("/api/")) {
+    const preflightResponse = handleCorsPreflight(request, true)
+    if (preflightResponse) {
+      return preflightResponse
+    }
+  }
+
   addDocumentResponseHeaders(request, responseHeaders);
   const userAgent = request.headers.get("user-agent");
   const callbackName = isbot(userAgent ?? '')

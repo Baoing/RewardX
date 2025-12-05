@@ -107,9 +107,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       if (!shop) {
         shop = session.shop
       }
-      console.log("✅ Admin session obtained successfully")
     } catch (authError) {
-      console.log("ℹ️ No admin session available (storefront call), will continue without order verification and discount creation")
       // 不抛出错误，允许继续（storefront 调用时可能没有 admin session）
     }
 
@@ -189,11 +187,7 @@ async function handleOrderLottery(admin: any, campaign: any, data: PlayLotteryRe
     try {
       const authResult = await authenticate.admin(request)
       admin = authResult.admin
-      if (admin) {
-        console.log("✅ Admin session obtained (optional, for fallback verification)")
-      }
     } catch (authError) {
-      console.log("ℹ️ No admin session available (storefront call), will verify from database")
       // 不返回错误，允许从数据库验证
     }
   }
@@ -232,7 +226,6 @@ async function handleOrderLottery(admin: any, campaign: any, data: PlayLotteryRe
     }
 
     if (dbOrder) {
-      console.log("✅ Order found in database:", dbOrder.orderNumber)
       order = {
         id: dbOrder.id,
         name: dbOrder.name,
@@ -261,7 +254,6 @@ async function handleOrderLottery(admin: any, campaign: any, data: PlayLotteryRe
 
   // 方法2：如果数据库中没有找到，且有 admin session，从 Shopify API 查询（后备方案）
   if (!order && admin) {
-    console.log("🔍 Order not found in database, trying Shopify API...")
     if (orderNumber && !orderId) {
     // 如果提供了订单号，先通过订单号查询订单
     const cleanOrderNumber = orderNumber.replace(/^#/, "").trim()
@@ -385,8 +377,6 @@ async function handleOrderLottery(admin: any, campaign: any, data: PlayLotteryRe
 
   // 订单验证是必需的，如果没有查询到订单，返回错误
   if (!finalOrderId || !order) {
-    console.error("❌ Order not found in database or Shopify API")
-    console.error("❌ Order not found or verification failed")
     return errorResponseWithCors(
       orderNumber 
         ? `Order not found: ${orderNumber}. Please verify the order number is correct.`
@@ -431,7 +421,6 @@ async function handleOrderLottery(admin: any, campaign: any, data: PlayLotteryRe
   }
 
   if (!orderAmount) {
-    console.warn("⚠️ Order amount not available, using 0")
     orderAmount = 0
   }
 
@@ -522,21 +511,10 @@ async function performLottery(admin: any, campaign: any, entryData: any, request
       try {
         const authResult = await authenticate.admin(request)
         admin = authResult.admin
-        if (admin) {
-          console.log("✅ Admin session obtained for discount creation")
-        }
       } catch (authError) {
-        console.log("ℹ️ No admin session available for discount creation, will skip Shopify discount creation")
-        // 即使认证失败，也继续流程，但记录错误
+        // 即使认证失败，也继续流程
         // discountCodeId 保持为 null，前端仍会显示折扣码，但可能无法在 Shopify 中使用
       }
-    }
-
-    // 记录折扣码创建状态
-    if (admin) {
-      console.log("🔍 Discount creation: Admin session available, will create discount in Shopify")
-    } else {
-      console.log("⚠️ Discount creation: No admin session, will skip Shopify discount creation")
     }
 
     // 调用 Shopify API 创建折扣码
@@ -560,7 +538,6 @@ async function performLottery(admin: any, campaign: any, entryData: any, request
 
       // 只有在 admin 存在时才创建 Shopify 折扣码
       if (admin) {
-        console.log("🔄 Creating discount in Shopify:", { code: discountCode, type: discountType })
         const shopifyDiscount = await createShopifyDiscount(admin, {
           code: discountCode,
           type: discountType,
@@ -577,9 +554,6 @@ async function performLottery(admin: any, campaign: any, entryData: any, request
         })
 
         discountCodeId = shopifyDiscount.discountCodeId
-        console.log("✅ Shopify discount created successfully:", { discountCodeId, code: discountCode })
-      } else {
-        console.log("ℹ️ Skipping Shopify discount creation (no admin session). Discount code generated:", discountCode)
       }
     } catch (error) {
       console.error("❌ 创建 Shopify 折扣码失败:", error)

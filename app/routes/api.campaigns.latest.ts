@@ -64,6 +64,7 @@ const getShopFromRequest = (request: Request): string | null => {
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   // 处理 OPTIONS 预检请求（强制允许所有来源）
+  // 必须在任何其他逻辑之前处理，避免 authenticate.admin 导致重定向
   const preflightResponse = handleCorsPreflight(request, true)
   if (preflightResponse) {
     return preflightResponse
@@ -77,12 +78,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     shop = getShopFromRequest(request)
 
     // 如果无法从请求中获取，尝试使用 authenticate.admin（可能失败）
+    // 注意：只在非 OPTIONS 请求时尝试认证，避免预检请求被重定向
     if (!shop) {
       try {
         const { session } = await authenticate.admin(request)
         shop = session.shop
       } catch (authError) {
-        console.warn("⚠️ Authentication failed, trying alternative methods:", authError)
+        // 忽略认证错误，允许继续
       }
     }
 
