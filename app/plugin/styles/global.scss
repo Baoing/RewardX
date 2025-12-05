@@ -184,6 +184,11 @@
     border-radius: 8px;
   }
 
+  .rewardx-block__gridWrapper canvas {
+    width: 100%;
+    max-width: initial;
+  }
+
   // 禁用提示
   .rewardx-block__disabledNotice {
     text-align: center;
