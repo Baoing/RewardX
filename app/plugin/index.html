@@ -164,21 +164,36 @@ http://localhost:5173/plugin/index.html?shop=your-shop.myshopify.com</pre>
       const shopParam = urlParams.get("shop")
       const shop = shopParam || "baoea.myshopify.com" // 默认 shop，用于开发预览
 
+      // 规范化 URL，确保协议正确
+      const normalizeUrl = (url) => {
+        if (!url) return url
+
+        let normalized = String(url).trim().replace(/\/+$/, "")
+
+        // 如果 URL 没有协议，添加协议
+        if (!normalized.match(/^https?:\/\//)) {
+          normalized = `${window.location.protocol}//${normalized}`
+        }
+
+        // 如果当前页面是 HTTPS，但 URL 是 HTTP，转换为 HTTPS
+        if (window.location.protocol === "https:") {
+          normalized = normalized.replace(/^http:\/\//, "https://")
+        }
+
+        return normalized
+      }
+
       // 获取应用 API URL
       const getAppApiUrl = () => {
         // 1. 优先使用 Vite 注入的环境变量（import.meta.env）
-        // Vite 会自动处理以 VITE_ 开头的环境变量，或通过 define 注入的变量
         try {
-          // @ts-ignore - Vite 会在构建时替换这个值
           const envUrl = import.meta.env.REWARDX_APP_URL || import.meta.env.SHOPIFY_APP_URL || import.meta.env.VITE_REWARDX_APP_URL || import.meta.env.VITE_SHOPIFY_APP_URL
 
           if (envUrl && envUrl !== "") {
-            console.log("🔗 Using env API URL:", envUrl)
-            // 移除末尾的斜杠，避免双斜杠
-            return String(envUrl).replace(/\/+$/, "")
+            return normalizeUrl(String(envUrl))
           }
         } catch (e) {
-          console.warn("⚠️ Failed to read env variables:", e)
+          // 忽略错误
         }
 
         // 2. 开发环境：如果当前是 Vite dev server (端口 5174)，则使用主服务器 (端口 3000)
@@ -187,12 +202,10 @@ http://localhost:5173/plugin/index.html?shop=your-shop.myshopify.com</pre>
 
         // 如果是 Vite dev server (5174)，代理到主服务器 (3000)
         if (currentPort === "5174" || currentOrigin.includes(":5174")) {
-          console.log("🔗 Using dev proxy (port 3000)")
           return currentOrigin.replace(":5174", ":3000").replace(/\/+$/, "")
         }
 
         // 3. 最后回退：使用当前域名（生产环境）
-        console.log("🔗 Using current origin:", currentOrigin)
         return currentOrigin.replace(/\/+$/, "")
       }
 

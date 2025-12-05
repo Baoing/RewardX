@@ -45,6 +45,33 @@ export const getShop = (container?: Element | null): string | null => {
 }
 
 /**
+ * 规范化 URL，确保协议正确
+ * 如果当前页面是 HTTPS，但 URL 是 HTTP，自动转换为 HTTPS
+ */
+const normalizeUrl = (url: string): string => {
+  if (!url) return url
+
+  let normalized = String(url).trim().replace(/\/+$/, "")
+
+  // 如果 URL 没有协议，添加协议
+  if (!normalized.match(/^https?:\/\//)) {
+    // 根据当前页面协议决定
+    if (typeof window !== "undefined") {
+      normalized = `${window.location.protocol}//${normalized}`
+    } else {
+      normalized = `https://${normalized}`
+    }
+  }
+
+  // 如果当前页面是 HTTPS，但 URL 是 HTTP，转换为 HTTPS
+  if (typeof window !== "undefined" && window.location.protocol === "https:") {
+    normalized = normalized.replace(/^http:\/\//, "https://")
+  }
+
+  return normalized
+}
+
+/**
  * 获取应用 API URL
  * 优先使用 Vite 注入的环境变量，然后回退到其他方式
  *
@@ -62,13 +89,12 @@ export const getAppApiUrl = (): string => {
   const envUrl = import.meta.env.REWARDX_APP_URL || import.meta.env.SHOPIFY_APP_URL || import.meta.env.VITE_REWARDX_APP_URL || import.meta.env.VITE_SHOPIFY_APP_URL
 
   if (envUrl) {
-    // 移除末尾的斜杠，避免双斜杠
-    return String(envUrl).replace(/\/+$/, "")
+    return normalizeUrl(String(envUrl))
   }
 
   // 2. 检查全局变量（可能由 Liquid 模板注入）
   if (typeof window !== "undefined" && (window as any).__REWARDX_APP_URL__) {
-    return String((window as any).__REWARDX_APP_URL__).replace(/\/+$/, "")
+    return normalizeUrl(String((window as any).__REWARDX_APP_URL__))
   }
 
   // 3. 开发环境：如果当前是 Vite dev server (端口 5174)，则使用主服务器 (端口 3000)
