@@ -17,7 +17,7 @@ import { validateCampaignData } from "@/utils/validation.server"
 const getDefaultContent = () => ({
   title: "Win Amazing Prizes!",
   description: "Enter your order number to participate in our exciting lottery and win amazing prizes!",
-  inputTitle: "Please enter your order number (e.g., #ORDER1234567)",
+  inputTitle: "Please enter your order number (e.g., #ORDER123)",
   inputPlaceholder: "Please enter your order number",
   inputEmptyError: "Order number is required",
   errorMessage: "Something went wrong. Please try again.",
@@ -66,6 +66,7 @@ const getDefaultPrizes = (): Array<{
   totalStock?: number | null
   displayOrder: number
   image?: string | null
+  activeImage?: string | null
 }> => [
   {
     name: "10% OFF",
@@ -77,7 +78,8 @@ const getDefaultPrizes = (): Array<{
     chancePercentage: 15,
     totalStock: null,
     displayOrder: 0,
-    image: null
+    image: null,
+    activeImage: null
   },
   {
     name: "20% OFF",
@@ -89,7 +91,8 @@ const getDefaultPrizes = (): Array<{
     chancePercentage: 10,
     totalStock: null,
     displayOrder: 1,
-    image: null
+    image: null,
+    activeImage: null
   },
   {
     name: "5% OFF",
@@ -101,7 +104,8 @@ const getDefaultPrizes = (): Array<{
     chancePercentage: 25,
     totalStock: null,
     displayOrder: 2,
-    image: null
+    image: null,
+    activeImage: null
   },
   {
     name: "Free Shipping",
@@ -113,7 +117,8 @@ const getDefaultPrizes = (): Array<{
     chancePercentage: 10,
     totalStock: null,
     displayOrder: 3,
-    image: null
+    image: null,
+    activeImage: null
   },
   {
     name: "Free Gift",
@@ -125,7 +130,8 @@ const getDefaultPrizes = (): Array<{
     chancePercentage: 5,
     totalStock: null,
     displayOrder: 4,
-    image: null
+    image: null,
+    activeImage: null
   },
   {
     name: "No Luck",
@@ -137,7 +143,8 @@ const getDefaultPrizes = (): Array<{
     chancePercentage: 35,
     totalStock: null,
     displayOrder: 5,
-    image: null
+    image: null,
+    activeImage: null
   }
 ]
 

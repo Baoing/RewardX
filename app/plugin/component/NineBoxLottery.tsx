@@ -3,8 +3,9 @@ import { LuckyGrid } from "@lucky-canvas/react"
 import type { Prize, CampaignStyles, CampaignContent } from "@plugin/main"
 import { getComponentClassName } from "@/utils/className"
 import { WinnerModal } from "./WinnerModal"
+import { fetchApiJson } from "../utils/api"
 import styles from "./NineBoxLottery.module.scss"
-import classNames from "classnames";
+import classNames from "classnames"
 
 const cn = (name: string) => getComponentClassName("block", name)
 
@@ -164,11 +165,27 @@ export const NineBoxLottery = ({
 
     try {
       // 调用后端 API 进行完整抽奖流程（验证订单 -> 抽奖 -> 生成折扣码 -> 记录）
-      const response = await fetch("/api/lottery/play", {
+      const data = await fetchApiJson<{
+        success: boolean
+        prizeId?: string
+        hasPlayed?: boolean
+        previousEntry?: {
+          isWinner: boolean
+          prizeName: string
+          discountCode?: string
+        }
+        entry?: {
+          isWinner: boolean
+          prize?: {
+            id: string
+            discountCode?: string
+            expiresAt?: string | null
+          }
+        }
+        error?: string
+        reason?: string
+      }>("/lottery/play", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
         body: JSON.stringify({
           campaignId,
           type: campaignType === "order" ? "order" : "email_form",
@@ -183,10 +200,8 @@ export const NineBoxLottery = ({
         })
       })
 
-      const data = await response.json()
-
-      // 如果接口不是 200 状态码，不启动抽奖动画
-      if (response.status !== 200 || !data.success) {
+      // 如果接口返回 success 为 false，不启动抽奖动画
+      if (!data.success) {
         // 处理错误响应
         if (data.hasPlayed && data.prizeId) {
           // 已经抽过奖，显示之前的结果
@@ -201,8 +216,8 @@ export const NineBoxLottery = ({
           if (data.previousEntry?.isWinner && data.prizeId) {
             setPrizeDiscountInfo(prev => {
               const newMap = new Map(prev)
-              newMap.set(data.prizeId, {
-                discountCode: data.previousEntry.discountCode || null,
+              newMap.set(data.prizeId!, {
+                discountCode: data.previousEntry!.discountCode || null,
                 expiresAt: null
               })
               return newMap
@@ -256,12 +271,13 @@ export const NineBoxLottery = ({
       // 注意：折扣码不是来自奖品对象本身，而是来自 play 接口返回的 prize.discountCode
       if (data.entry?.isWinner && data.entry?.prize && data.entry.prize.id) {
         // 只保存折扣码信息，不保存整个奖品对象
-        const discountCode = data.entry.prize.discountCode || null
-        const expiresAt = data.entry.prize.expiresAt || null
+        const entryPrize = data.entry.prize
+        const discountCode = entryPrize.discountCode || null
+        const expiresAt = entryPrize.expiresAt || null
 
         setPrizeDiscountInfo(prev => {
           const newMap = new Map(prev)
-          newMap.set(data.entry.prize.id, {
+          newMap.set(entryPrize.id, {
             discountCode,
             expiresAt
           })
@@ -269,7 +285,7 @@ export const NineBoxLottery = ({
         })
 
         console.log("✅ 保存折扣码信息:", {
-          prizeId: data.entry.prize.id,
+          prizeId: entryPrize.id,
           discountCode, // 来自 API
           expiresAt, // 来自 API
           hasDiscountCode: !!discountCode

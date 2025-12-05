@@ -2,6 +2,7 @@ import React from "react"
 import ReactDOM from "react-dom/client"
 import { NineBoxLottery } from "./component/NineBoxLottery"
 import { LotteryModal } from "./component/LotteryModal"
+import { buildApiUrl, fetchApiJson } from "./utils/api"
 // 导入全局样式（Storefront 使用）
 import "./styles/global.scss"
 
@@ -126,61 +127,6 @@ const initStorefront = () => {
 }
 
 /**
- * 获取应用 API URL
- * 优先使用 Vite 注入的环境变量
- *
- * 环境变量配置：
- * - REWARDX_APP_URL: 应用部署 URL（例如: https://your-app.vercel.app）
- * - 如果没有设置，会使用 SHOPIFY_APP_URL
- */
-const getAppApiUrl = (): string => {
-  // 1. 优先使用 Vite 注入的环境变量（构建时替换）
-  // Vite 的 define 会在构建时替换 process.env.REWARDX_APP_URL
-  // @ts-ignore - Vite 会在构建时替换这个值
-  let envUrl = process.env.REWARDX_APP_URL || process.env.SHOPIFY_APP_URL
-
-  if (envUrl) {
-    // 移除末尾的斜杠，避免双斜杠
-    return envUrl.replace(/\/+$/, "")
-  }
-
-  // 2. 尝试从 window 对象获取（如果 Liquid 传递了）
-  const windowUrl = (window as any).__REWARDX_APP_URL__
-  if (windowUrl) {
-    // 移除末尾的斜杠
-    return String(windowUrl).replace(/\/+$/, "")
-  }
-
-  // 3. 尝试从配置脚本中读取（Metafield 配置）
-  const configScript = document.querySelector('script[id^="rewardx-api-config-"]')
-  if (configScript && configScript.textContent) {
-    try {
-      const config = JSON.parse(configScript.textContent)
-      if (config.apiUrl) {
-        // 移除末尾的斜杠
-        return String(config.apiUrl).replace(/\/+$/, "")
-      }
-    } catch (e) {
-      console.warn("⚠️ RewardX: Failed to parse API config", e)
-    }
-  }
-
-  // 4. 最后回退：使用当前域名（不推荐，但作为兜底）
-  return window.location.origin.replace(/\/+$/, "")
-}
-
-/**
- * 构建 API URL
- */
-const buildApiUrl = (endpoint: string): string => {
-  const apiBase = getAppApiUrl()
-  // 移除 endpoint 开头的斜杠，避免双斜杠
-  const cleanEndpoint = endpoint.startsWith("/") ? endpoint.slice(1) : endpoint
-
-  return `${apiBase}/api/${cleanEndpoint}`
-}
-
-/**
  * 初始化容器
  */
 const initContainers = (containers: NodeListOf<Element>) => {
@@ -189,11 +135,11 @@ const initContainers = (containers: NodeListOf<Element>) => {
     let campaign: Campaign | null = null
 
     try {
-      let apiUrl: string
+      let endpoint: string
 
       if (campaignId) {
         // 如果指定了 campaign-id，获取指定活动
-        apiUrl = buildApiUrl(`/campaigns/${campaignId}`)
+        endpoint = `/campaigns/${campaignId}`
       } else {
         // 如果没有指定 campaign-id，获取最新的活跃活动
         // 从当前页面 URL 提取 shop 域名
@@ -208,28 +154,10 @@ const initContainers = (containers: NodeListOf<Element>) => {
             shopParam = `?shop=${shopFromData}`
           }
         }
-        apiUrl = buildApiUrl(`/campaigns/latest${shopParam}`)
+        endpoint = `/campaigns/latest${shopParam}`
       }
-      let response: Response
-      try {
-        response = await fetch(apiUrl, {
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json"
-          }
-        })
-      } catch (fetchError: any) {
-        // 处理网络错误（DNS 解析失败、连接超时等）
-        const errorMessage = fetchError?.message || String(fetchError)
-        // 其他网络错误
-        throw fetchError
-      }
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-      }
-
-      const data = await response.json()
+      // 使用封装的 API 请求函数
+      const data = await fetchApiJson<any>(endpoint)
 
       if (campaignId) {
         campaign = data.campaign || data
