@@ -76,7 +76,7 @@ const PreviewGameComponent = ({ campaign: campaignProp, isAdmin = false, onPrize
       </div>
     )
   }
-  console.log(campaignStyles)
+
   // 动态样式（通过 CSS 变量传递）
   const dynamicStyles = {
     "--title-color": campaignStyles.titleColor,

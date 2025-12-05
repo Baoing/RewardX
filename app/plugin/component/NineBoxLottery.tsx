@@ -399,9 +399,9 @@ export const NineBoxLottery = ({
       <div className={classNames(styles.inputContainer, cn("inputWrapper"))}>
         {/* 输入框标题 */}
         {campaignContent.inputTitle && (
-          <label className={cn("inputLabel")}>
+          <div className={cn("inputLabel")}>
             {campaignContent.inputTitle}
-          </label>
+          </div>
         )}
 
         {/* 输入框和按钮行 */}

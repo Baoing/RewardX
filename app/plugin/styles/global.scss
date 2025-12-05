@@ -68,6 +68,7 @@
     top: 5px;
     left: 5px;
     border-radius: 18px;
+    box-sizing: border-box;
   }
 
   // 标题
@@ -83,7 +84,6 @@
   .rewardx-block__description {
     font-size: 14px;
     line-height: 1.6;
-    margin: 0 0 24px;
     text-align: center;
     color: var(--description-color, #666);
   }
@@ -211,7 +211,6 @@
 
 // 响应式：移动端（Storefront 使用）
 @media (max-width: 567px) {
-
     .rewardx-block__wrapper {
       width: 100%;
       padding: 0;
