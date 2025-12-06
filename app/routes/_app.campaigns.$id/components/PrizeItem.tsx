@@ -15,6 +15,7 @@ import { useCallback, useState } from "react"
 import { useCampaignEditorStore } from "@/stores"
 import type { Prize } from "@/types/campaign"
 import { UploadPicture } from "@/components/UploadPicture"
+import { ProductPicker } from "@/components/ProductPicker/ProductPicker"
 import styles from "../styles.module.scss"
 
 interface PrizeItemProps {
@@ -257,24 +258,16 @@ const PrizeItem = observer(({ prize, index, onDelete }: PrizeItemProps) => {
 
             {/* Gift Product (for free_gift type) */}
             {prize.type === "free_gift" && (
-              <BlockStack gap="200">
-                <TextField
-                  label="Gift Product ID"
-                  value={prize.giftProductId || ""}
-                  onChange={(value) => updatePrizeField("giftProductId", value || undefined)}
-                  placeholder="Enter Shopify product ID"
-                  autoComplete="off"
-                  helpText="The Shopify product ID for the free gift"
-                />
-                <TextField
-                  label="Gift Variant ID"
-                  value={prize.giftVariantId || ""}
-                  onChange={(value) => updatePrizeField("giftVariantId", value || undefined)}
-                  placeholder="Enter Shopify variant ID (optional)"
-                  autoComplete="off"
-                  helpText="The specific variant ID if applicable"
-                />
-              </BlockStack>
+              <ProductPicker
+                label="Gift Product"
+                productId={prize.giftProductId}
+                variantId={prize.giftVariantId}
+                onSelect={(productId, variantId) => {
+                  updatePrizeField("giftProductId", productId || undefined)
+                  updatePrizeField("giftVariantId", variantId || undefined)
+                }}
+                helpText="Select the product and variant to give as a free gift"
+              />
             )}
 
             {/* Chance Percentage */}
