@@ -92,16 +92,26 @@ export async function createDiscountCodeForPrize(
 
   // 方法2：如果仍然没有 admin，尝试通过 shop 信息从数据库获取（storefront 调用时）
   if (!admin && shop) {
+    console.log(`🔍 尝试通过 shop 获取 admin 对象: ${shop}`)
     try {
       admin = await getAdminByShop(shop)
+      if (admin) {
+        console.log(`✅ 成功通过 shop 获取 admin 对象: ${shop}`)
+      } else {
+        console.warn(`⚠️ 通过 shop 获取 admin 对象失败: ${shop} (返回 null)`)
+      }
     } catch (error) {
-      console.error("❌ 通过 shop 获取 admin 对象失败:", error)
+      console.error(`❌ 通过 shop 获取 admin 对象失败: ${shop}`, error)
     }
+  } else if (!admin && !shop) {
+    console.warn(`⚠️ 无法获取 admin 对象：既没有 request 也没有 shop 参数`)
   }
 
   // 4. 如果没有 admin 对象，返回折扣码字符串但不创建 Shopify 折扣码
   if (!admin) {
-    console.warn("⚠️ 无法获取 admin 对象，折扣码将不会在 Shopify 中创建（但折扣码字符串已生成）")
+    console.warn(`⚠️ 无法获取 admin 对象，折扣码将不会在 Shopify 中创建（但折扣码字符串已生成）`)
+    console.warn(`   - shop: ${shop || "未提供"}`)
+    console.warn(`   - request: ${request ? "已提供" : "未提供"}`)
     return {
       code: discountCode,
       discountCodeId: null,

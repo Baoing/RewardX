@@ -38,10 +38,18 @@ interface PlayLotteryRequest {
 // 从请求中获取 shop 信息（支持多种方式）
 const getShopFromRequest = (request: Request): string | null => {
   const url = new URL(request.url)
+  
+  // 方法1：从 URL 查询参数获取
   const shopParam = url.searchParams.get("shop")
   if (shopParam) {
-    return shopParam.includes(".") ? shopParam : `${shopParam}.myshopify.com`
+    // 规范化 shop 格式
+    if (shopParam.includes(".myshopify.com")) {
+      return shopParam
+    }
+    return `${shopParam}.myshopify.com`
   }
+  
+  // 方法2：从 Referer 头获取
   const referer = request.headers.get("Referer")
   if (referer) {
     try {
@@ -58,6 +66,21 @@ const getShopFromRequest = (request: Request): string | null => {
       console.warn("⚠️ Failed to parse Referer:", e)
     }
   }
+  
+  // 方法3：从 Origin 头获取
+  const origin = request.headers.get("Origin")
+  if (origin) {
+    try {
+      const originUrl = new URL(origin)
+      const hostname = originUrl.hostname
+      if (hostname.includes(".myshopify.com")) {
+        return hostname
+      }
+    } catch (e) {
+      console.warn("⚠️ Failed to parse Origin:", e)
+    }
+  }
+  
   return null
 }
 
@@ -200,32 +223,53 @@ async function handleOrderLottery(admin: any, campaign: any, data: PlayLotteryRe
   let phone: string | null = null
   let email: string | null = null
 
-  // 方法1：优先从数据库验证订单（支持 storefront 调用）
-  const shop = await prisma.user.findUnique({
+  // 获取 shop 信息（用于 storefront 调用时创建折扣码）
+  const shopInfo = await prisma.user.findUnique({
     where: { id: userId },
     select: { shop: true }
   })
+  
+  const shopDomain = shopInfo?.shop || null
 
-  if (shop) {
+  // 方法1：优先从数据库查询订单（支持 storefront 调用，无需 admin session）
+  if (shopDomain) {
     let dbOrder = null
 
-    // 通过订单号查询
+    // 通过订单号查询（支持 #1001 或 1001 格式）
     if (orderNumber && !orderId) {
       const cleanOrderNumber = orderNumber.replace(/^#/, "").trim()
-      dbOrder = await prisma.order.findFirst({
+      
+      // 尝试多种格式匹配
+      dbOrder = await (prisma as any).order.findFirst({
         where: {
-          shop: shop.shop,
-          orderNumber: `#${cleanOrderNumber}`
+          shop: shopDomain,
+          OR: [
+            { orderNumber: `#${cleanOrderNumber}` },
+            { orderNumber: cleanOrderNumber },
+            { name: `#${cleanOrderNumber}` },
+            { name: cleanOrderNumber }
+          ]
         }
       })
     } else if (orderId) {
-      // 通过订单 ID 查询
-      dbOrder = await prisma.order.findUnique({
-        where: { id: orderId }
+      // 通过订单 ID 查询（Shopify 订单 ID 可能是 gid://shopify/Order/xxx 或纯数字）
+      const cleanOrderId = orderId.replace(/^gid:\/\/shopify\/Order\//, "").trim()
+      
+      dbOrder = await (prisma as any).order.findFirst({
+        where: {
+          shop: shopDomain,
+          OR: [
+            { id: orderId },
+            { id: cleanOrderId }
+          ]
+        }
       })
     }
 
+    // 如果从数据库找到订单，使用数据库中的信息
     if (dbOrder) {
+      console.log(`✅ 从数据库找到订单: ${dbOrder.orderNumber || dbOrder.name}`)
+      
       order = {
         id: dbOrder.id,
         name: dbOrder.name,
@@ -235,25 +279,28 @@ async function handleOrderLottery(admin: any, campaign: any, data: PlayLotteryRe
             currencyCode: dbOrder.currencyCode
           }
         },
-        customer: {
+        displayFinancialStatus: dbOrder.financialStatus || "paid",
+        customer: dbOrder.customerId ? {
           id: dbOrder.customerId,
-          displayName: dbOrder.customerName,
-          phone: dbOrder.customerPhone,
-          email: dbOrder.customerEmail
-        },
-        email: dbOrder.email
+          displayName: dbOrder.customerName || null,
+          phone: dbOrder.customerPhone || null
+        } : null,
+        email: dbOrder.customerEmail || dbOrder.email || null
       }
+      
       finalOrderId = dbOrder.id
       orderAmount = dbOrder.totalPrice
-      customerName = dbOrder.customerName
-      customerId = dbOrder.customerId
-      phone = dbOrder.customerPhone
-      email = dbOrder.customerEmail || dbOrder.email
+      customerName = dbOrder.customerName || null
+      customerId = dbOrder.customerId || null
+      phone = dbOrder.customerPhone || dbOrder.phone || null
+      email = dbOrder.customerEmail || dbOrder.email || null
     }
   }
 
   // 方法2：如果数据库中没有找到，且有 admin session，从 Shopify API 查询（后备方案）
+  // 注意：storefront 调用时可能没有 admin session，此时只能依赖数据库
   if (!order && admin) {
+    console.log(`⚠️ 数据库中没有找到订单，尝试从 Shopify API 查询`)
     if (orderNumber && !orderId) {
     // 如果提供了订单号，先通过订单号查询订单
     const cleanOrderNumber = orderNumber.replace(/^#/, "").trim()
@@ -425,8 +472,9 @@ async function handleOrderLottery(admin: any, campaign: any, data: PlayLotteryRe
   }
 
   // 执行抽奖并返回索引
+  console.log(`🔍 准备执行抽奖，shop: ${shopDomain || "未提供"}`)
   return await performLottery(admin, campaign, {
-    shop: shop?.shop || null, // 传递 shop 信息，用于 storefront 调用时创建折扣码
+    shop: shopDomain || null, // 传递 shop 信息，用于 storefront 调用时创建折扣码
     campaignType: "order",
     orderId: finalOrderId,
     orderNumber: order?.name || orderNumber || `#${finalOrderId}`,
@@ -483,6 +531,7 @@ async function handleEmailFormLottery(admin: any, campaign: any, data: PlayLotte
   })
 
   // 执行抽奖
+  console.log(`🔍 准备执行邮件表单抽奖，shop: ${shopInfo?.shop || "未提供"}`)
   return await performLottery(admin, campaign, {
     shop: shopInfo?.shop || null, // 传递 shop 信息，用于 storefront 调用时创建折扣码
     campaignType: "email_subscribe",
@@ -511,6 +560,7 @@ async function performLottery(admin: any, campaign: any, entryData: any, request
   let discountCodeId = null
 
   if (isWinner) {
+    console.log(`🎁 中奖了！准备创建折扣码，shop: ${entryData.shop || "未提供"}`)
     // 使用封装的折扣码创建服务
     const discountResult = await createDiscountCodeForPrize({
       prize: {

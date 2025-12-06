@@ -52,15 +52,21 @@ export async function createShopifyDiscount(
   // 根据类型设置不同的折扣值
   let priceRuleValue: any
   if (type === "discount_percentage") {
-    priceRuleValue = { percentage: value || 0 }
+    // Shopify API 期望百分比折扣值是 0.0 到 1.0 之间的小数
+    // 例如：10% 应该传递 0.1，而不是 10
+    // 如果 value 大于 1，说明是百分比数字（如 10），需要转换为小数（0.1）
+    const percentageValue = value && value > 1 ? value / 100 : (value || 0)
+    // 确保值在 0.0 到 1.0 之间
+    const normalizedValue = Math.max(0, Math.min(1, percentageValue))
+    priceRuleValue = { percentage: normalizedValue }
   } else if (type === "discount_fixed") {
     priceRuleValue = { fixedAmount: { amount: value || 0, currencyCode: "USD" } }
   } else if (type === "free_shipping") {
     // 免运费：使用 shipping 折扣
     priceRuleValue = { percentage: 0 } // 免运费在 customerGets 中单独处理
   } else if (type === "free_gift") {
-    // 免费赠品：使用固定金额折扣（0元）或百分比折扣（100%）
-    priceRuleValue = { percentage: 100 } // 或者使用 fixedAmount: { amount: 0 }
+    // 免费赠品：使用 100% 折扣（1.0 表示 100%）
+    priceRuleValue = { percentage: 1.0 }
   } else {
     priceRuleValue = { percentage: 0 }
   }
@@ -114,15 +120,16 @@ export async function createShopifyDiscount(
         productsToAdd: [giftProductId]
       }
     }
-    // 赠品使用 100% 折扣
-    customerGets.value = { percentage: 100 }
+    // 赠品使用 100% 折扣（1.0 表示 100%）
+    customerGets.value = { percentage: 1.0 }
   }
 
   const priceRuleVariables = {
     basicCodeDiscount: {
       title: priceRuleTitle,
       code: code,
-      startsAt: startsAt ? startsAt.toISOString() : null,
+      // Shopify 要求 startsAt 不能为空，如果没有提供则使用当前时间
+      startsAt: startsAt ? startsAt.toISOString() : new Date().toISOString(),
       endsAt: endsAt ? endsAt.toISOString() : null,
       customerSelection: {
         all: true
