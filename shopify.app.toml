@@ -2,7 +2,7 @@
 
 client_id = "1c324867f23ad7d0b6162fd64c60eff7"
 name = "RewardX"
-application_url = "https://rewardx.baoea.com"
+application_url = "https://rewardx.kkkits.com"
 embedded = true
 
 [build]
