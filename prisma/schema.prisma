@@ -206,7 +206,7 @@ model SetupGuide {
 }
 
 model Subscription {
-  id                 String        @id
+  id                 String        @id @default(uuid())
   userId             String
   shopifyChargeId    String?       @unique
   shopifyConfirmUrl  String?
