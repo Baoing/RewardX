@@ -1,8 +1,8 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "d5f18f7769e1b15b9537ff44e1e911d2"
-name = "RewardX – Spin, Win & Repeat"
-application_url = "https://intersection-storage-birth-segments.trycloudflare.com"
+client_id = "1c324867f23ad7d0b6162fd64c60eff7"
+name = "RewardX"
+application_url = "https://rewardx.kkkits.com"
 embedded = true
 
 [build]
