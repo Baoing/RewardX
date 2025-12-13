@@ -3,6 +3,7 @@
  * 处理订阅创建、更新、取消等核心业务逻辑
  */
 
+import { randomUUID } from "crypto"
 import prisma from "../db.server"
 import { PlanType, BillingCycle, SubscriptionStatus, getPlanConfig, getPlanPrice } from "../config/plans"
 
@@ -101,11 +102,12 @@ export async function createSubscription(params: CreateSubscriptionParams) {
       isManualGrant,
       grantedBy,
       grantReason,
-      grantExpiresAt: isManualGrant && grantReason ? periodEnd : null
+      grantExpiresAt: isManualGrant && grantReason ? periodEnd : null,
+      updatedAt: now
     },
     include: {
-      user: true,
-      discount: true
+      User: true,
+      Discount: true
     }
   })
 
@@ -141,7 +143,7 @@ export async function activateSubscription(subscriptionId: string, shopifyData?:
       metadata: shopifyData ? JSON.stringify(shopifyData) : undefined
     },
     include: {
-      user: true
+      User: true
     }
   })
 
@@ -295,6 +297,7 @@ export async function consumeQuota(
   // 记录使用量
   await prisma.usageRecord.create({
     data: {
+      id: randomUUID(),
       userId,
       subscriptionId: subscription.id,
       action,
@@ -491,6 +494,7 @@ async function recordAnalyticsEvent(data: {
 
   await prisma.analyticsEvent.create({
     data: {
+      id: randomUUID(),
       userId: data.userId,
       shop: user?.shop,
       eventType: data.eventType,

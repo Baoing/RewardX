@@ -11,6 +11,7 @@ export interface BillingPlan {
   interval: "EVERY_30_DAYS" | "ANNUAL"
   trialDays?: number
   test?: boolean
+  returnUrl?: string
 }
 
 /**
@@ -22,12 +23,15 @@ export async function createSubscription(
   plan: BillingPlan
 ) {
   try {
+    // 使用传入的 returnUrl，如果没有则使用默认值
+    const returnUrl = plan.returnUrl || `${process.env.SHOPIFY_APP_URL}/app/billing/callback`
+
     const response = await admin.graphql(
       `#graphql
       mutation CreateSubscription($name: String!, $price: Decimal!, $interval: AppPricingInterval!, $trialDays: Int, $test: Boolean) {
         appSubscriptionCreate(
           name: $name
-          returnUrl: "${process.env.SHOPIFY_APP_URL}/billing/callback"
+          returnUrl: "${returnUrl}"
           test: $test
           lineItems: [{
             plan: {

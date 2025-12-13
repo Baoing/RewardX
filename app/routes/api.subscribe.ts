@@ -44,7 +44,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       }, { status: 404 })
     }
 
-    // 2. Free 套餐直接激活
+    // 2. Free 套餐直接激活（不需要 Shopify 支付）
     if (planKey === PlanType.FREE) {
       const subscription = await createSubscription({
         userId: user.id,
@@ -59,37 +59,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       })
     }
 
-    // 3. 开发环境：直接激活订阅（跳过 Shopify Billing API）
-    if (process.env.NODE_ENV !== "production") {
-      const subscription = await createSubscription({
-        userId: user.id,
-        planType: planKey as PlanType,
-        billingCycle: billingCycle as BillingCycle,
-        discountCode: discountCode || undefined
-      })
-
-      // 直接激活订阅
-      await prisma.subscription.update({
-        where: { id: subscription.id },
-        data: {
-          status: "active"
-        }
-      })
-
-      console.log("✅ 开发模式：订阅已激活", {
-        shop: session.shop,
-        plan: planKey,
-        cycle: billingCycle
-      })
-
-      return Response.json({
-        success: true,
-        message: "Development mode: Subscription activated without Shopify payment",
-        subscription
-      })
-    }
-
-    // 4. 生产环境：构建完整的 plan key（用于 Shopify Billing API）
+    // 3. 付费套餐：构建完整的 plan key（用于 Shopify Billing API）
     const fullPlanKey = billingCycle === BillingCycle.YEARLY ? `${planKey}-yearly` : planKey
     const planConfig = BILLING_PLANS[fullPlanKey as keyof typeof BILLING_PLANS]
 
@@ -109,13 +79,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     })
 
     // 5. 调用 Shopify Billing API 创建订阅
+    // 开发环境使用 test: true（测试模式，不会真实扣费）
     const url = new URL(request.url)
     const returnUrl = `${url.origin}/app/billing/callback?subscriptionId=${dbSubscription.id}`
 
     const result = await createShopifySubscription(admin, session.shop, {
       ...planConfig,
       returnUrl,
-      test: process.env.NODE_ENV !== "production"
+      test: process.env.NODE_ENV !== "production" // 开发环境使用测试模式
     })
 
     if (!result.success) {
