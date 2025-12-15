@@ -1,11 +1,7 @@
-/**
- * Shopify 商品选择器组件
- * 使用 Modal 和商品搜索选择商品和变体
- */
-
 import { useState, useCallback, useEffect } from "react"
-import { Button, Text, BlockStack, InlineStack, Thumbnail, Select, Modal, TextField, Spinner } from "@shopify/polaris"
+import { Button, Text, BlockStack, InlineStack, Thumbnail, Modal, TextField, Spinner, InlineError, Checkbox } from "@shopify/polaris"
 import { api } from "@/utils/api.client"
+import styles from "./ProductPicker.module.scss"
 
 interface ProductInfo {
   id: string
@@ -25,6 +21,8 @@ export interface ProductPickerProps {
   onSelect: (productId: string, variantId?: string) => void
   label?: string
   helpText?: string
+  // 多选相关：最多可选多少个商品，默认为 1（兼容当前用法）
+  maxSelectable?: number
 }
 
 export const ProductPicker = ({
@@ -32,16 +30,36 @@ export const ProductPicker = ({
   variantId,
   onSelect,
   label = "Select Product",
-  helpText
+  helpText,
+  maxSelectable = 1
 }: ProductPickerProps) => {
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<ProductInfo | null>(null)
   const [loading, setLoading] = useState(false)
   const [products, setProducts] = useState<ProductInfo[]>([])
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedProductId, setSelectedProductId] = useState<string>("")
+  // 以变体为粒度记录选择
+  const [selectedVariantIds, setSelectedVariantIds] = useState<string[]>([])
+  const [errorMessage, setErrorMessage] = useState<string | undefined>()
+  const [hasSearched, setHasSearched] = useState(false)
 
-  // 如果有 productId，获取商品详情
+  // 搜索防抖，提升体验：输入后自动触发搜索，而不是点按钮
+  useEffect(() => {
+    if (!modalOpen) {
+      return
+    }
+
+    const trimmed = searchQuery.trim()
+
+    const timer = window.setTimeout(() => {
+      void handleSearch(trimmed)
+    }, 400)
+
+    return () => {
+      window.clearTimeout(timer)
+    }
+  }, [searchQuery, modalOpen])
+
   const fetchProductDetails = useCallback(async (id: string) => {
     try {
       setLoading(true)
@@ -63,30 +81,51 @@ export const ProductPicker = ({
     }
   }, [productId, selectedProduct, fetchProductDetails])
 
-  const handleSearch = useCallback(async () => {
+  // 根据外部传入的变体初始化内部选中列表，保证兼容旧用法
+  useEffect(() => {
+    if (variantId) {
+      setSelectedVariantIds([variantId])
+    } else {
+      setSelectedVariantIds([])
+    }
+  }, [variantId])
+
+  const handleSearch = useCallback(async (query: string) => {
     try {
       setLoading(true)
-      const response = await api.get<{ products: ProductInfo[] }>(`/api/products?query=${encodeURIComponent(searchQuery)}&limit=20`)
+      setErrorMessage(undefined)
+      const response = await api.get<{ products: ProductInfo[] }>(
+        `/api/products?query=${encodeURIComponent(query)}&limit=20`
+      )
       setProducts(response.products)
+      setHasSearched(true)
     } catch (error) {
       console.error("❌ 搜索商品失败:", error)
+      setErrorMessage("Failed to load products")
     } finally {
       setLoading(false)
     }
-  }, [searchQuery])
+  }, [])
 
   const handleProductSelect = useCallback(() => {
-    const product = products.find(p => p.id === selectedProductId)
-    if (product) {
-      setSelectedProduct(product)
-      // 默认选择第一个变体
-      const firstVariant = product.variants[0]
-      onSelect(product.id, firstVariant?.id || undefined)
-      setModalOpen(false)
-      setSelectedProductId("")
-      setSearchQuery("")
+    if (selectedVariantIds.length === 0) {
+      return
     }
-  }, [products, selectedProductId, onSelect])
+
+    // 兼容现有签名：仍然只返回第一个选中的变体
+    const firstVariantId = selectedVariantIds[0]
+    const product = products.find(p =>
+      p.variants.some(variant => variant.id === firstVariantId)
+    )
+    const variant = product?.variants.find(v => v.id === firstVariantId)
+    if (product && variant) {
+      setSelectedProduct(product)
+      onSelect(product.id, variant.id)
+      setModalOpen(false)
+      setSearchQuery("")
+      // 多选模式下仍然保留内部选中状态，交由外部根据需要重置
+    }
+  }, [products, selectedVariantIds, onSelect])
 
   const handleVariantChange = useCallback((value: string) => {
     if (selectedProduct && productId) {
@@ -96,16 +135,39 @@ export const ProductPicker = ({
 
   const handleClear = useCallback(() => {
     setSelectedProduct(null)
+    setSelectedVariantIds([])
     onSelect("", undefined)
   }, [onSelect])
 
   const handleModalOpen = useCallback(() => {
     setModalOpen(true)
-    // 打开 modal 时自动加载商品列表（如果没有搜索过）
+    setHasSearched(false)
+    setErrorMessage(undefined)
+    setSearchQuery("")
+    setProducts([])
+    setSelectedVariantIds(variantId ? [variantId] : [])
+
     if (products.length === 0 && !searchQuery) {
-      handleSearch()
+      void handleSearch("")
     }
-  }, [products.length, searchQuery, handleSearch])
+  }, [products.length, searchQuery, handleSearch, variantId])
+
+  // 将已选中的变体排在前面，方便用户查看和取消选择
+  const variantItems = products.flatMap((product) =>
+    product.variants.map((variant) => ({
+      product,
+      variant
+    }))
+  )
+
+  const sortedVariantItems = [...variantItems].sort((a, b) => {
+    const aSelected = selectedVariantIds.includes(a.variant.id)
+    const bSelected = selectedVariantIds.includes(b.variant.id)
+    if (aSelected === bSelected) {
+      return 0
+    }
+    return aSelected ? -1 : 1
+  })
 
   return (
     <BlockStack gap="200">
@@ -134,16 +196,12 @@ export const ProductPicker = ({
               <Text as="p" variant="bodyMd">
                 {selectedProduct?.title || "Product selected"}
               </Text>
-              {selectedProduct?.variants && selectedProduct.variants.length > 1 && (
-                <Select
-                  label="Variant"
-                  options={selectedProduct.variants.map((variant) => ({
-                    label: `${variant.title}${variant.price ? ` - $${variant.price}` : ""}`,
-                    value: variant.id
-                  }))}
-                  value={variantId || selectedProduct.variants[0]?.id || ""}
-                  onChange={handleVariantChange}
-                />
+              {selectedProduct && selectedProduct.variants.length > 0 && (
+                <Text as="p" variant="bodySm" tone="subdued">
+                  {selectedProduct.variants.find(
+                    variant => selectedVariantIds.includes(variant.id)
+                  )?.title || selectedProduct.variants[0]?.title}
+                </Text>
               )}
             </BlockStack>
           </InlineStack>
@@ -166,61 +224,136 @@ export const ProductPicker = ({
         open={modalOpen}
         onClose={() => {
           setModalOpen(false)
-          setSelectedProductId("")
           setSearchQuery("")
+          setErrorMessage(undefined)
+          setHasSearched(false)
+          setSelectedVariantIds(variantId ? [variantId] : [])
         }}
         title="Select Product"
         primaryAction={{
           content: "Select",
           onAction: handleProductSelect,
-          disabled: !selectedProductId
+          disabled: selectedVariantIds.length === 0
         }}
         secondaryActions={[
           {
             content: "Cancel",
             onAction: () => {
               setModalOpen(false)
-              setSelectedProductId("")
               setSearchQuery("")
             }
           }
         ]}
       >
-        <Modal.Section>
+
           <BlockStack gap="300">
+            <div className={styles.modalHeader}>
             <BlockStack gap="200">
               <TextField
                 label="Search Products"
                 value={searchQuery}
                 onChange={setSearchQuery}
-                placeholder="Enter product name..."
+                placeholder="Enter product name or keyword..."
                 autoComplete="off"
               />
-              <Button onClick={handleSearch} loading={loading} fullWidth>
-                Search
-              </Button>
+              {errorMessage && (
+                <InlineError message={errorMessage} fieldID="product-search" />
+              )}
             </BlockStack>
+            </div>
 
             {loading && products.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "20px" }}>
+              <div style={{ textAlign: "center", padding: "16px" }}>
                 <Spinner size="small" />
               </div>
             ) : (
-              <Select
-                label="Products"
-                options={[
-                  { label: "Select a product...", value: "" },
-                  ...products.map((product) => ({
-                    label: product.title,
-                    value: product.id
-                  }))
-                ]}
-                value={selectedProductId}
-                onChange={setSelectedProductId}
-              />
+              <>
+                {products.length === 0 && hasSearched ? (
+                  <Text as="p" tone="subdued">
+                    No products match this search.
+                  </Text>
+                ) : (
+                  <BlockStack gap="100">
+                    {sortedVariantItems.map(({ product, variant }) => {
+                      const isActive = selectedVariantIds.includes(variant.id)
+                      const hasReachedLimit = selectedVariantIds.length >= maxSelectable
+                      const isDisabled = !isActive && hasReachedLimit
+
+                      return (
+                        <button
+                          className={styles.productButton}
+                          key={variant.id}
+                          type="button"
+                          onClick={() => {
+                            if (isDisabled) {
+                              return
+                            }
+                            setSelectedVariantIds((prev) => {
+                              if (prev.includes(variant.id)) {
+                                return prev.filter(id => id !== variant.id)
+                              }
+                              if (prev.length >= maxSelectable) {
+                                return prev
+                              }
+                              return [...prev, variant.id]
+                            })
+                          }}
+                          disabled={isDisabled}
+                        >
+                          <div
+                            className={"flex gap-2 items-center"}
+                          >
+                            <div onClick={(event) => {
+                              event.stopPropagation()
+                            }}>
+
+
+                            <Checkbox
+                              label=""
+                              checked={isActive}
+                              disabled={isDisabled}
+                              onChange={() => {
+                                if (isDisabled) {
+                                  return
+                                }
+                                setSelectedVariantIds((prev) => {
+                                  if (prev.includes(variant.id)) {
+                                    return prev.filter(id => id !== variant.id)
+                                  }
+                                  if (prev.length >= maxSelectable) {
+                                    return prev
+                                  }
+                                  return [...prev, variant.id]
+                                })
+                              }}
+                            />
+                            </div>
+                            <div className={"flex items-center gap-2"}>
+                              {product.image && (
+                                <Thumbnail
+                                  source={product.image}
+                                  alt={product.title}
+                                  size="small"
+                                />
+                              )}
+
+                              <div className={"text-left flex-1"}>
+                                <Text as="p" variant="bodyMd">
+                                  {product.title} - <Text as="span" variant="bodySm" tone="subdued">
+                                  {variant.title}
+                                </Text>
+                                </Text>
+                              </div>
+                            </div>
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </BlockStack>
+                )}
+              </>
             )}
           </BlockStack>
-        </Modal.Section>
       </Modal>
     </BlockStack>
   )

@@ -1,0 +1,26 @@
+.modalHeader{
+  padding: var(--p-space-400) var(--p-space-400);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fff;
+  border-bottom: var(--p-border-width-025) solid var(--p-color-border-secondary);
+}
+.productButton{
+  padding: var(--p-space-200) var(--p-space-400);
+  align-items: center;
+  border-bottom: var(--p-border-width-025) solid var(--p-color-border-secondary);
+  background-color: var(--p-color-bg-surface);
+
+  &:last-of-type{
+    border-bottom: none;
+  }
+
+  &:hover{
+    background-color: var(--p-color-bg-hovered);
+  }
+
+  &:disabled{
+    cursor: not-allowed;
+  }
+}
