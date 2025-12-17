@@ -39,10 +39,16 @@ import { LoadingScreen } from "@/components/LoadingScreen"
 import "@/i18n/config"
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const url = new URL(request.url)
+  console.log("📥 _app loader 被调用:", {
+    pathname: url.pathname,
+    search: url.search,
+    timestamp: new Date().toISOString()
+  })
+
   const { admin, session } = await authenticate.admin(request)
 
   // 从 URL 参数中获取 locale（Partner 后台的语言）
-  const url = new URL(request.url)
   const partnerLocale = url.searchParams.get("locale") || "en"
 
   // 获取店铺信息（包含 storefront 语言）
@@ -105,6 +111,16 @@ export function shouldRevalidate({
   defaultShouldRevalidate,
   formAction
 }: ShouldRevalidateFunctionArgs) {
+  // 添加详细日志，帮助调试
+  console.log("🔍 shouldRevalidate 被调用:", {
+    currentPath: currentUrl.pathname,
+    nextPath: nextUrl.pathname,
+    currentSearch: currentUrl.search,
+    nextSearch: nextUrl.search,
+    formAction,
+    defaultShouldRevalidate
+  })
+
   // 如果有表单提交，需要重新加载
   if (formAction) {
     console.log("🔄 表单提交，重新加载数据")
@@ -117,16 +133,45 @@ export function shouldRevalidate({
     return true
   }
 
-  // 如果是在应用内导航（如首页 -> 设置），不重新加载
-  if (currentUrl.pathname !== nextUrl.pathname &&
-      currentUrl.pathname.startsWith("/app") &&
-      nextUrl.pathname.startsWith("/app")) {
-    console.log("⚡️ 应用内导航，使用缓存数据")
+  // 定义应用内路由列表（这些路由共享同一个 _app 布局，应该使用缓存）
+  const appRoutes = [
+    "/campaigns",
+    "/billing",
+    "/settings",
+    "/app"
+  ]
+
+  // 判断是否是应用内路由
+  const isAppRoute = (path: string) => {
+    if (path === "/" || path === "") return true // 根路径也是应用内
+    if (path.startsWith("/app")) return true
+    return appRoutes.some(route => path === route || path.startsWith(route + "/"))
+  }
+
+  const currentPath = currentUrl.pathname
+  const nextPath = nextUrl.pathname
+
+  // 如果是在应用内导航（应用内的任何路由之间），不重新加载
+  // 这样可以大幅减少数据库查询
+  if (isAppRoute(currentPath) && isAppRoute(nextPath)) {
+    if (currentPath !== nextPath) {
+      console.log("⚡️ 应用内导航，使用缓存数据:", { from: currentPath, to: nextPath })
+      return false
+    }
+    // 相同路径，使用缓存
+    console.log("⚡️ 相同路径，使用缓存数据")
     return false
   }
 
-  // 其他情况使用默认行为
-  return defaultShouldRevalidate
+  // 其他情况：默认情况下也尽量使用缓存，除非是首次加载
+  if (currentPath === nextPath) {
+    console.log("⚡️ 相同路径，使用缓存数据")
+    return false
+  }
+
+  // 其他情况使用默认行为（但尽量返回 false 以减少查询）
+  console.log("⚠️ 其他情况，使用缓存以减少查询")
+  return false
 }
 
 const polarisTranslations: Record<string, any> = {
@@ -223,7 +268,6 @@ const PolarisProvider = observer(() => {
   // 2. URL 中没有标准的 Shopify Admin 参数（如 shop, host）
   // 3. 或者 URL 包含特定的 modal 标记
   const isInModal = typeof window !== "undefined" && window.opener
-  console.log(isInModal)
   return (
     <AppProvider i18n={polarisI18n}>
       {!isFullyInitialized ? (

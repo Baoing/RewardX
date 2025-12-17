@@ -53,13 +53,24 @@ class CampaignStore {
     this.entries = entries
   }
 
-  async fetchCampaigns() {
+  private lastFetchTime: number = 0
+  private readonly CACHE_DURATION = 5000 // 5 秒缓存
+
+  async fetchCampaigns(force = false) {
+    // 如果已经有缓存且未过期，且不是强制刷新，则跳过
+    const now = Date.now()
+    if (!force && this.isInitialized && (now - this.lastFetchTime) < this.CACHE_DURATION) {
+      console.log("⚡️ 使用缓存的 Campaign 数据")
+      return
+    }
+
     this.setLoading(true)
     this.setError(null)
 
     try {
       const campaigns = await getCampaigns()
       this.setCampaigns(campaigns)
+      this.lastFetchTime = now
     } catch (error) {
       console.error("❌ Failed to fetch campaigns:", error)
       const message = error instanceof ApiError ? error.message : "Failed to fetch campaigns"

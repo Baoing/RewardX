@@ -68,6 +68,22 @@ export const loader = async ({request}: LoaderFunctionArgs) => {
   }
 }
 
+// 优化：避免不必要的重新加载
+export function shouldRevalidate({
+  formAction,
+  defaultShouldRevalidate
+}: {
+  formAction?: string
+  defaultShouldRevalidate: boolean
+}) {
+  // 只有在表单提交时才重新加载
+  if (formAction) {
+    return true
+  }
+  // 其他情况使用缓存
+  return false
+}
+
 type BillingCycleType = "monthly" | "yearly"
 
 export default function BillingPage() {

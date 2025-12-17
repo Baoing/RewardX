@@ -21,11 +21,29 @@ import styles from "./styles.module.scss"
 
 // loader 进行 Shopify 认证
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
+  console.log("📥 _app.campaigns.$id loader 被调用:", params.id)
   // Shopify 认证
   await authenticate.admin(request)
 
   // 返回路由参数（实际数据由前端 MobX store 加载）
   return { campaignId: params.id }
+}
+
+// 优化：避免不必要的重新加载
+export function shouldRevalidate({
+  formAction,
+  defaultShouldRevalidate
+}: {
+  formAction?: string
+  defaultShouldRevalidate: boolean
+}) {
+  console.log("🔍 _app.campaigns.$id shouldRevalidate 被调用:", { formAction, defaultShouldRevalidate })
+  // 只有在表单提交时才重新加载
+  if (formAction) {
+    return true
+  }
+  // 其他情况使用缓存
+  return false
 }
 
 const CampaignDetailPage = observer(() => {
