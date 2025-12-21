@@ -1,9 +1,9 @@
-import {useState} from "react"
-import {Badge, BlockStack, Box, Button, Card, Icon, InlineStack, Page, Text} from "@shopify/polaris"
+import {useState, useEffect} from "react"
+import {Badge, BlockStack, Box, Button, Card, Icon, InlineStack, Page, Text, Spinner} from "@shopify/polaris"
 import {CheckIcon} from "@shopify/polaris-icons"
 import {useTranslation} from "react-i18next"
 import type {LoaderFunctionArgs} from "react-router"
-import {useLoaderData, useRevalidator} from "react-router"
+import {useLoaderData, useRevalidator, useNavigation} from "react-router"
 import {authenticate} from "../../shopify.server"
 import {SwitchTab} from "../../components/SwitchTab"
 import {DowngradeModal} from "../../components/DowngradeModal"
@@ -12,8 +12,12 @@ import {getAllPlans, PlanConfig, PlanType} from "../../config/plans"
 import {showToast, showErrorToast} from "../../utils/toast"
 import prisma from "../../db.server"
 
+// 优化：快速返回，减少等待时间
 export const loader = async ({request}: LoaderFunctionArgs) => {
   const {admin, session} = await authenticate.admin(request)
+
+  // 立即返回 plans（同步数据，不需要等待）
+  const plans = getAllPlans()
 
   // 获取用户信息
   const user = await prisma.user.findUnique({
@@ -22,10 +26,10 @@ export const loader = async ({request}: LoaderFunctionArgs) => {
 
   if (!user) {
     return {
+      plans,
       currentPlan: PlanType.FREE,
-      plans: getAllPlans(),
-      hasCompletedSubscription: false,  // 新用户无订阅历史
-      isInTrial: false  // 新用户不在试用期
+      hasCompletedSubscription: false,
+      isInTrial: false
     }
   }
 
@@ -37,14 +41,14 @@ export const loader = async ({request}: LoaderFunctionArgs) => {
     where: {
       userId: user.id,
       planType: {
-        not: PlanType.FREE  // 排除免费套餐
+        not: PlanType.FREE
       },
       OR: [
-        { isTrial: false },  // 已付费的订阅
+        { isTrial: false },
         {
           AND: [
-            { isTrial: true },  // 试用期
-            { status: { in: ["cancelled", "expired"] } }  // 但已取消或过期
+            { isTrial: true },
+            { status: { in: ["cancelled", "expired"] } }
           ]
         }
       ]
@@ -61,10 +65,10 @@ export const loader = async ({request}: LoaderFunctionArgs) => {
   const isInTrial = subscription?.isTrial && subscription?.status === "active"
 
   return {
+    plans,
     currentPlan: subscription?.planType || PlanType.FREE,
-    plans: getAllPlans(),
-    hasCompletedSubscription: completedSubscriptionHistory.length > 0,  // 是否有已完成的付费订阅
-    isInTrial: isInTrial || false  // 是否在试用期内
+    hasCompletedSubscription: completedSubscriptionHistory.length > 0,
+    isInTrial: isInTrial || false
   }
 }
 
@@ -89,10 +93,14 @@ type BillingCycleType = "monthly" | "yearly"
 export default function BillingPage() {
   const {t} = useTranslation()
   const revalidator = useRevalidator()
-  const {currentPlan, plans, hasCompletedSubscription, isInTrial} = useLoaderData<typeof loader>()
+  const navigation = useNavigation()
+  const {plans, currentPlan, hasCompletedSubscription, isInTrial} = useLoaderData<typeof loader>()
   const [billingCycle, setBillingCycle] = useState<BillingCycleType>("monthly")
   const [isSubscribing, setIsSubscribing] = useState(false)
   const [showDowngradeModal, setShowDowngradeModal] = useState(false)
+
+  // 显示加载状态（如果数据还在加载）
+  const isLoading = navigation.state === "loading"
 
   const handleSubscribe = async (planKey: string | Blob) => {
     // 如果选择 Free 套餐，显示降级确认弹窗

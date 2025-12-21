@@ -32,7 +32,7 @@ import zhTWPolaris from "@shopify/polaris/locales/zh-TW.json"
 
 import { authenticate } from "@/shopify.server"
 import { getShopInfo } from "@/utils/shop.server"
-import { upsertUser } from "@/utils/user.server"
+import { upsertUser, userToShopInfo } from "@/utils/user.server"
 import { getCurrentSubscription } from "@/services/subscription.server"
 import { StoreContext, userInfoStore, commonStore, campaignStore, campaignEditorStore, useCommonStore } from "@/stores"
 import { LoadingScreen } from "@/components/LoadingScreen"
@@ -127,29 +127,36 @@ export function shouldRevalidate({
     return true
   }
 
+  // 规范化路径：移除尾部斜杠，统一处理
+  const normalizePath = (path: string) => {
+    if (!path || path === "/") return "/app" // 根路径映射到 /app
+    // 移除尾部斜杠（除了根路径）
+    return path.endsWith("/") && path !== "/" ? path.slice(0, -1) : path
+  }
+
+  const currentPath = normalizePath(currentUrl.pathname)
+  const nextPath = normalizePath(nextUrl.pathname)
+
   // 如果是从外部链接进入（带 shop 参数），需要加载
   if (nextUrl.searchParams.has("shop") && !currentUrl.searchParams.has("shop")) {
-    console.log("🔄 首次进入应用，加载数据")
+    console.log("🔄 首次进入应用（带 shop 参数），加载数据")
     return true
   }
 
-  // 定义应用内路由列表（这些路由共享同一个 _app 布局，应该使用缓存）
-  const appRoutes = [
-    "/campaigns",
-    "/billing",
-    "/settings",
-    "/app"
-  ]
-
   // 判断是否是应用内路由
   const isAppRoute = (path: string) => {
-    if (path === "/" || path === "") return true // 根路径也是应用内
-    if (path.startsWith("/app")) return true
-    return appRoutes.some(route => path === route || path.startsWith(route + "/"))
+    // 根路径和 /app 都是应用内路由
+    if (path === "/app" || path === "/") return true
+    // 所有以 /app 开头的路径都是应用内路由
+    if (path.startsWith("/app/")) return true
+    // 其他应用内路由
+    return path === "/campaigns" ||
+           path === "/billing" ||
+           path === "/settings" ||
+           path.startsWith("/campaigns/") ||
+           path.startsWith("/billing/") ||
+           path.startsWith("/settings/")
   }
-
-  const currentPath = currentUrl.pathname
-  const nextPath = nextUrl.pathname
 
   // 如果是在应用内导航（应用内的任何路由之间），不重新加载
   // 这样可以大幅减少数据库查询
@@ -160,6 +167,12 @@ export function shouldRevalidate({
     }
     // 相同路径，使用缓存
     console.log("⚡️ 相同路径，使用缓存数据")
+    return false
+  }
+
+  // 如果是从非应用路由进入应用路由，且没有 shop 参数，也使用缓存（可能是刷新页面）
+  if (!isAppRoute(currentPath) && isAppRoute(nextPath) && !nextUrl.searchParams.has("shop")) {
+    console.log("⚡️ 从外部进入应用（无 shop 参数），使用缓存数据")
     return false
   }
 
@@ -202,13 +215,7 @@ function AppContent() {
   const { apiKey, shopInfo, userInfo, partnerLocale } = useLoaderData<typeof loader>()
   const { t } = useTranslation()
   const commonStore = useCommonStore()
-  // const renderCount = useRef(0)
-  //
-  // // 追踪渲染次数
-  // useEffect(() => {
-  //   renderCount.current += 1
-  //   console.log(`🔄 AppContent 渲染次数: ${renderCount.current}`)
-  // })
+  console.log(122121)
 
   // 🔥 关键优化：语言初始化提前到第一位（同步执行）
   // 使用 store 的初始化状态，避免重复初始化
@@ -217,12 +224,8 @@ function AppContent() {
 
     if (userInfo.appLanguage) {
       targetLanguage = userInfo.appLanguage
-      // console.log("📝 使用用户设置的语言:", userInfo.appLanguage)
     } else if (partnerLocale && partnerLocale !== "en") {
       targetLanguage = partnerLocale
-      // console.log("🌐 使用 Partner 后台语言:", partnerLocale)
-    } else {
-      // console.log("🔤 使用默认语言: en")
     }
 
     console.log("初始化语言:", targetLanguage)
@@ -262,12 +265,11 @@ const PolarisProvider = observer(() => {
   // 🔥 检查是否全部初始化完成
   const isFullyInitialized = commonStore.isFullyInitialized && userInfoStore.isInitialized
 
+  console.log(commonStore.isFullyInitialized, "xxxx")
+  console.log(userInfoStore.isInitialized, "xxxxcc")
   // 🔥 检测是否在 Modal 中打开
-  // Shopify Modal 场景的判断条件：
-  // 1. 在 iframe 中运行（window.self !== window.top）
-  // 2. URL 中没有标准的 Shopify Admin 参数（如 shop, host）
-  // 3. 或者 URL 包含特定的 modal 标记
   const isInModal = typeof window !== "undefined" && window.opener
+
   return (
     <AppProvider i18n={polarisI18n}>
       {!isFullyInitialized ? (
