@@ -127,6 +127,9 @@ class ApiClient {
         delete options.params
       }
 
+      // 注意：认证已在组件层面通过 useAuthenticatedFetch 处理
+      // 这里不再需要获取 idToken，因为请求已经包含了认证头
+
       // 合并 headers
       const headers = {
         ...this.config.headers,
@@ -271,9 +274,31 @@ class ApiClient {
 // ============ 导出实例 ============
 
 /**
+ * 获取 App Bridge idToken（如果可用）
+ * 注意：此函数不再使用，因为认证已改为在前端通过 useAuthenticatedFetch 处理
+ */
+async function getIdToken(): Promise<string | null> {
+  // 不再尝试获取 idToken，因为认证已在 fetch 层面处理
+  return null
+}
+
+/**
  * 默认 API 客户端实例
  */
 export const api = new ApiClient()
+
+/**
+ * 创建带认证的 API 客户端
+ * @param getIdTokenFn 获取 idToken 的函数
+ */
+export const createAuthenticatedApiClient = (getIdTokenFn: () => Promise<string | null>) => {
+  return new ApiClient({
+    headers: async () => {
+      const token = await getIdTokenFn()
+      return token ? { Authorization: `Bearer ${token}` } : {}
+    }
+  })
+}
 
 /**
  * 创建自定义配置的 API 客户端

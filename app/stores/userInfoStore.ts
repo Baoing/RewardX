@@ -43,12 +43,19 @@ class UserInfoStore {
     this.isInitialized = false
   }
 
-  async fetchUserInfo() {
+  async fetchUserInfo(fetchFn?: (url: string, init?: RequestInit) => Promise<Response>) {
     this.setLoading(true)
     this.setError(null)
 
     try {
-      const response = await fetch("/api/userInfo")
+      // 如果提供了 fetch 函数（带认证），使用它；否则使用默认 fetch
+      const fetchToUse = fetchFn || fetch
+      const response = await fetchToUse("/api/userInfo")
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
       const result = await response.json()
 
       if (result.userInfo) {

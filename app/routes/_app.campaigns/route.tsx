@@ -23,31 +23,11 @@ import { createDefaultCampaign, toggleCampaignStatus, deleteCampaign } from "@/u
 import { ApiError } from "@/utils/api.client"
 import { authenticate } from "@/shopify.server"
 
-// ✅ 添加 loader 进行 Shopify 认证
-// 注意：这个 loader 只做认证，实际数据由前端 MobX store 通过 API 获取
-export const loader = async ({ request }: LoaderFunctionArgs) => {
-  console.log("📥 _app.campaigns loader 被调用")
-  await authenticate.admin(request)
-  return {}
-}
-
-// 优化：避免不必要的重新加载
-// 注意：React Router v7 的 shouldRevalidate 可能不会在所有情况下被调用
-export function shouldRevalidate({
-  formAction,
-  defaultShouldRevalidate
-}: {
-  formAction?: string
-  defaultShouldRevalidate: boolean
-}) {
-  console.log("🔍 _app.campaigns shouldRevalidate 被调用:", { formAction, defaultShouldRevalidate })
-  // 只有在表单提交时才重新加载
-  if (formAction) {
-    return true
-  }
-  // 其他情况使用缓存
-  return false
-}
+// 简化 loader：只做认证，数据由客户端加载
+// export const loader = async ({ request }: LoaderFunctionArgs) => {
+//   await authenticate.admin(request)
+//   return {}
+// }
 
 const CampaignsPage = observer(() => {
   const { t } = useTranslation()
@@ -57,7 +37,7 @@ const CampaignsPage = observer(() => {
   const [selectedTab, setSelectedTab] = useState(0)
   const [isCreating, setIsCreating] = useState(false)
   const appWindowRef = useRef<any>(null)
-  
+
   // 判断是否在子路由（详情页、分析页等）
   const isChildRoute = location.pathname !== "/campaigns"
 

@@ -1,6 +1,6 @@
 /// <reference path="../globals.d.ts" />
-import { useEffect, useMemo, useRef } from "react"
-import type { HeadersFunction, LoaderFunctionArgs, ShouldRevalidateFunctionArgs } from "react-router"
+import { useEffect, useMemo, useRef, useState } from "react"
+import type { HeadersFunction, LoaderFunctionArgs } from "react-router"
 import { Outlet, useLoaderData, useRouteError } from "react-router"
 import { boundary } from "@shopify/shopify-app-react-router/server"
 import { AppProvider as ShopifyAppProvider } from "@shopify/shopify-app-react-router/react"
@@ -30,161 +30,22 @@ import trPolaris from "@shopify/polaris/locales/tr.json"
 import zhCNPolaris from "@shopify/polaris/locales/zh-CN.json"
 import zhTWPolaris from "@shopify/polaris/locales/zh-TW.json"
 
-import { authenticate } from "@/shopify.server"
-import { getShopInfo } from "@/utils/shop.server"
-import { upsertUser, userToShopInfo } from "@/utils/user.server"
-import { getCurrentSubscription } from "@/services/subscription.server"
+import { userToShopInfo } from "@/utils/shop.client"
 import { StoreContext, userInfoStore, commonStore, campaignStore, campaignEditorStore, useCommonStore } from "@/stores"
 import { LoadingScreen } from "@/components/LoadingScreen"
 import "@/i18n/config"
 
+// loader 已移除，完全由前端处理
+// 返回必要的配置信息
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url)
-  console.log("📥 _app loader 被调用:", {
-    pathname: url.pathname,
-    search: url.search,
-    timestamp: new Date().toISOString()
-  })
-
-  const { admin, session } = await authenticate.admin(request)
-
-  // 从 URL 参数中获取 locale（Partner 后台的语言）
   const partnerLocale = url.searchParams.get("locale") || "en"
-
-  // 获取店铺信息（包含 storefront 语言）
-  let shopInfo = await getShopInfo(admin)
-
-  // 创建或更新用户，传递 Partner locale
-  const userInfo = await upsertUser(session.shop, shopInfo, partnerLocale)
-
-  // 降级策略：如果 API 获取失败，从数据库恢复
-  if (!shopInfo && userInfo) {
-    const { userToShopInfo } = await import("@/utils/user.server")
-    shopInfo = userToShopInfo(userInfo)
-  }
-
-  // 获取用户当前订阅
-  let subscription = null
-  if (userInfo) {
-    subscription = await getCurrentSubscription(userInfo.id)
-  }
-
-  // 使用 console.table 优雅地打印用户信息
-  console.log("\n === 用户信息 ===")
-  console.table({
-    "店铺": session.shop,
-    "Partner locale": partnerLocale,
-    "店铺语言": shopInfo?.primaryLocale || "未知",
-    "用户语言": userInfo?.appLanguage || "未设置（使用 Partner 语言）",
-    "当前套餐": subscription?.planType || "free",
-    "套餐状态": subscription?.status || "无订阅",
-    "计费周期": subscription?.billingCycle || "-",
-    "配额限制": subscription?.quotaLimit ?? "20（默认）",
-    "已用配额": subscription?.quotaUsed ?? 0,
-    "试用期": subscription?.isTrial ? "是" : "否"
-  })
 
   // eslint-disable-next-line no-undef
   return {
     apiKey: process.env.SHOPIFY_API_KEY || "",
-    shopInfo,
-    userInfo: {
-      ...userInfo,
-      subscription // 添加订阅信息
-    },
-    partnerLocale, // 传递 Partner 的 locale 参数
-    session: {
-      shop: session.shop,
-      accessToken: session.accessToken ? "***" : null // 不暴露完整token
-    }
+    partnerLocale
   }
-}
-
-/**
- * 控制 loader 何时重新执行
- * 返回 false = 不重新加载（使用缓存数据）
- * 返回 true = 重新加载
- */
-export function shouldRevalidate({
-  currentUrl,
-  nextUrl,
-  defaultShouldRevalidate,
-  formAction
-}: ShouldRevalidateFunctionArgs) {
-  // 添加详细日志，帮助调试
-  console.log("🔍 shouldRevalidate 被调用:", {
-    currentPath: currentUrl.pathname,
-    nextPath: nextUrl.pathname,
-    currentSearch: currentUrl.search,
-    nextSearch: nextUrl.search,
-    formAction,
-    defaultShouldRevalidate
-  })
-
-  // 如果有表单提交，需要重新加载
-  if (formAction) {
-    console.log("🔄 表单提交，重新加载数据")
-    return true
-  }
-
-  // 规范化路径：移除尾部斜杠，统一处理
-  const normalizePath = (path: string) => {
-    if (!path || path === "/") return "/app" // 根路径映射到 /app
-    // 移除尾部斜杠（除了根路径）
-    return path.endsWith("/") && path !== "/" ? path.slice(0, -1) : path
-  }
-
-  const currentPath = normalizePath(currentUrl.pathname)
-  const nextPath = normalizePath(nextUrl.pathname)
-
-  // 如果是从外部链接进入（带 shop 参数），需要加载
-  if (nextUrl.searchParams.has("shop") && !currentUrl.searchParams.has("shop")) {
-    console.log("🔄 首次进入应用（带 shop 参数），加载数据")
-    return true
-  }
-
-  // 判断是否是应用内路由
-  const isAppRoute = (path: string) => {
-    // 根路径和 /app 都是应用内路由
-    if (path === "/app" || path === "/") return true
-    // 所有以 /app 开头的路径都是应用内路由
-    if (path.startsWith("/app/")) return true
-    // 其他应用内路由
-    return path === "/campaigns" ||
-           path === "/billing" ||
-           path === "/settings" ||
-           path.startsWith("/campaigns/") ||
-           path.startsWith("/billing/") ||
-           path.startsWith("/settings/")
-  }
-
-  // 如果是在应用内导航（应用内的任何路由之间），不重新加载
-  // 这样可以大幅减少数据库查询
-  if (isAppRoute(currentPath) && isAppRoute(nextPath)) {
-    if (currentPath !== nextPath) {
-      console.log("⚡️ 应用内导航，使用缓存数据:", { from: currentPath, to: nextPath })
-      return false
-    }
-    // 相同路径，使用缓存
-    console.log("⚡️ 相同路径，使用缓存数据")
-    return false
-  }
-
-  // 如果是从非应用路由进入应用路由，且没有 shop 参数，也使用缓存（可能是刷新页面）
-  if (!isAppRoute(currentPath) && isAppRoute(nextPath) && !nextUrl.searchParams.has("shop")) {
-    console.log("⚡️ 从外部进入应用（无 shop 参数），使用缓存数据")
-    return false
-  }
-
-  // 其他情况：默认情况下也尽量使用缓存，除非是首次加载
-  if (currentPath === nextPath) {
-    console.log("⚡️ 相同路径，使用缓存数据")
-    return false
-  }
-
-  // 其他情况使用默认行为（但尽量返回 false 以减少查询）
-  console.log("⚠️ 其他情况，使用缓存以减少查询")
-  return false
 }
 
 const polarisTranslations: Record<string, any> = {
@@ -212,38 +73,92 @@ const polarisTranslations: Record<string, any> = {
 
 // 分离出一个纯展示组件，不使用 observer
 function AppContent() {
-  const { apiKey, shopInfo, userInfo, partnerLocale } = useLoaderData<typeof loader>()
-  const { t } = useTranslation()
+  const { apiKey, partnerLocale } = useLoaderData<typeof loader>()
   const commonStore = useCommonStore()
-  console.log(122121)
-
-  // 🔥 关键优化：语言初始化提前到第一位（同步执行）
-  // 使用 store 的初始化状态，避免重复初始化
-  if (!commonStore.isLanguageInitialized && userInfo && partnerLocale) {
-    let targetLanguage: string = "en"
-
-    if (userInfo.appLanguage) {
-      targetLanguage = userInfo.appLanguage
-    } else if (partnerLocale && partnerLocale !== "en") {
-      targetLanguage = partnerLocale
+  
+  // 获取 authenticated fetch 函数
+  // 注意：在 SSR 时，Hook 可能无法正常工作，所以需要条件检查
+  // 使用 useState 来延迟初始化，确保只在客户端执行
+  const [authenticatedFetch] = useState<((url: string, init?: RequestInit) => Promise<Response>)>(() => {
+    // 在 SSR 时返回一个基础的 fetch 函数
+    if (typeof window === "undefined") {
+      return async (url: string, init?: RequestInit) => fetch(url, { ...init, credentials: "include" })
     }
+    // 在客户端，返回带认证的 fetch
+    // 直接在这里实现获取 session token 的逻辑
+    return async (url: string, init?: RequestInit) => {
+      try {
+        let sessionToken: string | null = null
+        
+        // 尝试获取 session token
+        const shopify = (window as any).shopify
+        if (shopify?.appBridge) {
+          if (typeof shopify.appBridge.getSessionToken === "function") {
+            sessionToken = await shopify.appBridge.getSessionToken()
+          } else if (typeof shopify.appBridge.idToken === "function") {
+            sessionToken = await shopify.appBridge.idToken()
+          }
+        }
+        
+        return fetch(url, {
+          ...init,
+          headers: {
+            ...init?.headers,
+            ...(sessionToken ? { "Authorization": `Bearer ${sessionToken}` } : {})
+          },
+          credentials: "include"
+        })
+      } catch {
+        return fetch(url, { ...init, credentials: "include" })
+      }
+    }
+  })
 
-    console.log("初始化语言:", targetLanguage)
-    commonStore.setLanguage(targetLanguage as any)
-  }
-
-  // 初始化 stores（使用 store 的初始化标记）
+  // 🔥 客户端加载数据：在 useEffect 中请求 API
   useEffect(() => {
-    // 检查 UserInfo 是否已初始化
-    if (!userInfoStore.isInitialized && userInfo) {
-      userInfoStore.setUserInfo(userInfo)
+    // 如果已经初始化过，就不需要再加载了
+    if (commonStore.isLanguageInitialized && userInfoStore.isInitialized) {
+      return
     }
 
-    // 检查 ShopInfo 是否已初始化
-    if (!commonStore.isShopInfoInitialized && shopInfo) {
-      commonStore.setShopInfo(shopInfo)
+    // 异步加载用户信息
+    const loadUserData = async () => {
+      try {
+        // 使用带认证的 fetch 获取用户信息
+        const response = await authenticatedFetch("/api/userInfo")
+        const result = await response.json()
+        
+        if (result.userInfo) {
+          const userInfo = result.userInfo
+          // 从 userInfo 生成 shopInfo（降级方案，从数据库恢复）
+          const shopInfo = userToShopInfo(userInfo)
+          if (shopInfo) {
+            commonStore.setShopInfo(shopInfo)
+          }
+
+          // 初始化语言
+          if (!commonStore.isLanguageInitialized) {
+            let targetLanguage: string = "en"
+            if (userInfo.appLanguage) {
+              targetLanguage = userInfo.appLanguage
+            } else if (partnerLocale && partnerLocale !== "en") {
+              targetLanguage = partnerLocale
+            }
+            console.log("初始化语言:", targetLanguage)
+            commonStore.setLanguage(targetLanguage as any)
+          }
+
+          // 设置到 store
+          userInfoStore.setUserInfo(userInfo)
+        }
+      } catch (error) {
+        console.error("❌ 加载用户数据失败:", error)
+      }
     }
-  }, [userInfo, shopInfo, commonStore])
+
+    loadUserData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [partnerLocale, authenticatedFetch])
 
   return (
     <ShopifyAppProvider embedded apiKey={apiKey}>
@@ -258,22 +173,22 @@ const PolarisProvider = observer(() => {
   const commonStore = useCommonStore()
 
   // 根据当前语言选择 Polaris 翻译（响应式）
+  // 确保始终有一个有效的语言，避免样式问题
   const polarisI18n = useMemo(() => {
-    return polarisTranslations[commonStore.currentLanguage] || enPolaris
+    const lang = commonStore.currentLanguage || "en"
+    return polarisTranslations[lang] || enPolaris
   }, [commonStore.currentLanguage])
 
   // 🔥 检查是否全部初始化完成
   const isFullyInitialized = commonStore.isFullyInitialized && userInfoStore.isInitialized
 
-  console.log(commonStore.isFullyInitialized, "xxxx")
-  console.log(userInfoStore.isInitialized, "xxxxcc")
   // 🔥 检测是否在 Modal 中打开
   const isInModal = typeof window !== "undefined" && window.opener
 
   return (
     <AppProvider i18n={polarisI18n}>
       {!isFullyInitialized ? (
-        // 全局 Loading 状态（使用 Tailwind 组件）
+        // 全局 Loading 状态（数据未加载完成时显示）
         <LoadingScreen />
       ) : (
         // 应用主内容

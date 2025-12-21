@@ -3,11 +3,13 @@ import { userInfoStore } from "./userInfoStore"
 import { commonStore } from "./commonStore"
 import { campaignStore } from "./campaignStore"
 import { campaignEditorStore } from "./campaignEditorStore"
+import { billingStore } from "./billingStore"
 
 export { userInfoStore } from "./userInfoStore"
 export { commonStore } from "./commonStore"
 export { campaignStore } from "./campaignStore"
 export { campaignEditorStore } from "./campaignEditorStore"
+export { billingStore } from "./billingStore"
 
 export const StoreContext = createContext({
   userInfoStore,

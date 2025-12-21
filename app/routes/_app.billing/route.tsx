@@ -2,105 +2,51 @@ import {useState, useEffect} from "react"
 import {Badge, BlockStack, Box, Button, Card, Icon, InlineStack, Page, Text, Spinner} from "@shopify/polaris"
 import {CheckIcon} from "@shopify/polaris-icons"
 import {useTranslation} from "react-i18next"
-import type {LoaderFunctionArgs} from "react-router"
-import {useLoaderData, useRevalidator, useNavigation} from "react-router"
-import {authenticate} from "../../shopify.server"
+import {observer} from "mobx-react-lite"
+import {useAuthenticatedFetch} from "../../utils/shopifyFetch.client"
 import {SwitchTab} from "../../components/SwitchTab"
 import {DowngradeModal} from "../../components/DowngradeModal"
-import {getCurrentSubscription} from "../../services/subscription.server"
 import {getAllPlans, PlanConfig, PlanType} from "../../config/plans"
 import {showToast, showErrorToast} from "../../utils/toast"
-import prisma from "../../db.server"
+import {billingStore} from "../../stores"
 
-// 优化：快速返回，减少等待时间
-export const loader = async ({request}: LoaderFunctionArgs) => {
-  const {admin, session} = await authenticate.admin(request)
-
-  // 立即返回 plans（同步数据，不需要等待）
-  const plans = getAllPlans()
-
-  // 获取用户信息
-  const user = await prisma.user.findUnique({
-    where: {shop: session.shop}
-  })
-
-  if (!user) {
-    return {
-      plans,
-      currentPlan: PlanType.FREE,
-      hasCompletedSubscription: false,
-      isInTrial: false
-    }
-  }
-
-  // 获取当前订阅
-  const subscription = await getCurrentSubscription(user.id)
-
-  // 检查是否有已完成的付费订阅历史（排除当前试用中的订阅）
-  const completedSubscriptionHistory = await prisma.subscription.findMany({
-    where: {
-      userId: user.id,
-      planType: {
-        not: PlanType.FREE
-      },
-      OR: [
-        { isTrial: false },
-        {
-          AND: [
-            { isTrial: true },
-            { status: { in: ["cancelled", "expired"] } }
-          ]
-        }
-      ]
-    },
-    select: {
-      id: true,
-      planType: true,
-      status: true,
-      isTrial: true
-    }
-  })
-
-  // 判断当前是否在试用期内
-  const isInTrial = subscription?.isTrial && subscription?.status === "active"
-
-  return {
-    plans,
-    currentPlan: subscription?.planType || PlanType.FREE,
-    hasCompletedSubscription: completedSubscriptionHistory.length > 0,
-    isInTrial: isInTrial || false
-  }
-}
-
-// 优化：避免不必要的重新加载
-export function shouldRevalidate({
-  formAction,
-  defaultShouldRevalidate
-}: {
-  formAction?: string
-  defaultShouldRevalidate: boolean
-}) {
-  // 只有在表单提交时才重新加载
-  if (formAction) {
-    return true
-  }
-  // 其他情况使用缓存
-  return false
-}
+// loader 已移除，完全由前端处理
+// export const loader = async (): Promise<Record<string, never>> => {
+//   return {}
+// }
 
 type BillingCycleType = "monthly" | "yearly"
 
-export default function BillingPage() {
+const BillingPage = observer(() => {
   const {t} = useTranslation()
-  const revalidator = useRevalidator()
-  const navigation = useNavigation()
-  const {plans, currentPlan, hasCompletedSubscription, isInTrial} = useLoaderData<typeof loader>()
+  const authenticatedFetch = useAuthenticatedFetch()
+  const plans = getAllPlans()
   const [billingCycle, setBillingCycle] = useState<BillingCycleType>("monthly")
   const [isSubscribing, setIsSubscribing] = useState(false)
   const [showDowngradeModal, setShowDowngradeModal] = useState(false)
 
-  // 显示加载状态（如果数据还在加载）
-  const isLoading = navigation.state === "loading"
+  // 从 store 获取数据
+  const { currentPlan, hasCompletedSubscription, isInTrial, isLoading } = billingStore
+
+  // 客户端加载账单数据（只在 store 未初始化或缓存过期时请求）
+  useEffect(() => {
+    // 如果 store 已有缓存数据，直接使用，不请求
+    if (billingStore.isCacheValid && billingStore.isInitialized) {
+      console.log("⚡️ Billing 页面：使用 store 缓存数据")
+      return
+    }
+
+    const loadBillingData = async () => {
+      await billingStore.fetchBillingData(authenticatedFetch, false)
+    }
+
+    loadBillingData()
+  }, [authenticatedFetch])
+
+  // 重新加载账单数据的函数（强制刷新）
+  const reloadBillingData = async () => {
+    await billingStore.fetchBillingData(authenticatedFetch, true)
+  }
 
   const handleSubscribe = async (planKey: string | Blob) => {
     // 如果选择 Free 套餐，显示降级确认弹窗
@@ -116,7 +62,7 @@ export default function BillingPage() {
       formData.append("plan", planKey)
       formData.append("billingCycle", billingCycle)
 
-      const response = await fetch("/api/subscribe", {
+      const response = await authenticatedFetch("/api/subscribe", {
         method: "POST",
         body: formData
       })
@@ -132,7 +78,7 @@ export default function BillingPage() {
           // 开发模式：重新加载数据
           console.log("✅ 开发模式：订阅已激活")
           showToast({ content: t("billing.subscriptionSuccess") })
-          setTimeout(() => revalidator.revalidate(), 1000)
+          await reloadBillingData()
         }
       } else {
         console.error("❌ 订阅失败:", result.error)
@@ -152,7 +98,7 @@ export default function BillingPage() {
     try {
       console.log("⚠️ 取消当前订阅，切换到免费套餐")
 
-      const response = await fetch("/api/cancel-subscription", {
+      const response = await authenticatedFetch("/api/cancel-subscription", {
         method: "POST"
       })
 
@@ -161,7 +107,7 @@ export default function BillingPage() {
       if (result.success) {
         console.log("✅ 订阅已取消，重新加载数据")
         showToast({ content: t("billing.downgradeSuccess") })
-        setTimeout(() => revalidator.revalidate(), 1000)
+        await reloadBillingData()
       } else {
         console.error("❌ 取消订阅失败:", result.error)
         showErrorToast(t("billing.downgradeError", { error: result.error }))
@@ -370,5 +316,7 @@ export default function BillingPage() {
       />
     </Page>
   )
-}
+})
+
+export default BillingPage
 
