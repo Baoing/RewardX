@@ -33,6 +33,7 @@ declare namespace JSX {
     "s-link": React.DetailedHTMLProps<
       React.HTMLAttributes<HTMLElement> & {
         href?: string
+        rel?: string
       },
       HTMLElement
     >

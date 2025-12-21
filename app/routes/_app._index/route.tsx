@@ -1,5 +1,7 @@
 import type {
-  HeadersFunction
+  HeadersFunction,
+  LoaderFunctionArgs,
+  ShouldRevalidateFunctionArgs
 } from "react-router"
 import {
   Page,
@@ -22,13 +24,6 @@ import { FAQCard } from "@/components/FAQCard"
 import { AppEmbedBanner } from "@/components/AppEmbedBanner"
 import { SetupGuide, SetupGuideStep } from "@/components/SetupGuide"
 import { useUserInfoStore } from "@/stores"
-import { getAppName } from "@/config/app.config"
-
-// 移除 loader，从父路由 (_app.tsx) 继承数据
-// export const loader = async ({ request }: LoaderFunctionArgs) => {
-//   await authenticate.admin(request)
-//   return null
-// }
 
 const Index = observer(() => {
   const { t } = useTranslation()
