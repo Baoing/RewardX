@@ -45,7 +45,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     // 提取客户信息
     const customer = order.customer
-    const customerId = customer?.id || null
+    // Shopify 客户 ID 是数字，需要转换为字符串
+    const customerId = customer?.id ? String(customer.id) : null
     const customerName = customer ? `${customer.first_name || ""} ${customer.last_name || ""}`.trim() || null : null
     const customerEmail = customer?.email || email || null
     const customerPhone = customer?.phone || phone || null
