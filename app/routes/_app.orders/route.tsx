@@ -643,7 +643,7 @@ const OrdersPage = observer(() => {
               </IndexTable>
 
               {pagination.totalPages > 1 && (
-                <div className={"flex justify-center"}>
+                <div className={"flex justify-center my-3"}>
                   <Pagination
                     hasPrevious={pagination.page > 1}
                     onPrevious={() => {
@@ -653,10 +653,6 @@ const OrdersPage = observer(() => {
                     onNext={() => {
                       setPagination(prev => ({ ...prev, page: prev.page + 1 }))
                     }}
-                    label={t("orders.pagination.label", {
-                      page: pagination.page,
-                      totalPages: pagination.totalPages
-                    })}
                   />
                 </div>
               )}
