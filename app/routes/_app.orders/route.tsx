@@ -186,10 +186,10 @@ const OrdersPage = observer(() => {
     if (!status) return <Badge tone="info">-</Badge>
 
     const statusKey = status.toLowerCase()
-    const translationKey = statusType === "financial" 
+    const translationKey = statusType === "financial"
       ? `orders.status.financial.${statusKey}`
       : `orders.status.fulfillment.${statusKey}`
-    
+
     const statusMap: Record<string, { tone: "success" | "warning" | "critical" | "info" }> = {
       paid: { tone: "success" },
       pending: { tone: "warning" },
@@ -242,7 +242,7 @@ const OrdersPage = observer(() => {
   ]
 
   return (
-    <Page>
+    <Page fullWidth>
       <BlockStack gap="400">
         <InlineStack align="space-between" blockAlign="center">
           <Text as="h1" variant="headingXl">
@@ -284,20 +284,18 @@ const OrdersPage = observer(() => {
                   rows={rows}
                 />
                 {pagination.totalPages > 1 && (
-                  <Pagination
-                    hasPrevious={pagination.page > 1}
-                    onPrevious={() => {
-                      setPagination(prev => ({ ...prev, page: prev.page - 1 }))
-                    }}
-                    hasNext={pagination.page < pagination.totalPages}
-                    onNext={() => {
-                      setPagination(prev => ({ ...prev, page: prev.page + 1 }))
-                    }}
-                    label={t("orders.pagination.label", {
-                      page: pagination.page,
-                      totalPages: pagination.totalPages
-                    })}
-                  />
+                  <div className={"flex justify-center"}>
+                    <Pagination
+                      hasPrevious={pagination.page > 1}
+                      onPrevious={() => {
+                        setPagination(prev => ({ ...prev, page: prev.page - 1 }))
+                      }}
+                      hasNext={pagination.page < pagination.totalPages}
+                      onNext={() => {
+                        setPagination(prev => ({ ...prev, page: prev.page + 1 }))
+                      }}
+                    />
+                  </div>
                 )}
               </BlockStack>
             )}
