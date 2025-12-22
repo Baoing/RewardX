@@ -15,7 +15,8 @@
     "home": "Home",
     "campaigns": "Campaigns",
     "billing": "Billing",
-    "settings": "Settings"
+    "settings": "Settings",
+    "orders": "Orders"
   },
   "home": {
     "welcome": "Hi {{userName}} 👋, welcome to {{appName}}",
@@ -260,6 +261,12 @@
           "dedicated_support": "Dedicated account manager",
           "onboarding": "Dedicated onboarding assistance",
           "sla": "SLA guarantee"
+        }
+      },
+      "orders": {
+        "empty": {
+          "heading": "Order is empty",
+          "description": "Order is empty"
         }
       }
     }

@@ -15,7 +15,8 @@
     "home": "首页",
     "campaigns": "抽奖活动",
     "billing": "套餐",
-    "settings": "设置"
+    "settings": "设置",
+    "orders": "订单"
   },
   "home": {
     "welcome": "Hi {{userName}} 👋, 欢迎使用 {{appName}}",

@@ -251,6 +251,7 @@ const PolarisProvider = observer(() => {
             <s-app-nav>
               <s-link href="/" rel="home">{t("nav.home")}</s-link>
               <s-link href="/campaigns">{t("nav.campaigns")}</s-link>
+              <s-link href="/orders">{t("nav.orders")}</s-link>
               <s-link href="/billing">{t("nav.billing")}</s-link>
               <s-link href="/settings">{t("nav.settings")}</s-link>
             </s-app-nav>
