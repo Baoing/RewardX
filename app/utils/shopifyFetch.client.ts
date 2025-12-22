@@ -40,16 +40,6 @@ async function getSessionToken(): Promise<string | null> {
       }
     }
 
-    // 方法3: 使用 @shopify/app-bridge/utilities 的 getSessionToken（如果可用）
-    try {
-      const { getSessionToken } = await import("@shopify/app-bridge/utilities")
-      if (appBridge && typeof getSessionToken === "function") {
-        return await getSessionToken(appBridge)
-      }
-    } catch {
-      // 导入失败，继续尝试其他方法
-    }
-
     return null
   } catch (error) {
     console.warn("⚠️ 无法获取 session token:", error)
