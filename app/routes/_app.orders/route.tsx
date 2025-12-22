@@ -16,7 +16,8 @@ import {
   useIndexResourceState,
   TextField,
   ChoiceList,
-  useBreakpoints
+  useBreakpoints,
+  Pagination
 } from "@shopify/polaris"
 import type { IndexFiltersProps, TabProps } from "@shopify/polaris"
 import { RefreshIcon } from "@shopify/polaris-icons"
@@ -289,10 +290,15 @@ const OrdersPage = observer(() => {
     return <Badge tone={statusInfo.tone}>{label}</Badge>
   }
 
+  // 判断订单是否中奖（Lottery Status 为 Winner）
+  const isWinnerOrder = (order: Order): boolean => {
+    return order.lotteryEntry?.isWinner === true
+  }
+
   // 获取抽奖状态 Badge
   const getLotteryBadge = (order: Order) => {
     if (order.hasLotteryEntry) {
-      if (order.lotteryEntry?.isWinner) {
+      if (isWinnerOrder(order)) {
         return <Badge tone="success">{t("orders.lottery.winner")}</Badge>
       } else {
         return <Badge tone="info">{t("orders.lottery.played")}</Badge>
@@ -333,10 +339,11 @@ const OrdersPage = observer(() => {
     if (lotteryStatusFilter && lotteryStatusFilter.length > 0) {
       result = result.filter(order => {
         if (lotteryStatusFilter.includes("winner")) {
-          return order.lotteryEntry?.isWinner === true
+          // 中奖视图：只显示 Lottery Status 为 Winner 的订单
+          return isWinnerOrder(order)
         }
         if (lotteryStatusFilter.includes("played")) {
-          return order.hasLotteryEntry && !order.lotteryEntry?.isWinner
+          return order.hasLotteryEntry && !isWinnerOrder(order)
         }
         if (lotteryStatusFilter.includes("notPlayed")) {
           return !order.hasLotteryEntry
@@ -394,7 +401,8 @@ const OrdersPage = observer(() => {
         count = orders.filter(order => order.fulfillmentStatus?.toLowerCase() === "unfulfilled").length
         break
       case "winners":
-        count = orders.filter(order => order.lotteryEntry?.isWinner === true).length
+        // 中奖视图：统计 Lottery Status 为 Winner 的订单数量
+        count = orders.filter(order => isWinnerOrder(order)).length
         break
       default:
         count = 0
@@ -635,27 +643,21 @@ const OrdersPage = observer(() => {
               </IndexTable>
 
               {pagination.totalPages > 1 && (
-                <div className="flex justify-center items-center" style={{ padding: "1rem" }}>
-                  <Button
-                    disabled={pagination.page === 1}
-                    onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
-                  >
-                    {t("orders.pagination.previous")}
-                  </Button>
-                  <div style={{ margin: "0 1rem" }}>
-                    <Text as="p" tone="subdued">
-                      {t("orders.pagination.label", {
-                        page: pagination.page,
-                        totalPages: pagination.totalPages
-                      })}
-                    </Text>
-                  </div>
-                  <Button
-                    disabled={pagination.page >= pagination.totalPages}
-                    onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
-                  >
-                    {t("orders.pagination.next")}
-                  </Button>
+                <div className={"flex justify-center"}>
+                  <Pagination
+                    hasPrevious={pagination.page > 1}
+                    onPrevious={() => {
+                      setPagination(prev => ({ ...prev, page: prev.page - 1 }))
+                    }}
+                    hasNext={pagination.page < pagination.totalPages}
+                    onNext={() => {
+                      setPagination(prev => ({ ...prev, page: prev.page + 1 }))
+                    }}
+                    label={t("orders.pagination.label", {
+                      page: pagination.page,
+                      totalPages: pagination.totalPages
+                    })}
+                  />
                 </div>
               )}
             </>
