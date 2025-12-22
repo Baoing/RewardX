@@ -1,10 +1,7 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback, useMemo } from "react"
 import type { LoaderFunctionArgs } from "react-router"
 import {
   Page,
-  Layout,
-  Card,
-  DataTable,
   Button,
   InlineStack,
   Text,
@@ -12,13 +9,22 @@ import {
   EmptyState,
   Spinner,
   BlockStack,
-  Pagination
+  IndexTable,
+  LegacyCard,
+  IndexFilters,
+  useSetIndexFiltersMode,
+  useIndexResourceState,
+  TextField,
+  ChoiceList,
+  useBreakpoints
 } from "@shopify/polaris"
+import type { IndexFiltersProps, TabProps } from "@shopify/polaris"
 import { RefreshIcon } from "@shopify/polaris-icons"
 import { useTranslation } from "react-i18next"
 import { observer } from "mobx-react-lite"
 import { authenticate } from "@/shopify.server"
 import { showSuccessToast, showErrorToast } from "@/utils/toast"
+import CopyField from "@/components/CopyField"
 
 interface Order {
   id: string
@@ -74,6 +80,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 const OrdersPage = observer(() => {
   const { t, i18n } = useTranslation()
+  const breakpoints = useBreakpoints()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
@@ -83,6 +90,86 @@ const OrdersPage = observer(() => {
     total: 0,
     totalPages: 0
   })
+
+  // IndexFilters 相关状态
+  const [queryValue, setQueryValue] = useState("")
+  const [financialStatusFilter, setFinancialStatusFilter] = useState<string[] | undefined>(undefined)
+  const [fulfillmentStatusFilter, setFulfillmentStatusFilter] = useState<string[] | undefined>(undefined)
+  const [lotteryStatusFilter, setLotteryStatusFilter] = useState<string[] | undefined>(undefined)
+  const [sortSelected, setSortSelected] = useState(["createdAt desc"])
+  const [selectedView, setSelectedView] = useState(0)
+  const { mode, setMode } = useSetIndexFiltersMode()
+
+  // 默认视图配置
+  const views: TabProps[] = [
+    {
+      content: t("orders.views.all", "All"),
+      id: "all",
+      isLocked: true,
+      onAction: () => {
+        setSelectedView(0)
+        setFinancialStatusFilter(undefined)
+        setFulfillmentStatusFilter(undefined)
+        setLotteryStatusFilter(undefined)
+        setQueryValue("")
+      }
+    },
+    {
+      content: t("orders.views.paid", "Paid"),
+      id: "paid",
+      onAction: () => {
+        setSelectedView(1)
+        setFinancialStatusFilter(["paid"])
+        setFulfillmentStatusFilter(undefined)
+        setLotteryStatusFilter(undefined)
+        setQueryValue("")
+      }
+    },
+    {
+      content: t("orders.views.pending", "Pending"),
+      id: "pending",
+      onAction: () => {
+        setSelectedView(2)
+        setFinancialStatusFilter(["pending"])
+        setFulfillmentStatusFilter(undefined)
+        setLotteryStatusFilter(undefined)
+        setQueryValue("")
+      }
+    },
+    {
+      content: t("orders.views.fulfilled", "Fulfilled"),
+      id: "fulfilled",
+      onAction: () => {
+        setSelectedView(3)
+        setFinancialStatusFilter(undefined)
+        setFulfillmentStatusFilter(["fulfilled"])
+        setLotteryStatusFilter(undefined)
+        setQueryValue("")
+      }
+    },
+    {
+      content: t("orders.views.unfulfilled", "Unfulfilled"),
+      id: "unfulfilled",
+      onAction: () => {
+        setSelectedView(4)
+        setFinancialStatusFilter(undefined)
+        setFulfillmentStatusFilter(["unfulfilled"])
+        setLotteryStatusFilter(undefined)
+        setQueryValue("")
+      }
+    },
+    {
+      content: t("orders.views.winners", "Winners"),
+      id: "winners",
+      onAction: () => {
+        setSelectedView(5)
+        setFinancialStatusFilter(undefined)
+        setFulfillmentStatusFilter(undefined)
+        setLotteryStatusFilter(["winner"])
+        setQueryValue("")
+      }
+    }
+  ]
 
   // 获取订单列表
   const fetchOrders = async () => {
@@ -129,7 +216,6 @@ const OrdersPage = observer(() => {
             success,
             total
           }))
-          // 刷新订单列表
           await fetchOrders()
         } else {
           showErrorToast(t("orders.syncMessages.noNewOrders"))
@@ -158,12 +244,11 @@ const OrdersPage = observer(() => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: currency || "USD"
-    }).format(price / 100) // Shopify 价格以分为单位
+    }).format(price / 100)
   }
 
   // 格式化日期
   const formatDate = (dateString: string) => {
-    // 根据当前语言设置 locale
     const localeMap: Record<string, string> = {
       "en": "en-US",
       "zh-CN": "zh-CN",
@@ -216,30 +301,264 @@ const OrdersPage = observer(() => {
     return <Badge>{t("orders.lottery.notPlayed")}</Badge>
   }
 
-  // 表格列配置
-  const rows = orders.map(order => {
-    return [
-      order.orderNumber,
-      order.customerName || order.email || "-",
-      formatPrice(order.totalPrice, order.currencyCode),
-      getStatusBadge(order.financialStatus, "financial"),
-      getStatusBadge(order.fulfillmentStatus, "fulfillment"),
-      getLotteryBadge(order),
-      order.lotteryEntry?.discountCode || "-",
-      formatDate(order.createdAt)
-    ]
-  })
+  // 筛选和排序订单
+  const filteredAndSortedOrders = useCallback(() => {
+    let result = [...orders]
 
-  const headings = [
-    t("orders.table.orderNumber"),
-    t("orders.table.customer"),
-    t("orders.table.total"),
-    t("orders.table.financialStatus"),
-    t("orders.table.fulfillmentStatus"),
-    t("orders.table.lotteryStatus"),
-    t("orders.table.discountCode"),
-    t("orders.table.createdAt")
+    // 搜索筛选
+    if (queryValue) {
+      const query = queryValue.toLowerCase()
+      result = result.filter(order =>
+        order.orderNumber.toLowerCase().includes(query) ||
+        (order.customerName || "").toLowerCase().includes(query) ||
+        (order.email || "").toLowerCase().includes(query)
+      )
+    }
+
+    // 支付状态筛选
+    if (financialStatusFilter && financialStatusFilter.length > 0) {
+      result = result.filter(order =>
+        order.financialStatus && financialStatusFilter.includes(order.financialStatus.toLowerCase())
+      )
+    }
+
+    // 发货状态筛选
+    if (fulfillmentStatusFilter && fulfillmentStatusFilter.length > 0) {
+      result = result.filter(order =>
+        order.fulfillmentStatus && fulfillmentStatusFilter.includes(order.fulfillmentStatus.toLowerCase())
+      )
+    }
+
+    // 抽奖状态筛选
+    if (lotteryStatusFilter && lotteryStatusFilter.length > 0) {
+      result = result.filter(order => {
+        if (lotteryStatusFilter.includes("winner")) {
+          return order.lotteryEntry?.isWinner === true
+        }
+        if (lotteryStatusFilter.includes("played")) {
+          return order.hasLotteryEntry && !order.lotteryEntry?.isWinner
+        }
+        if (lotteryStatusFilter.includes("notPlayed")) {
+          return !order.hasLotteryEntry
+        }
+        return true
+      })
+    }
+
+    // 排序
+    const [sortKey, sortDirection] = sortSelected[0].split(" ")
+    result.sort((a, b) => {
+      let comparison = 0
+      switch (sortKey) {
+        case "orderNumber":
+          comparison = a.orderNumber.localeCompare(b.orderNumber)
+          break
+        case "customer":
+          comparison = (a.customerName || a.email || "").localeCompare(b.customerName || b.email || "")
+          break
+        case "total":
+          comparison = a.totalPrice - b.totalPrice
+          break
+        case "createdAt":
+        case "date":
+          comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          break
+        default:
+          comparison = 0
+      }
+      return sortDirection === "desc" ? -comparison : comparison
+    })
+
+    return result
+  }, [orders, queryValue, financialStatusFilter, fulfillmentStatusFilter, lotteryStatusFilter, sortSelected, t])
+
+  const displayOrders = filteredAndSortedOrders()
+
+  // 计算每个视图的订单数量
+  const getViewCount = useCallback((viewId: string) => {
+    let count = 0
+    switch (viewId) {
+      case "all":
+        count = orders.length
+        break
+      case "paid":
+        count = orders.filter(order => order.financialStatus?.toLowerCase() === "paid").length
+        break
+      case "pending":
+        count = orders.filter(order => order.financialStatus?.toLowerCase() === "pending").length
+        break
+      case "fulfilled":
+        count = orders.filter(order => order.fulfillmentStatus?.toLowerCase() === "fulfilled").length
+        break
+      case "unfulfilled":
+        count = orders.filter(order => order.fulfillmentStatus?.toLowerCase() === "unfulfilled").length
+        break
+      case "winners":
+        count = orders.filter(order => order.lotteryEntry?.isWinner === true).length
+        break
+      default:
+        count = 0
+    }
+    return count
+  }, [orders])
+
+  // 更新视图配置，添加数量显示
+  const viewsWithCount: TabProps[] = useMemo(() => {
+    return views.map(view => ({
+      ...view,
+      content: `${view.content} (${getViewCount(view.id || "")})`
+    }))
+  }, [getViewCount])
+
+  // IndexFilters 配置
+  const sortOptions: IndexFiltersProps["sortOptions"] = [
+    { label: t("orders.table.orderNumber"), value: "orderNumber asc", directionLabel: "A-Z" },
+    { label: t("orders.table.orderNumber"), value: "orderNumber desc", directionLabel: "Z-A" },
+    { label: t("orders.table.customer"), value: "customer asc", directionLabel: "A-Z" },
+    { label: t("orders.table.customer"), value: "customer desc", directionLabel: "Z-A" },
+    { label: t("orders.table.total"), value: "total asc", directionLabel: t("orders.sort.ascending", "Ascending") },
+    { label: t("orders.table.total"), value: "total desc", directionLabel: t("orders.sort.descending", "Descending") },
+    { label: t("orders.table.createdAt"), value: "createdAt asc", directionLabel: t("orders.sort.oldest", "Oldest first") },
+    { label: t("orders.table.createdAt"), value: "createdAt desc", directionLabel: t("orders.sort.newest", "Newest first") }
   ]
+
+  const filters: IndexFiltersProps["filters"] = [
+    {
+      key: "financialStatus",
+      label: t("orders.table.financialStatus"),
+      filter: (
+        <ChoiceList
+          title={t("orders.table.financialStatus")}
+          titleHidden
+          choices={[
+            { label: t("orders.status.financial.paid"), value: "paid" },
+            { label: t("orders.status.financial.pending"), value: "pending" },
+            { label: t("orders.status.financial.refunded"), value: "refunded" }
+          ]}
+          selected={financialStatusFilter || []}
+          onChange={setFinancialStatusFilter}
+          allowMultiple
+        />
+      ),
+      shortcut: true
+    },
+    {
+      key: "fulfillmentStatus",
+      label: t("orders.table.fulfillmentStatus"),
+      filter: (
+        <ChoiceList
+          title={t("orders.table.fulfillmentStatus")}
+          titleHidden
+          choices={[
+            { label: t("orders.status.fulfillment.fulfilled"), value: "fulfilled" },
+            { label: t("orders.status.fulfillment.unfulfilled"), value: "unfulfilled" },
+            { label: t("orders.status.fulfillment.partial"), value: "partial" }
+          ]}
+          selected={fulfillmentStatusFilter || []}
+          onChange={setFulfillmentStatusFilter}
+          allowMultiple
+        />
+      ),
+      shortcut: true
+    },
+    {
+      key: "lotteryStatus",
+      label: t("orders.table.lotteryStatus"),
+      filter: (
+        <ChoiceList
+          title={t("orders.table.lotteryStatus")}
+          titleHidden
+          choices={[
+            { label: t("orders.lottery.winner"), value: "winner" },
+            { label: t("orders.lottery.played"), value: "played" },
+            { label: t("orders.lottery.notPlayed"), value: "notPlayed" }
+          ]}
+          selected={lotteryStatusFilter || []}
+          onChange={setLotteryStatusFilter}
+          allowMultiple
+        />
+      ),
+      shortcut: true
+    }
+  ]
+
+  const appliedFilters: IndexFiltersProps["appliedFilters"] = []
+  if (financialStatusFilter && financialStatusFilter.length > 0) {
+    appliedFilters.push({
+      key: "financialStatus",
+      label: `${t("orders.table.financialStatus")}: ${financialStatusFilter.map(s => t(`orders.status.financial.${s}`)).join(", ")}`,
+      onRemove: () => setFinancialStatusFilter(undefined)
+    })
+  }
+  if (fulfillmentStatusFilter && fulfillmentStatusFilter.length > 0) {
+    appliedFilters.push({
+      key: "fulfillmentStatus",
+      label: `${t("orders.table.fulfillmentStatus")}: ${fulfillmentStatusFilter.map(s => t(`orders.status.fulfillment.${s}`)).join(", ")}`,
+      onRemove: () => setFulfillmentStatusFilter(undefined)
+    })
+  }
+  if (lotteryStatusFilter && lotteryStatusFilter.length > 0) {
+    appliedFilters.push({
+      key: "lotteryStatus",
+      label: `${t("orders.table.lotteryStatus")}: ${lotteryStatusFilter.map(s => {
+        if (s === "winner") return t("orders.lottery.winner")
+        if (s === "played") return t("orders.lottery.played")
+        return t("orders.lottery.notPlayed")
+      }).join(", ")}`,
+      onRemove: () => setLotteryStatusFilter(undefined)
+    })
+  }
+
+  const handleFiltersClearAll = useCallback(() => {
+    setSelectedView(0)
+    setFinancialStatusFilter(undefined)
+    setFulfillmentStatusFilter(undefined)
+    setLotteryStatusFilter(undefined)
+    setQueryValue("")
+  }, [])
+
+  const resourceName = {
+    singular: t("orders.resource.singular", "order"),
+    plural: t("orders.resource.plural", "orders")
+  }
+
+  const { selectedResources, allResourcesSelected, handleSelectionChange } = useIndexResourceState(
+    displayOrders as unknown as Array<{ [key: string]: unknown }>
+  )
+
+  const rowMarkup = displayOrders.map((order, index) => (
+    <IndexTable.Row
+      id={order.id}
+      key={order.id}
+      selected={selectedResources.includes(order.id)}
+      position={index}
+    >
+      <IndexTable.Cell>
+        <Text variant="bodyMd" fontWeight="semibold" as="span">
+          {order.orderNumber}
+        </Text>
+      </IndexTable.Cell>
+      <IndexTable.Cell>{order.customerName || order.email || "-"}</IndexTable.Cell>
+      <IndexTable.Cell>
+        <Text as="span" alignment="end" numeric>
+          {formatPrice(order.totalPrice, order.currencyCode)}
+        </Text>
+      </IndexTable.Cell>
+      <IndexTable.Cell>{getStatusBadge(order.financialStatus, "financial")}</IndexTable.Cell>
+      <IndexTable.Cell>{getStatusBadge(order.fulfillmentStatus, "fulfillment")}</IndexTable.Cell>
+      <IndexTable.Cell>{getLotteryBadge(order)}</IndexTable.Cell>
+      <IndexTable.Cell>
+        <CopyField
+          copyValue={order.lotteryEntry?.discountCode || undefined}
+          toolTipText={t("common.copy")}
+          config={{ hover: true }}
+        >
+          {order.lotteryEntry?.discountCode || "-"}
+        </CopyField>
+      </IndexTable.Cell>
+      <IndexTable.Cell>{formatDate(order.createdAt)}</IndexTable.Cell>
+    </IndexTable.Row>
+  ))
 
   return (
     <Page fullWidth>
@@ -257,55 +576,94 @@ const OrdersPage = observer(() => {
             {syncing ? t("orders.syncing") : t("orders.sync")}
           </Button>
         </InlineStack>
-      <Layout>
-        <Layout.Section>
-          <Card>
-            {loading ? (
-              <div style={{ padding: "2rem", textAlign: "center" }}>
-                <Spinner size="large" />
-                <div style={{ marginTop: "1rem" }}>
-                  <Text as="p" tone="subdued">
-                    {t("orders.loading")}
-                  </Text>
-                </div>
+
+        <LegacyCard>
+          <IndexFilters
+            sortOptions={sortOptions}
+            sortSelected={sortSelected}
+            queryValue={queryValue}
+            queryPlaceholder={t("orders.search.placeholder", "Search orders")}
+            onQueryChange={setQueryValue}
+            onQueryClear={() => setQueryValue("")}
+            onSort={setSortSelected}
+            tabs={viewsWithCount}
+            selected={selectedView}
+            onSelect={setSelectedView}
+            filters={filters}
+            appliedFilters={appliedFilters}
+            onClearAll={handleFiltersClearAll}
+            mode={mode}
+            setMode={setMode}
+          />
+
+          {loading ? (
+            <div style={{ padding: "2rem", textAlign: "center" }}>
+              <Spinner size="large" />
+              <div style={{ marginTop: "1rem" }}>
+                <Text as="p" tone="subdued">
+                  {t("orders.loading")}
+                </Text>
               </div>
-            ) : orders.length === 0 ? (
-              <EmptyState
-                heading={t("orders.empty.heading")}
-                image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
+            </div>
+          ) : displayOrders.length === 0 ? (
+            <EmptyState
+              heading={t("orders.empty.heading")}
+              image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
+            >
+              <p>{t("orders.empty.description")}</p>
+            </EmptyState>
+          ) : (
+            <>
+              <IndexTable
+                condensed={breakpoints.smDown}
+                resourceName={resourceName}
+                itemCount={displayOrders.length}
+                selectedItemsCount={allResourcesSelected ? "All" : selectedResources.length}
+                onSelectionChange={handleSelectionChange}
+                headings={[
+                  { title: t("orders.table.orderNumber") },
+                  { title: t("orders.table.customer") },
+                  { title: t("orders.table.total"), alignment: "end" },
+                  { title: t("orders.table.financialStatus") },
+                  { title: t("orders.table.fulfillmentStatus") },
+                  { title: t("orders.table.lotteryStatus") },
+                  { title: t("orders.table.discountCode") },
+                  { title: t("orders.table.createdAt") }
+                ]}
               >
-                <p>{t("orders.empty.description")}</p>
-              </EmptyState>
-            ) : (
-              <BlockStack gap="400">
-                <DataTable
-                  columnContentTypes={["text", "text", "numeric", "text", "text", "text", "text", "text"]}
-                  headings={headings}
-                  rows={rows}
-                />
-                {pagination.totalPages > 1 && (
-                  <div className={"flex justify-center"}>
-                    <Pagination
-                      hasPrevious={pagination.page > 1}
-                      onPrevious={() => {
-                        setPagination(prev => ({ ...prev, page: prev.page - 1 }))
-                      }}
-                      hasNext={pagination.page < pagination.totalPages}
-                      onNext={() => {
-                        setPagination(prev => ({ ...prev, page: prev.page + 1 }))
-                      }}
-                    />
+                {rowMarkup}
+              </IndexTable>
+
+              {pagination.totalPages > 1 && (
+                <div className="flex justify-center items-center" style={{ padding: "1rem" }}>
+                  <Button
+                    disabled={pagination.page === 1}
+                    onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
+                  >
+                    {t("orders.pagination.previous")}
+                  </Button>
+                  <div style={{ margin: "0 1rem" }}>
+                    <Text as="p" tone="subdued">
+                      {t("orders.pagination.label", {
+                        page: pagination.page,
+                        totalPages: pagination.totalPages
+                      })}
+                    </Text>
                   </div>
-                )}
-              </BlockStack>
-            )}
-          </Card>
-        </Layout.Section>
-      </Layout>
+                  <Button
+                    disabled={pagination.page >= pagination.totalPages}
+                    onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+                  >
+                    {t("orders.pagination.next")}
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
+        </LegacyCard>
       </BlockStack>
     </Page>
   )
 })
 
 export default OrdersPage
-

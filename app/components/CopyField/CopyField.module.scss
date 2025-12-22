@@ -1,0 +1,19 @@
+.hoverCopyFieldWrapper {
+  .copyFieldIcon {
+    opacity: 0;
+    display: none;
+    transition: opacity 0.5s ease;
+  }
+
+  &:hover .copyFieldIcon {
+    opacity: 1;
+    display: block;
+  }
+
+  :global {
+    [data-polaris-tooltip-activator] {
+      width: 100%;
+    }
+  }
+}
+

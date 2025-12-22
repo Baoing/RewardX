@@ -1,7 +1,9 @@
 {
   "common": {
     "loading": "Loading...",
-    "remove": "Remove"
+    "remove": "Remove",
+    "copy": "Copy",
+    "copied": "Copied successfully"
   },
   "uploadPicture": {
     "success": "Image uploaded successfully",
@@ -231,6 +233,30 @@
       "previous": "Previous",
       "next": "Next",
       "label": "Page {page} of {totalPages}"
+    },
+    "resource": {
+      "singular": "order",
+      "plural": "orders"
+    },
+    "search": {
+      "placeholder": "Search orders"
+    },
+    "sort": {
+      "ascending": "Ascending",
+      "descending": "Descending",
+      "oldest": "Oldest first",
+      "newest": "Newest first"
+    },
+    "filter": {
+      "all": "All"
+    },
+    "views": {
+      "all": "All",
+      "paid": "Paid",
+      "pending": "Pending",
+      "fulfilled": "Fulfilled",
+      "unfulfilled": "Unfulfilled",
+      "winners": "Winners"
     }
   },
   "billing": {
