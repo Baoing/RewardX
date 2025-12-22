@@ -177,6 +177,62 @@
     "onboarding": "Onboarding",
     "sla": "SLA"
   },
+  "orders": {
+    "title": "Order Management",
+    "sync": "Sync Orders",
+    "syncing": "Syncing...",
+    "loading": "Loading...",
+    "empty": {
+      "heading": "No Orders",
+      "description": "Click the \"Sync Orders\" button above to sync historical orders from Shopify"
+    },
+    "table": {
+      "orderNumber": "Order Number",
+      "customer": "Customer",
+      "total": "Total",
+      "financialStatus": "Payment Status",
+      "fulfillmentStatus": "Fulfillment Status",
+      "lotteryStatus": "Lottery Status",
+      "discountCode": "Discount Code",
+      "createdAt": "Created At"
+    },
+    "lottery": {
+      "winner": "Winner",
+      "played": "Played",
+      "notPlayed": "Not Played"
+    },
+    "status": {
+      "financial": {
+        "paid": "Paid",
+        "pending": "Pending",
+        "refunded": "Refunded",
+        "authorized": "Authorized",
+        "partially_paid": "Partially Paid",
+        "partially_refunded": "Partially Refunded",
+        "voided": "Voided"
+      },
+      "fulfillment": {
+        "fulfilled": "Fulfilled",
+        "unfulfilled": "Unfulfilled",
+        "partial": "Partially Fulfilled",
+        "restocked": "Restocked"
+      }
+    },
+    "syncMessages": {
+      "success": "Sync successful: {{success}}/{{total}} orders synced",
+      "failed": "Failed to sync orders",
+      "noNewOrders": "No new orders to sync",
+      "failedCount": "{{count}} orders failed to sync"
+    },
+    "errors": {
+      "fetchFailed": "Failed to fetch orders"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "label": "Page {page} of {totalPages}"
+    }
+  },
   "billing": {
     "title": "Plans & Billing",
     "payMonthly": "Pay monthly",

@@ -11,7 +11,8 @@ import {
   Badge,
   EmptyState,
   Spinner,
-  BlockStack
+  BlockStack,
+  Pagination
 } from "@shopify/polaris"
 import { RefreshIcon } from "@shopify/polaris-icons"
 import { useTranslation } from "react-i18next"
@@ -33,6 +34,12 @@ interface Order {
   customerEmail: string | null
   createdAt: string
   updatedAt: string
+  hasLotteryEntry?: boolean
+  lotteryEntry?: {
+    isWinner: boolean
+    prizeName: string | null
+    discountCode: string | null
+  } | null
 }
 
 interface OrdersResponse {
@@ -66,13 +73,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 }
 
 const OrdersPage = observer(() => {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 20,
+    limit: 15,
     total: 0,
     totalPages: 0
   })
@@ -88,11 +95,11 @@ const OrdersPage = observer(() => {
         setOrders(data.data.orders)
         setPagination(data.data.pagination)
       } else {
-        showErrorToast(data.error || "获取订单列表失败")
+        showErrorToast(data.error || t("orders.errors.fetchFailed"))
       }
     } catch (error) {
       console.error("❌ 获取订单列表错误:", error)
-      showErrorToast("获取订单列表失败")
+      showErrorToast(t("orders.errors.fetchFailed"))
     } finally {
       setLoading(false)
     }
@@ -118,21 +125,24 @@ const OrdersPage = observer(() => {
       if (data.success && data.results) {
         const { total, success, failed } = data.results
         if (success > 0) {
-          showSuccessToast(`同步成功：${success}/${total} 个订单已同步`)
+          showSuccessToast(t("orders.syncMessages.success", {
+            success,
+            total
+          }))
           // 刷新订单列表
           await fetchOrders()
         } else {
-          showErrorToast("没有新订单需要同步")
+          showErrorToast(t("orders.syncMessages.noNewOrders"))
         }
         if (failed > 0) {
-          console.warn(`⚠️ ${failed} 个订单同步失败`)
+          console.warn(`⚠️ ${t("orders.syncMessages.failedCount", { count: failed })}`)
         }
       } else {
-        showErrorToast(data.error || "同步订单失败")
+        showErrorToast(data.error || t("orders.syncMessages.failed"))
       }
     } catch (error) {
       console.error("❌ 同步订单错误:", error)
-      showErrorToast("同步订单失败")
+      showErrorToast(t("orders.syncMessages.failed"))
     } finally {
       setSyncing(false)
     }
@@ -140,7 +150,8 @@ const OrdersPage = observer(() => {
 
   useEffect(() => {
     fetchOrders()
-  }, [pagination.page])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagination.page, pagination.limit])
 
   // 格式化金额
   const formatPrice = (price: number, currency: string) => {
@@ -152,7 +163,16 @@ const OrdersPage = observer(() => {
 
   // 格式化日期
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("zh-CN", {
+    // 根据当前语言设置 locale
+    const localeMap: Record<string, string> = {
+      "en": "en-US",
+      "zh-CN": "zh-CN",
+      "zh-TW": "zh-TW",
+      "ja": "ja-JP",
+      "ko": "ko-KR"
+    }
+    const locale = localeMap[i18n.language] || "en-US"
+    return new Date(dateString).toLocaleDateString(locale, {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -161,44 +181,64 @@ const OrdersPage = observer(() => {
     })
   }
 
-  // 获取状态文本和样式
-  const getStatusInfo = (status: string | null) => {
-    if (!status) return { label: "-", tone: "info" as const }
+  // 获取状态 Badge
+  const getStatusBadge = (status: string | null, statusType: "financial" | "fulfillment") => {
+    if (!status) return <Badge tone="info">-</Badge>
 
-    const statusMap: Record<string, { label: string; tone: "success" | "warning" | "critical" | "info" }> = {
-      paid: { label: "已支付", tone: "success" },
-      pending: { label: "待支付", tone: "warning" },
-      refunded: { label: "已退款", tone: "critical" },
-      fulfilled: { label: "已发货", tone: "success" },
-      unfulfilled: { label: "未发货", tone: "warning" },
-      partial: { label: "部分发货", tone: "info" }
+    const statusKey = status.toLowerCase()
+    const translationKey = statusType === "financial" 
+      ? `orders.status.financial.${statusKey}`
+      : `orders.status.fulfillment.${statusKey}`
+    
+    const statusMap: Record<string, { tone: "success" | "warning" | "critical" | "info" }> = {
+      paid: { tone: "success" },
+      pending: { tone: "warning" },
+      refunded: { tone: "critical" },
+      fulfilled: { tone: "success" },
+      unfulfilled: { tone: "warning" },
+      partial: { tone: "info" }
     }
 
-    return statusMap[status.toLowerCase()] || { label: status, tone: "info" as const }
+    const statusInfo = statusMap[statusKey] || { tone: "info" as const }
+    const label = t(translationKey)
+    return <Badge tone={statusInfo.tone}>{label}</Badge>
+  }
+
+  // 获取抽奖状态 Badge
+  const getLotteryBadge = (order: Order) => {
+    if (order.hasLotteryEntry) {
+      if (order.lotteryEntry?.isWinner) {
+        return <Badge tone="success">{t("orders.lottery.winner")}</Badge>
+      } else {
+        return <Badge tone="info">{t("orders.lottery.played")}</Badge>
+      }
+    }
+    return <Badge>{t("orders.lottery.notPlayed")}</Badge>
   }
 
   // 表格列配置
   const rows = orders.map(order => {
-    const financialStatus = getStatusInfo(order.financialStatus)
-    const fulfillmentStatus = getStatusInfo(order.fulfillmentStatus)
-    
     return [
       order.orderNumber,
       order.customerName || order.email || "-",
       formatPrice(order.totalPrice, order.currencyCode),
-      financialStatus.label,
-      fulfillmentStatus.label,
+      getStatusBadge(order.financialStatus, "financial"),
+      getStatusBadge(order.fulfillmentStatus, "fulfillment"),
+      getLotteryBadge(order),
+      order.lotteryEntry?.discountCode || "-",
       formatDate(order.createdAt)
     ]
   })
 
   const headings = [
-    t("orders.table.orderNumber", "订单号"),
-    t("orders.table.customer", "客户"),
-    t("orders.table.total", "总金额"),
-    t("orders.table.financialStatus", "支付状态"),
-    t("orders.table.fulfillmentStatus", "发货状态"),
-    t("orders.table.createdAt", "创建时间")
+    t("orders.table.orderNumber"),
+    t("orders.table.customer"),
+    t("orders.table.total"),
+    t("orders.table.financialStatus"),
+    t("orders.table.fulfillmentStatus"),
+    t("orders.table.lotteryStatus"),
+    t("orders.table.discountCode"),
+    t("orders.table.createdAt")
   ]
 
   return (
@@ -206,7 +246,7 @@ const OrdersPage = observer(() => {
       <BlockStack gap="400">
         <InlineStack align="space-between" blockAlign="center">
           <Text as="h1" variant="headingXl">
-            {t("orders.title", "订单管理")}
+            {t("orders.title")}
           </Text>
           <Button
             icon={RefreshIcon}
@@ -214,7 +254,7 @@ const OrdersPage = observer(() => {
             loading={syncing}
             variant="primary"
           >
-            {syncing ? t("orders.syncing", "同步中...") : t("orders.sync", "同步订单")}
+            {syncing ? t("orders.syncing") : t("orders.sync")}
           </Button>
         </InlineStack>
       <Layout>
@@ -225,13 +265,13 @@ const OrdersPage = observer(() => {
                 <Spinner size="large" />
                 <div style={{ marginTop: "1rem" }}>
                   <Text as="p" tone="subdued">
-                    {t("orders.loading", "加载中...")}
+                    {t("orders.loading")}
                   </Text>
                 </div>
               </div>
             ) : orders.length === 0 ? (
               <EmptyState
-                heading={t("orders.empty.heading", "暂无订单")}
+                heading={t("orders.empty.heading")}
                 image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
               >
                 <p>{t("orders.empty.description")}</p>
@@ -239,31 +279,25 @@ const OrdersPage = observer(() => {
             ) : (
               <BlockStack gap="400">
                 <DataTable
-                  columnContentTypes={["text", "text", "numeric", "text", "text", "text"]}
+                  columnContentTypes={["text", "text", "numeric", "text", "text", "text", "text", "text"]}
                   headings={headings}
                   rows={rows}
                 />
                 {pagination.totalPages > 1 && (
-                  <InlineStack align="center" gap="200">
-                    <Button
-                      disabled={pagination.page === 1}
-                      onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
-                    >
-                      {t("common.previous", "上一页")}
-                    </Button>
-                    <Text as="p" tone="subdued">
-                      {t("common.pageInfo", "第 {page} 页，共 {total} 条", {
-                        page: pagination.page,
-                        total: pagination.total
-                      })}
-                    </Text>
-                    <Button
-                      disabled={pagination.page >= pagination.totalPages}
-                      onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
-                    >
-                      {t("common.next", "下一页")}
-                    </Button>
-                  </InlineStack>
+                  <Pagination
+                    hasPrevious={pagination.page > 1}
+                    onPrevious={() => {
+                      setPagination(prev => ({ ...prev, page: prev.page - 1 }))
+                    }}
+                    hasNext={pagination.page < pagination.totalPages}
+                    onNext={() => {
+                      setPagination(prev => ({ ...prev, page: prev.page + 1 }))
+                    }}
+                    label={t("orders.pagination.label", {
+                      page: pagination.page,
+                      totalPages: pagination.totalPages
+                    })}
+                  />
                 )}
               </BlockStack>
             )}
